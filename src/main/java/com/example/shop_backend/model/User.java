@@ -44,6 +44,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(length = 255)
+    private String avatar;
+
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "ENUM('ADMIN', 'USER', 'CUSTOMER') DEFAULT 'CUSTOMER'")
     private Role role = Role.CUSTOMER;
