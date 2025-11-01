@@ -9,17 +9,40 @@ import com.example.shop_backend.exception.AppException;
 import com.example.shop_backend.exception.ErrorCode;
 import com.example.shop_backend.mapper.UserMapper;
 import com.example.shop_backend.model.User;
+import com.example.shop_backend.model.UserProvider;
+import com.example.shop_backend.model.enums.Role;
+import com.example.shop_backend.model.enums.UserStatus;
+import com.example.shop_backend.repository.UserProviderRepository;
 import com.example.shop_backend.repository.UserRepository;
 import com.example.shop_backend.security.JwtUtils;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Collections;
+import java.util.Optional;
+
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private final UserProviderRepository userProviderRepository;
+
+    @Value("${GOOGLE_CLIENT_ID}")
+    private String googleClientId;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -62,8 +85,8 @@ public class AuthService {
         userRepository.save(user);
 
         // Tạo JWT token
-        String accessToken = jwtUtils.generateToken(user.getEmail());
-        String refreshToken = jwtUtils.generateToken(user.getEmail());
+        String accessToken = jwtUtils.generateAccessToken(user.getEmail());
+        String refreshToken = jwtUtils.generateRefreshToken(user.getEmail());
 
         // Trả response
         return RegisterResponse.builder()
@@ -106,8 +129,8 @@ public class AuthService {
         }
 
         // Sinh token JWT
-        String accessToken = jwtUtils.generateToken(user.getEmail());
-        String refreshToken = jwtUtils.generateToken(user.getEmail());
+        String accessToken = jwtUtils.generateAccessToken(user.getEmail(), request.isRemember_me());
+        String refreshToken = jwtUtils.generateRefreshToken(user.getEmail());
 
         // Tạo dữ liệu phản hồi
         LoginResponse.LoginData data = LoginResponse.LoginData.builder()
@@ -132,4 +155,76 @@ public class AuthService {
         return new ApiResponse<>(1000, "Đăng nhập thành công", data);
     }
 
+    // ✅ Đăng nhập bằng Google
+    public LoginResponse loginWithGoogle(String idTokenString) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    new NetHttpTransport(),
+                    new GsonFactory()
+            ).setAudience(Collections.singletonList(googleClientId)).build();
+
+            GoogleIdToken idToken = verifier.verify(idTokenString);
+            if (idToken == null) {
+                throw new RuntimeException("Token Google không hợp lệ");
+            }
+
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+            String picture = (String) payload.get("picture");
+
+            // Tìm user theo email
+            Optional<User> optionalUser = userRepository.findByEmail(email);
+            User user = optionalUser.orElseGet(() -> {
+                User newUser = User.builder()
+                        .fullName(name)
+                        .email(email)
+                        .password(passwordEncoder.encode("GOOGLE_USER"))
+                        .avatar(picture)
+                        .role(Role.CUSTOMER)
+                        .status(UserStatus.ACTIVE)
+                        .build();
+                userRepository.save(newUser);
+
+                // Lưu vào bảng UserProvider
+                UserProvider provider = UserProvider.builder()
+                        .user(newUser)
+                        .providerName("GOOGLE")
+                        .providerUserId(payload.getSubject())
+                        .build();
+                userProviderRepository.save(provider);
+
+                return newUser;
+            });
+
+            // Sinh token JWT
+            String accessToken = jwtUtils.generateAccessToken(email);
+            String refreshToken = jwtUtils.generateRefreshToken(email);
+
+            return LoginResponse.builder()
+                    .success(true)
+                    .message("Đăng nhập Google thành công")
+                    .data(LoginResponse.LoginData.builder()
+                            .user(LoginResponse.UserInfo.builder()
+                                    .id(user.getId())
+                                    .fullName(user.getFullName())
+                                    .email(user.getEmail())
+                                    .phone(user.getPhone())
+                                    .email_verified(true)
+                                    .status(user.getStatus().name())
+                                    .created_at(user.getCreatedAt())
+                                    .avatar(user.getAvatar())
+                                    .build())
+                            .tokens(LoginResponse.TokenInfo.builder()
+                                    .access_token(accessToken)
+                                    .refresh_token(refreshToken)
+                                    .expires_in(3600)
+                                    .build())
+                            .build())
+                    .build();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Đăng nhập Google thất bại: " + e.getMessage(), e);
+        }
+    }
 }

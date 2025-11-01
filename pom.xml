@@ -22,6 +22,7 @@
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
 	</properties>
 
+
 	<dependencies>
 		<!-- Spring Boot Dependencies -->
 		<dependency>
@@ -86,6 +87,20 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- OAuth2 client -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
+
+		<!-- Google API (nếu bạn muốn verify idToken trên server later) -->
+		<dependency>
+			<groupId>com.google.api-client</groupId>
+			<artifactId>google-api-client</artifactId>
+			<version>2.2.0</version>
+		</dependency>
+
+
 		<!-- JSON Web Token (JJWT) -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
@@ -104,6 +119,7 @@
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
+
 	</dependencies>
 
 	<build>
