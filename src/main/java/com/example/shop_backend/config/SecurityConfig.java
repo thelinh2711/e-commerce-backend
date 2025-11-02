@@ -20,6 +20,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Cho phép không cần xác thực cho các API public (auth, login, register)
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Cho phép truy cập public cho products
+                        .requestMatchers("/api/products/**").permitAll()
                         // Các request khác cần có JWT
                         .anyRequest().authenticated()
                 )

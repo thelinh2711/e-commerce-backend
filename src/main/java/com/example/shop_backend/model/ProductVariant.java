@@ -45,6 +45,7 @@ public class ProductVariant {
     @Column(unique = true, length = 100)
     private String sku;
 
+    @Builder.Default
     @Column(columnDefinition = "INT DEFAULT 0")
     private Integer stock = 0;
 

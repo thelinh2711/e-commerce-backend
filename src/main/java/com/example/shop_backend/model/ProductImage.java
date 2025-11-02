@@ -38,9 +38,11 @@ public class ProductImage {
 
     private String altText;
 
+    @Builder.Default
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isThumbnail = false;
 
+    @Builder.Default
     @Column(columnDefinition = "INT DEFAULT 0")
     private Integer displayOrder = 0;
 
