@@ -1,42 +1,52 @@
 package com.example.shop_backend.config;
 
+import com.example.shop_backend.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@RequiredArgsConstructor
+@EnableMethodSecurity  // ✅ Cho phép dùng @PreAuthorize nếu cần sau này
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // ✅ Tắt CSRF (do ta dùng REST API, không dùng form submission)
                 .csrf(csrf -> csrf.disable())
-
-                // ✅ Cấu hình phân quyền truy cập
                 .authorizeHttpRequests(auth -> auth
-                        // Cho phép không cần xác thực cho các API public (auth, login, register)
+                        // ✅ Các API public
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Các request khác cần có JWT
+
+                        // ✅ Chỉ CUSTOMER mới được đổi mật khẩu và cập nhật thông tin cá nhân
+                        .requestMatchers("/api/users/change-password", "/api/users/update-profile")
+                        .hasAuthority("CUSTOMER")
+
+                        // ✅ Chỉ ADMIN mới được truy cập khu vực quản trị
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+
+                        // ✅ Các request còn lại yêu cầu đăng nhập
                         .anyRequest().authenticated()
                 )
-
-                // ✅ Không dùng session (stateless) vì ta dùng JWT
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS)
-                )
-
-                // ✅ Tạm thời tắt form login & logout mặc định
+                // ✅ Stateless session vì dùng JWT
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(form -> form.disable())
-                .logout(logout -> logout.disable());
+                .logout(logout -> logout.disable())
+                // ✅ Thêm JWT filter
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ✅ Cấu hình mã hóa mật khẩu bằng BCrypt (dùng cho login/register thông thường)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
