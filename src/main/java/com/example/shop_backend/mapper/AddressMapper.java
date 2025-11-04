@@ -9,16 +9,18 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface AddressMapper {
 
-    // Request -> Entity (khi tạo mới)
+    // Tạo mới Address từ request
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", source = "user")
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "defaultAddress", source = "request.defaultAddress") // ✅ đúng cú pháp
     Address toEntity(AddressRequest request, User user);
 
-    // Entity -> Response
+    // Map sang response
     AddressResponse toResponse(Address address);
 
-    // Cập nhật entity từ request (cho update)
+    // Cập nhật thông tin từ request sang entity
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "defaultAddress", source = "request.defaultAddress") // ✅ đúng cú pháp
     void updateEntityFromRequest(AddressRequest request, @MappingTarget Address address);
 }

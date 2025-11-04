@@ -1,16 +1,21 @@
 package com.example.shop_backend.dto.response;
 
-import lombok.Builder;
-import lombok.Data;
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class AddressResponse {
     private Integer id;
     private String street;
+    private String ward;
     private String district;
-    private String city;
-    private Boolean isDefault;
-    private LocalDateTime createdAt;
+    private String province;
+    private String note;
+
+    @JsonProperty("isDefault")
+    private boolean defaultAddress;
 }
