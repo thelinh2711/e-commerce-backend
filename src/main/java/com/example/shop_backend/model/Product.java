@@ -70,6 +70,10 @@ public class Product {
     private Integer stock = 0;
 
     @Builder.Default
+    @Column(name = "total_product", columnDefinition = "INT DEFAULT 0")
+    private Integer totalProduct = 0;
+
+    @Builder.Default
     @Column(columnDefinition = "INT DEFAULT 0")
     private Integer sold = 0;
 

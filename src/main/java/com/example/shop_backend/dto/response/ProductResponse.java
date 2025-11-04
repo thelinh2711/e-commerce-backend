@@ -1,6 +1,7 @@
 package com.example.shop_backend.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,18 +27,11 @@ public class ProductResponse {
     @JsonProperty("total_count")
     private Integer totalCount;
     
-    private List<String> labels;
+    @JsonProperty("total_product")
+    private Integer totalProduct;
     
-    @JsonProperty("is_wishlisted")
-    private Boolean isWishlisted;
-    
-    @JsonProperty("is_best_seller")
-    private Boolean isBestSeller;
-    
-    @JsonProperty("is_new_arrival")
-    private Boolean isNewArrival;
-    
-    private String url;
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
 
     @Data
     @NoArgsConstructor

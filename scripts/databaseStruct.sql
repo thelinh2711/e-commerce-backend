@@ -245,6 +245,7 @@ CREATE TABLE products (
     brand_id INT,
     sku VARCHAR(100) UNIQUE,
     stock INT DEFAULT 0,
+    total_product INT DEFAULT 0,
     sold INT DEFAULT 0,
     rating DECIMAL(3,2) DEFAULT 0,
     view INT DEFAULT 0,
