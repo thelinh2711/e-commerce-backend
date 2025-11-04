@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hiển thị sản phẩm từ API</title>
+    <style>
+        /* CSS đơn giản để ảnh trông đẹp hơn */
+        body {
+            font-family: Arial, sans-serif;
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+        .product-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            text-align: center;
+        }
+        #product-image {
+            max-width: 100%;
+            height: auto;
+            max-height: 400px;
+            border-radius: 4px;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+        }
+        #product-name {
+            font-size: 1.5em;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="product-card">
+        <h1>Chi tiết sản phẩm</h1>
+        
+        <h2 id="product-name">Đang tải...</h2>
+        
+        <img id="product-image" src="" alt="Ảnh sản phẩm">
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const imgElement = document.getElementById('product-image');
+            const nameElement = document.getElementById('product-name');
+            
+            // --- BẮT ĐẦU SỬA ĐỔI ---
+
+            // 1. Định nghĩa domain của server API
+            const apiBaseUrl = 'https://fnzv9bcp-8080.asse.devtunnels.ms';
+            
+            // 2. Tạo URL API đầy đủ
+            const apiUrl = `${apiBaseUrl}/api/products/1`;
+
+            // Bắt đầu gọi API
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Mạng hoặc Server có lỗi: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Dữ liệu API:', data);
+
+                    // 3. Kiểm tra dữ liệu trả về có đúng cấu trúc không
+                    if (data && data.result) {
+                        const result = data.result;
+                        let imageUrl = null;
+                        let productName = result.name;
+
+                        // 4. Cập nhật tên sản phẩm LÊN TRƯỚC
+                        nameElement.textContent = productName || 'Không tìm thấy tên';
+
+                        // 5. Xử lý logic lấy ảnh
+                        if (result.images && result.images.length > 0) {
+                            
+                            // 6. TẠO URL ẢNH ĐẦY ĐỦ
+                            // Nối domain của server với đường dẫn ảnh tương đối
+                            // Ví dụ: "https://...ms" + "/" + "public/product_image/nike_peg40_1.jpg"
+                            // (Chúng ta thêm 1 dấu "/" nếu đường dẫn không bắt đầu bằng "/")
+                            
+                            let imagePath = result.images[0];
+                            if (imagePath.startsWith('/')) {
+                                imageUrl = `${apiBaseUrl}${imagePath}`;
+                            } else {
+                                imageUrl = `${apiBaseUrl}/${imagePath}`;
+                            }
+                            
+                            console.log('Image URL đầy đủ:', imageUrl);
+                            
+                            // 7. Gán URL đầy đủ cho thẻ <img>
+                            imgElement.src = imageUrl;
+                            imgElement.alt = "Ảnh của " + (productName || 'sản phẩm');
+
+                        } else {
+                            // Chỉ chạy nếu mảng images thực sự rỗng
+                            nameElement.textContent = 'Sản phẩm này không có ảnh';
+                            console.warn('Mảng "images" bị rỗng.');
+                        }
+
+                    } else {
+                        // Báo lỗi nếu API trả về JSON không có 'data.result'
+                        nameElement.textContent = 'Lỗi cấu trúc dữ liệu API';
+                    }
+                })
+                .catch(error => {
+                    // Xử lý nếu có lỗi xảy ra trong quá trình fetch
+                    console.error('Lỗi khi lấy API:', error);
+                    nameElement.textContent = 'Không thể tải dữ liệu sản phẩm.';
+                    imgElement.alt = 'Lỗi tải ảnh';
+                });
+            
+            // --- KẾT THÚC SỬA ĐỔI ---
+        });
+    </script>
+
+</body>
+</html>

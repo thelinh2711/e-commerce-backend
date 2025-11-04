@@ -35,12 +35,17 @@ public class SecurityConfig {
                         // .requestMatchers("POST", "/api/products/**").permitAll()
                         // .requestMatchers("PUT", "/api/products/**").permitAll()
                         // .requestMatchers("DELETE", "/api/products/**").permitAll()
+
+                        // Cho phép tất cả các yêu cầu GET đến thư mục public (chứa ảnh)
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/public/**").permitAll()
+
+                        // Các thao tác cần ADMIN
                         .requestMatchers("POST", "/api/products/**").hasRole("ADMIN")
                         .requestMatchers("PUT", "/api/products/**").hasRole("ADMIN")
                         .requestMatchers("DELETE", "/api/products/**").hasRole("ADMIN")
                         // Các request khác cần có JWT
                         .anyRequest().authenticated()
-                )
+               
 
                         // ✅ Chỉ CUSTOMER mới được đổi mật khẩu và cập nhật thông tin cá nhân
                         .requestMatchers("/api/users/change-password", "/api/users/update-profile")

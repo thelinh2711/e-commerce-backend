@@ -1,8 +1,6 @@
 package com.example.shop_backend.service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -400,12 +398,21 @@ public class ProductService {
     private ProductResponse convertToProductResponse(Product product) {
         // Get product images
         List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(product.getId());
+        System.out.println("=== DEBUG convertToProductResponse ===");
+        System.out.println("Product ID: " + product.getId());
+        System.out.println("Product Images found: " + productImages.size());
+        productImages.forEach(img -> System.out.println("  - Image URL: " + img.getImageUrl()));
+        
         List<String> imageUrls = productImages.stream()
                 .map(ProductImage::getImageUrl)
                 .collect(Collectors.toList());
 
         // Get product variants with color and size
         List<ProductVariant> variants = productVariantRepository.findByProductIdWithColorAndSize(product.getId());
+        System.out.println("Product Variants found: " + variants.size());
+        variants.forEach(v -> System.out.println("  - Variant: color=" + (v.getColor() != null ? v.getColor().getName() : "null") + 
+                ", size=" + (v.getSize() != null ? v.getSize().getName() : "null") + ", stock=" + v.getStock()));
+        
         List<ProductResponse.VariantInfo> variantInfos = new ArrayList<>();
         int totalStock = 0;
 
@@ -428,9 +435,9 @@ public class ProductService {
 
         // Get product labels
         List<ProductLabel> productLabels = productLabelRepository.findByProductIdWithLabel(product.getId());
-        List<String> labels = productLabels.stream()
-                .map(pl -> pl.getLabel().getName())
-                .collect(Collectors.toList());
+        System.out.println("Product Labels found: " + productLabels.size());
+        productLabels.forEach(pl -> System.out.println("  - Label: " + (pl.getLabel() != null ? pl.getLabel().getName() : "null")));
+        System.out.println("=== END DEBUG ===");
 
         // Calculate price info
         BigDecimal currentPrice = product.getDiscountPrice() != null ? product.getDiscountPrice() : product.getPrice();
@@ -444,27 +451,16 @@ public class ProductService {
                 .currency("VND")
                 .build();
 
-        // Check if product is new arrival (created within last 30 days)
-        boolean isNewArrival = product.getCreatedAt() != null &&
-                ChronoUnit.DAYS.between(product.getCreatedAt(), LocalDateTime.now()) <= 30;
-
-        // Check if product is best seller (sold > 100 or high rating)
-        boolean isBestSeller = product.getSold() > 100 || 
-                (product.getRating() != null && product.getRating().compareTo(new BigDecimal("4.5")) >= 0);
-
         return ProductResponse.builder()
                 .id(product.getId().toString())
                 .name(product.getName())
-                .slug(product.getSlug())
                 .brand(product.getBrand() != null ? product.getBrand().getName() : "KHÁC")
                 .price(priceInfo)
                 .images(imageUrls)
                 .variants(variantInfos)
                 .totalCount(totalStock)
-                .labels(labels)
-                .isWishlisted(false) // TODO: Check if user has wishlisted this product
-                .isBestSeller(isBestSeller)
-                .isNewArrival(isNewArrival)
+                .sold(product.getSold())
+                .createdAt(product.getCreatedAt())
                 .url("/product/" + product.getSlug())
                 .build();
     }

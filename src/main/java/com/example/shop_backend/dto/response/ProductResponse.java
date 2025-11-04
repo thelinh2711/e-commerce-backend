@@ -1,6 +1,7 @@
 package com.example.shop_backend.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,7 +18,6 @@ import lombok.NoArgsConstructor;
 public class ProductResponse {
     private String id;
     private String name;
-    private String slug;
     private String brand;
     private PriceInfo price;
     private List<String> images;
@@ -26,16 +26,10 @@ public class ProductResponse {
     @JsonProperty("total_count")
     private Integer totalCount;
     
-    private List<String> labels;
+    private Integer sold;
     
-    @JsonProperty("is_wishlisted")
-    private Boolean isWishlisted;
-    
-    @JsonProperty("is_best_seller")
-    private Boolean isBestSeller;
-    
-    @JsonProperty("is_new_arrival")
-    private Boolean isNewArrival;
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
     
     private String url;
 

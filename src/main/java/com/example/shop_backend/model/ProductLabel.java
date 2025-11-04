@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "ProductLabels",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"productId", "labelId"}))
+    uniqueConstraints = @UniqueConstraint(columnNames = {"product_id", "label_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
