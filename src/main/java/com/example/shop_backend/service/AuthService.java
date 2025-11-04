@@ -123,12 +123,12 @@ public class AuthService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         // Kiểm tra mật khẩu
-        // if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-        //     throw new AppException(ErrorCode.INVALID_CREDENTIALS);
-        // }
-        if( !request.getPassword().equals(String.valueOf("admin"))) {
-                throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+             throw new AppException(ErrorCode.INVALID_CREDENTIALS);
         }
+//        if( !request.getPassword().equals(String.valueOf("admin"))) {
+//                throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+//        }
 
         // Sinh token JWT với role
         String accessToken = jwtUtils.generateAccessToken(user.getEmail(), user.getRole(), request.isRemember_me());

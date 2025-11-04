@@ -37,6 +37,8 @@ public enum ErrorCode {
     SIZE_NOT_FOUND(2007, "Kích thước không tồn tại", HttpStatus.NOT_FOUND),
     INVALID_PRODUCT_STATUS(2008, "Trạng thái sản phẩm không hợp lệ", HttpStatus.BAD_REQUEST),
 
+    ADDRESS_NOT_FOUND(2009, "Địa chỉ không tồn tại", HttpStatus.NOT_FOUND),
+
     ;
 
     ErrorCode(int code, String message, HttpStatus httpStatusCode) {

@@ -3,6 +3,8 @@ package com.example.shop_backend.security;
 import java.io.IOException;
 import java.util.Collections;
 
+import com.example.shop_backend.model.User;
+import com.example.shop_backend.repository.UserRepository;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,32 +24,36 @@ import lombok.RequiredArgsConstructor;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        
+
         try {
-            // Lấy JWT từ request header
             String jwt = getJwtFromRequest(request);
 
-            // Validate token
             if (StringUtils.hasText(jwt) && jwtUtils.validateToken(jwt)) {
-                // Lấy email và role từ token
                 String email = jwtUtils.getEmailFromToken(jwt);
                 String role = jwtUtils.getRoleFromToken(jwt);
 
-                // Tạo authentication object với role
+                // ✅ Lấy user từ DB
+                User user = userRepository.findByEmail(email)
+                        .orElse(null);
+                if (user == null) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                // ✅ Tạo authentication object với user thật
                 SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        email, 
-                        null, 
+                        user, // principal là User
+                        null,
                         Collections.singletonList(authority)
                 );
-                
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Set authentication vào SecurityContext
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
@@ -57,9 +63,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Lấy JWT token từ header Authorization
-     */
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
@@ -68,3 +71,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 }
+
