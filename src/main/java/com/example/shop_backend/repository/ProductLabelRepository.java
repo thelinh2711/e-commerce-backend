@@ -13,4 +13,6 @@ import com.example.shop_backend.model.ProductLabel;
 public interface ProductLabelRepository extends JpaRepository<ProductLabel, Integer> {
     @Query("SELECT pl FROM ProductLabel pl LEFT JOIN FETCH pl.label WHERE pl.product.id = :productId")
     List<ProductLabel> findByProductIdWithLabel(@Param("productId") Integer productId);
+    
+    List<ProductLabel> findByProductId(Integer productId);
 }

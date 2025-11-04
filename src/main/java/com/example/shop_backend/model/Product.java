@@ -48,18 +48,18 @@ public class Product {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2, name = "cost_price")
     private BigDecimal costPrice;
 
-    @Column(precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2, name = "discount_price")
     private BigDecimal discountPrice;
 
     @Builder.Default
-    @Column(columnDefinition = "INT DEFAULT 0")
+    @Column(name = "discount_percent", columnDefinition = "INT DEFAULT 0")
     private Integer discountPercent = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "brandId")
+    @JoinColumn(name = "brand_id")
     private Brand brand;
 
     @Column(unique = true, length = 100)
@@ -102,9 +102,10 @@ public class Product {
     private List<ProductLabel> productLabels = new ArrayList<>();
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

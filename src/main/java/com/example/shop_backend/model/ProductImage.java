@@ -30,23 +30,24 @@ public class ProductImage {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "productId", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "image_url")
     private String imageUrl;
 
+    @Column(name = "alt_text")
     private String altText;
 
     @Builder.Default
-    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Column(name = "is_thumbnail", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isThumbnail = false;
 
     @Builder.Default
-    @Column(columnDefinition = "INT DEFAULT 0")
+    @Column(name = "display_order", columnDefinition = "INT DEFAULT 0")
     private Integer displayOrder = 0;
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

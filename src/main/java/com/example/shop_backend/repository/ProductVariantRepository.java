@@ -16,4 +16,6 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
            "LEFT JOIN FETCH pv.size " +
            "WHERE pv.product.id = :productId")
     List<ProductVariant> findByProductIdWithColorAndSize(@Param("productId") Integer productId);
+    
+    List<ProductVariant> findByProductId(Integer productId);
 }
