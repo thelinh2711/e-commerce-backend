@@ -38,11 +38,11 @@ public class SecurityConfig {
                         .requestMatchers("PUT", "/api/products/**").hasRole("ADMIN")
                         .requestMatchers("DELETE", "/api/products/**").hasRole("ADMIN")
 
-                        // CUSTOMER được đổi mật khẩu, cập nhật profile
-                        .requestMatchers("/api/users/change-password", "/api/users/update-profile").hasAuthority("CUSTOMER")
+                        // ✅ CUSTOMER được đổi mật khẩu, cập nhật profile
+                        .requestMatchers("/api/users/change-password", "/api/users/update-profile").hasRole("CUSTOMER")
 
-                        // ADMIN truy cập admin area
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        // ✅ ADMIN truy cập admin area
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // Các request còn lại cần đăng nhập
                         .anyRequest().authenticated()
