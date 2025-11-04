@@ -19,6 +19,14 @@ public enum ErrorCode {
     USER_NOT_FOUND(1006, "Tài khoản không tồn tại", HttpStatus.NOT_FOUND),
     INVALID_CREDENTIALS(1007, "Email hoặc mật khẩu không đúng", HttpStatus.UNAUTHORIZED),
 
+    INVALID_OTP(1008, "OTP không hợp lệ hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
+    INVALID_RESET_TOKEN(1009, "Reset token không hợp lệ hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
+    OLD_PASSWORD_INCORRECT(1010, "Mật khẩu cũ không chính xác", HttpStatus.BAD_REQUEST),
+
+    // Bổ sung cho phân quyền
+    UNAUTHORIZED(1011, "Bạn chưa đăng nhập hoặc token không hợp lệ", HttpStatus.UNAUTHORIZED),
+    FORBIDDEN(1012, "Bạn không có quyền truy cập chức năng này", HttpStatus.FORBIDDEN),
+
     // ✅ Lỗi sản phẩm
     PRODUCT_NOT_FOUND(2001, "Sản phẩm không tồn tại", HttpStatus.NOT_FOUND),
     SLUG_EXISTED(2002, "Slug đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),

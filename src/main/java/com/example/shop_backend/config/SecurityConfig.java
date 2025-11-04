@@ -12,10 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.example.shop_backend.security.JwtAuthenticationFilter;
-
-import lombok.RequiredArgsConstructor;
-
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
@@ -26,38 +22,40 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // ✅ Tắt CSRF vì dùng JWT
                 .csrf(csrf -> csrf.disable())
+
+                // ✅ Cấu hình quyền truy cập
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ Các API public
+                        // API public
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Cho phép truy cập GET public cho products, nhưng POST/PUT/DELETE cần ADMIN
+
+                        // Cho phép GET sản phẩm công khai
                         .requestMatchers("GET", "/api/products/**").permitAll()
-                        // .requestMatchers("POST", "/api/products/**").permitAll()
-                        // .requestMatchers("PUT", "/api/products/**").permitAll()
-                        // .requestMatchers("DELETE", "/api/products/**").permitAll()
+
+                        // Các thao tác cần ADMIN
                         .requestMatchers("POST", "/api/products/**").hasRole("ADMIN")
                         .requestMatchers("PUT", "/api/products/**").hasRole("ADMIN")
                         .requestMatchers("DELETE", "/api/products/**").hasRole("ADMIN")
-                        // Các request khác cần có JWT
-                        .anyRequest().authenticated()
-                )
 
-                        // ✅ Chỉ CUSTOMER mới được đổi mật khẩu và cập nhật thông tin cá nhân
-                        .requestMatchers("/api/users/change-password", "/api/users/update-profile")
-                        .hasAuthority("CUSTOMER")
+                        // CUSTOMER được đổi mật khẩu, cập nhật profile
+                        .requestMatchers("/api/users/change-password", "/api/users/update-profile").hasAuthority("CUSTOMER")
 
-                        // ✅ Chỉ ADMIN mới được truy cập khu vực quản trị
+                        // ADMIN truy cập admin area
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
-                        // ✅ Các request còn lại yêu cầu đăng nhập
+                        // Các request còn lại cần đăng nhập
                         .anyRequest().authenticated()
                 )
+
                 // ✅ Stateless session vì dùng JWT
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // ✅ Tắt form login + logout mặc định
                 .formLogin(form -> form.disable())
                 .logout(logout -> logout.disable())
 
-                // ✅ Thêm JWT filter vào trước UsernamePasswordAuthenticationFilter
+                // ✅ Thêm JWT filter
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
