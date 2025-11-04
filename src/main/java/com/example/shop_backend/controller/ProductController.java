@@ -23,7 +23,7 @@ import com.example.shop_backend.service.ProductService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-// mvnw spring-boot:run
+// .\mvnw spring-boot:run
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
