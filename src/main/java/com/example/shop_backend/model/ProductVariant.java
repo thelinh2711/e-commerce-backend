@@ -31,20 +31,21 @@ public class ProductVariant {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "productId", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "colorId")
+    @JoinColumn(name = "color_id")
     private Color color;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sizeId")
+    @JoinColumn(name = "size_id")
     private Size size;
 
     @Column(unique = true, length = 100)
     private String sku;
 
+    @Builder.Default
     @Column(columnDefinition = "INT DEFAULT 0")
     private Integer stock = 0;
 
@@ -52,6 +53,6 @@ public class ProductVariant {
     private BigDecimal price;
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

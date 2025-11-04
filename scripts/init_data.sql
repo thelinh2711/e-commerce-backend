@@ -38,7 +38,7 @@ INSERT INTO Categories (name, description, slug) VALUES
 ('Dụng Cụ Thể Thao', 'Bóng, thảm tập yoga, dây nhảy.', 'dung-cu-the-thao');
 
 -- Colors (10)
-INSERT INTO Colors (name, hexCode) VALUES
+INSERT INTO Colors (name, hex_code) VALUES
 ('Đen', '#000000'),
 ('Trắng', '#FFFFFF'),
 ('Đỏ', '#FF0000'),
@@ -78,7 +78,7 @@ INSERT INTO Labels (name, color) VALUES
 
 -- Users (10)
 -- Mật khẩu nên được băm (hashed) ở phía ứng dụng. Ở đây dùng 'hashed_password_placeholder'
-INSERT INTO Users (fullName, email, phone, password, role) VALUES
+INSERT INTO Users (full_name, email, phone, password, role) VALUES
 ('Nguyễn Văn Quản Trị', 'admin@shop.com', '0900000001', '$2a$10$E.M9j8cN0.A.i.3.A.B.C.D.E.F.G.H.I.J.K.L.M', 'ADMIN'),
 ('Trần Văn An', 'an.tran@gmail.com', '0912345678', '$2a$10$E.M9j8cN0.A.i.3.A.B.C.D.E.F.G.H.I.J.K.L.M', 'CUSTOMER'),
 ('Lê Thị Bình', 'binh.le@yahoo.com', '0987654321', '$2a$10$E.M9j8cN0.A.i.3.A.B.C.D.E.F.G.H.I.J.K.L.M', 'CUSTOMER'),
@@ -91,7 +91,7 @@ INSERT INTO Users (fullName, email, phone, password, role) VALUES
 ('Lý Văn Kiên', 'kien.ly@gmail.com', '0977889900', '$2a$10$E.M9j8cN0.A.i.3.A.B.C.D.E.F.G.H.I.J.K.L.M', 'CUSTOMER');
 
 -- Vouchers (10)
-INSERT INTO Vouchers (code, description, discountType, discountValue, maxUsageCount, startDate, endDate) VALUES
+INSERT INTO Vouchers (code, description, discount_type, discount_value, max_usage_count, start_date, end_date) VALUES
 ('SALE10', 'Giảm 10% tổng đơn hàng', 'PERCENTAGE', 10, 1000, '2025-10-01 00:00:00', '2025-10-31 23:59:59'),
 ('FREESHIP', 'Miễn phí vận chuyển', 'FIXED_AMOUNT', 30000, 500, '2025-10-01 00:00:00', '2025-10-31 23:59:59'),
 ('NEWUSER20', 'Giảm 20% cho người dùng mới', 'PERCENTAGE', 20, 200, '2025-01-01 00:00:00', '2025-12-31 23:59:59'),
@@ -104,7 +104,7 @@ INSERT INTO Vouchers (code, description, discountType, discountValue, maxUsageCo
 ('RUNFAST', 'Giảm 10% cho giày chạy bộ', 'PERCENTAGE', 10, 50, '2025-10-01 00:00:00', '2025-10-31 23:59:59');
 
 -- FlashSales (10)
-INSERT INTO FlashSales (name, description, startDate, endDate) VALUES
+INSERT INTO FlashSales (name, description, start_date, end_date) VALUES
 ('Black Friday Sớm', 'Giảm giá sốc các mặt hàng hot', '2025-11-20 00:00:00', '2025-11-28 23:59:59'),
 ('Sale 11.11', 'Siêu sale 11.11', '2025-11-11 00:00:00', '2025-11-11 23:59:59'),
 ('Giáng Sinh An Lành', 'Mua sắm quà giáng sinh', '2025-12-15 00:00:00', '2025-12-25 23:59:59'),
@@ -117,7 +117,7 @@ INSERT INTO FlashSales (name, description, startDate, endDate) VALUES
 ('Outdoor Essentials', 'Giảm giá đồ dã ngoại', '2025-10-10 00:00:00', '2025-10-20 23:59:59');
 
 -- News (10)
-INSERT INTO News (title, slug, content, excerpt, author, status, publishedAt) VALUES
+INSERT INTO News (title, slug, content, excerpt, author, status, published_at) VALUES
 ('Cách chọn giày chạy bộ cho người mới bắt đầu', 'cach-chon-giay-chay-bo', 'Nội dung chi tiết về cách chọn giày...', 'Việc chọn đúng giày chạy bộ là rất quan trọng...', 'Admin', 'PUBLISHED', '2025-10-01 10:00:00'),
 ('Top 5 bài tập tăng cơ bắp hiệu quả tại nhà', 'top-5-bai-tap-tang-co-bap', 'Nội dung chi tiết về 5 bài tập...', 'Không cần đến phòng gym, bạn vẫn có thể...', 'Admin', 'PUBLISHED', '2025-10-05 11:00:00'),
 ('Công nghệ Dri-FIT của Nike hoạt động như thế nào?', 'cong-nghe-dri-fit-nike', 'Nội dung chi tiết về Dri-FIT...', 'Dri-FIT là công nghệ vải giúp thấm hút mồ hôi...', 'Biên Tập Viên', 'PUBLISHED', '2025-10-10 14:30:00'),
@@ -130,7 +130,7 @@ INSERT INTO News (title, slug, content, excerpt, author, status, publishedAt) VA
 ('Các loại balo The North Face phổ biến', 'cac-loai-balo-the-north-face', 'Nội dung...', 'Từ đi học đến đi phượt...', 'Admin', 'PUBLISHED', '2025-10-18 15:00:00');
 
 -- Banners (10)
-INSERT INTO Banners (title, image, link, position, isActive, startDate, endDate) VALUES
+INSERT INTO Banners (title, image, link, position, is_active, start_date, end_date) VALUES
 ('Bộ sưu tập Nike Mới', 'banner_nike_new.jpg', '/categories/giay-chay-bo?brand=nike', 'TOP', TRUE, '2025-10-15 00:00:00', '2025-10-31 23:59:59'),
 ('Adidas Sale 30%', 'banner_adidas_sale.jpg', '/categories/giay-da-banh?brand=adidas', 'TOP', TRUE, '2025-10-20 00:00:00', '2025-10-30 23:59:59'),
 ('Under Armour Training', 'banner_ua_gym.jpg', '/categories/do-tap-gym', 'MIDDLE', TRUE, '2025-10-01 00:00:00', '2025-10-31 23:59:59'),
@@ -149,7 +149,7 @@ BẢNG TIER 2 (PHỤ THUỘC TIER 1)
 */
 
 -- UserProviders (10)
-INSERT INTO UserProviders (userId, providerName, providerUserId) VALUES
+INSERT INTO UserProviders (user_id, provider_name, provider_user_id) VALUES
 (2, 'google', 'google_user_1001'),
 (3, 'facebook', 'fb_user_2002'),
 (4, 'google', 'google_user_1003'),
@@ -162,7 +162,7 @@ INSERT INTO UserProviders (userId, providerName, providerUserId) VALUES
 (1, 'google', 'google_user_admin');
 
 -- Addresses (10)
-INSERT INTO Addresses (userId, street, ward, district, city, province, country, isDefault) VALUES
+INSERT INTO Addresses (user_id, street, ward, district, city, province, country, is_default) VALUES
 (1, '123 Đường Quản Trị', 'Phường Bến Nghé', 'Quận 1', 'Hồ Chí Minh', 'Hồ Chí Minh', 'Vietnam', TRUE),
 (2, '456 Đường Lê Lợi', 'Phường Hàng Bạc', 'Quận Hoàn Kiếm', 'Hà Nội', 'Hà Nội', 'Vietnam', TRUE),
 (3, '789 Đường Võ Văn Tần', 'Phường 6', 'Quận 3', 'Hồ Chí Minh', 'Hồ Chí Minh', 'Vietnam', TRUE),
@@ -175,15 +175,15 @@ INSERT INTO Addresses (userId, street, ward, district, city, province, country, 
 (10, '707 Đường 30/4', 'Phường Hưng Lợi', 'Quận Ninh Kiều', 'Cần Thơ', 'Cần Thơ', 'Vietnam', TRUE);
 
 -- Carts (10)
-INSERT INTO Carts (userId) VALUES
+INSERT INTO Carts (user_id) VALUES
 (1), (2), (3), (4), (5), (6), (7), (8), (9), (10);
 
 -- Wishlists (10)
-INSERT INTO Wishlists (userId) VALUES
+INSERT INTO Wishlists (user_id) VALUES
 (1), (2), (3), (4), (5), (6), (7), (8), (9), (10);
 
 -- Orders (10)
-INSERT INTO Orders (userId, orderNumber, totalAmount, finalAmount, status, paymentStatus, deliveryAddress) VALUES
+INSERT INTO Orders (user_id, order_number, total_amount, final_amount, status, payment_status, delivery_address) VALUES
 (2, 'DH000001', 2500000, 2500000, 'DELIVERED', 'PAID', '456 Đường Lê Lợi, Hàng Bạc, Hoàn Kiếm, Hà Nội'),
 (3, 'DH000002', 1200000, 1170000, 'DELIVERED', 'PAID', '789 Đường Võ Văn Tần, P6, Q3, TPHCM'),
 (4, 'DH000003', 850000, 850000, 'SHIPPED', 'PAID', '101 Đường Nguyễn Huệ, Hải Châu 1, Hải Châu, Đà Nẵng'),
@@ -196,7 +196,7 @@ INSERT INTO Orders (userId, orderNumber, totalAmount, finalAmount, status, payme
 (10, 'DH000010', 980000, 980000, 'PENDING', 'UNPAID', '707 Đường 30/4, Hưng Lợi, Ninh Kiều, Cần Thơ');
 
 -- Conversations (10)
-INSERT INTO Conversations (userId, subject, status) VALUES
+INSERT INTO Conversations (user_id, subject, status) VALUES
 (2, 'Hỏi về tình trạng đơn hàng DH000001', 'CLOSED'),
 (3, 'Tư vấn chọn size giày', 'OPEN'),
 (4, 'Khiếu nại sản phẩm bị lỗi', 'IN_PROGRESS'),
@@ -214,7 +214,7 @@ PRODUCTS (100 SẢN PHẨM)
 Tạo 10 sản phẩm cho mỗi thương hiệu (10 thương hiệu)
 =====================================================
 */
-INSERT INTO Products (name, description, price, brandId, sku, stock, slug) VALUES
+INSERT INTO Products (name, description, price, brand_id, sku, stock, slug) VALUES
 -- Nike (1-10)
 ('Nike Air Zoom Pegasus 40', 'Giày chạy bộ huyền thoại, êm ái và ổn định.', 3200000, 1, 'NIKE-PEG40', 100, 'nike-air-zoom-pegasus-40'),
 ('Nike Mercurial Superfly 9', 'Giày đá banh tốc độ, thiết kế cho sân cỏ tự nhiên.', 4500000, 1, 'NIKE-MERC9', 50, 'nike-mercurial-superfly-9'),
@@ -347,7 +347,7 @@ BẢNG TIER 3 (PHỤ THUỘC SẢN PHẨM, USER...)
 -- 10 danh mục (1-10) là Giày chạy, Giày đá banh, Áo thun...
 -- -> Sản phẩm 1, 11, 21, 31, 41, 51, 61, 71, 81, 91 là "Giày Chạy Bộ" (hoặc tương tự)
 -- -> Sản phẩm 2, 12, 22, 32, 42, 52, 62, 72, 82, 92 là "Giày Đá Banh" (hoặc tương tự)
-INSERT INTO ProductCategories (productId, categoryId) VALUES
+INSERT INTO ProductCategories (product_id, category_id) VALUES
 (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7), (8, 8), (9, 9), (10, 10),
 (11, 1), (12, 2), (13, 3), (14, 4), (15, 5), (16, 6), (17, 7), (18, 8), (19, 9), (20, 10),
 (21, 1), (22, 2), (23, 3), (24, 4), (25, 5), (26, 6), (27, 7), (28, 8), (29, 9), (30, 10),
@@ -360,14 +360,14 @@ INSERT INTO ProductCategories (productId, categoryId) VALUES
 (91, 1), (92, 2), (93, 3), (94, 4), (95, 5), (96, 6), (97, 7), (98, 8), (99, 9), (100, 10);
 
 -- ProductLabels (Gán nhãn cho 20 sản phẩm đầu tiên)
-INSERT INTO ProductLabels (productId, labelId) VALUES
+INSERT INTO ProductLabels (product_id, label_id) VALUES
 (1, 1), (1, 2), (1, 8), (11, 1), (11, 2), (21, 1), (31, 8), (41, 2), (51, 1), (61, 2), (71, 7),
 (2, 1), (2, 3), (12, 1), (22, 1), (32, 1), (92, 3), (10, 2), (20, 2), (30, 2), (40, 2), (50, 2), (60, 2);
 
 -- ProductVariants (Tạo biến thể cho 10 sản phẩm đầu: 5 áo/quần, 5 giày)
 -- Áo/Quần (ID 3, 4, 5, 6, 7): Size S, M, L (ID 1, 2, 3) + Màu Đen, Trắng (ID 1, 2)
 -- Giày (ID 1, 2): Size 40, 41, 42 (ID 7, 8, 9) + Màu Đen, Xám (ID 1, 5)
-INSERT INTO ProductVariants (productId, colorId, sizeId, sku, stock, price) VALUES
+INSERT INTO ProductVariants (product_id, color_id, size_id, sku, stock, price) VALUES
 -- SP 1 (Giày Nike Peg40): Đen(1)+40(7), Đen(1)+41(8), Đen(1)+42(9), Xám(5)+40(7), Xám(5)+41(8), Xám(5)+42(9)
 (1, 1, 7, 'NIKE-PEG40-BLK-40', 20, 3200000), (1, 1, 8, 'NIKE-PEG40-BLK-41', 20, 3200000), (1, 1, 9, 'NIKE-PEG40-BLK-42', 20, 3200000),
 (1, 5, 7, 'NIKE-PEG40-GRY-40', 15, 3200000), (1, 5, 8, 'NIKE-PEG40-GRY-41', 15, 3200000), (1, 5, 9, 'NIKE-PEG40-GRY-42', 15, 3200000),
@@ -397,7 +397,7 @@ INSERT INTO ProductVariants (productId, colorId, sizeId, sku, stock, price) VALU
 
 
 -- ProductImages (Thêm 2 ảnh cho 10 sản phẩm đầu)
-INSERT INTO ProductImages (productId, imageUrl, altText, isThumbnail) VALUES
+INSERT INTO ProductImages (product_id, image_url, alt_text, is_thumbnail) VALUES
 (1, 'nike_peg40_1.jpg', 'Nike Pegasus 40 - Ảnh 1', TRUE), (1, 'nike_peg40_2.jpg', 'Nike Pegasus 40 - Ảnh 2', FALSE),
 (2, 'nike_merc9_1.jpg', 'Nike Mercurial 9 - Ảnh 1', TRUE), (2, 'nike_merc9_2.jpg', 'Nike Mercurial 9 - Ảnh 2', FALSE),
 (3, 'nike_miller_1.jpg', 'Áo Nike Miller - Ảnh 1', TRUE), (3, 'nike_miller_2.jpg', 'Áo Nike Miller - Ảnh 2', FALSE),
@@ -410,7 +410,7 @@ INSERT INTO ProductImages (productId, imageUrl, altText, isThumbnail) VALUES
 (31, 'ua_hovr_1.jpg', 'UA HOVR Phantom 3 - Ảnh 1', TRUE), (31, 'ua_hovr_2.jpg', 'UA HOVR Phantom 3 - Ảnh 2', FALSE);
 
 -- FlashSaleProducts (Thêm 10 sản phẩm vào Flash Sale 7: "Running Day")
-INSERT INTO FlashSaleProducts (flashSaleId, productId, flashSalePrice, quantity) VALUES
+INSERT INTO FlashSaleProducts (flash_sale_id, product_id, flash_sale_price, quantity) VALUES
 (7, 1, 2900000, 20),
 (7, 11, 4200000, 20),
 (7, 21, 2500000, 15),
@@ -423,7 +423,7 @@ INSERT INTO FlashSaleProducts (flashSaleId, productId, flashSalePrice, quantity)
 (7, 44, 1000000, 30);
 
 -- Reviews (10 đánh giá từ 10 user cho 10 sản phẩm)
-INSERT INTO Reviews (userId, productId, rating, title, content, status) VALUES
+INSERT INTO Reviews (user_id, product_id, rating, title, content, status) VALUES
 (2, 1, 5, 'Tuyệt vời!', 'Giày êm, chạy rất thích. Giao hàng nhanh.', 'APPROVED'),
 (3, 11, 5, 'Rất hài lòng', 'Đúng là Ultraboost, nhẹ và êm, đáng tiền.', 'APPROVED'),
 (4, 21, 4, 'Khá tốt', 'Giày đẹp, đệm êm, nhưng form hơi nhỏ.', 'APPROVED'),
@@ -436,52 +436,52 @@ INSERT INTO Reviews (userId, productId, rating, title, content, status) VALUES
 (2, 4, 3, 'Bình thường', 'Quần cũng được, túi hơi bé.', 'APPROVED');
 
 -- UserVouchers (Gán voucher cho user)
-INSERT INTO UserVouchers (userId, voucherId) VALUES
+INSERT INTO UserVouchers (user_id, voucher_id) VALUES
 (2, 3), (3, 3), (4, 1), (5, 2), (6, 1), (7, 4), (8, 2), (9, 5), (10, 9), (1, 1);
 
 -- OrderItems (Chi tiết cho 10 đơn hàng)
 -- Order 1 (User 2): Mua SP 1 (Giày Nike)
-INSERT INTO OrderItems (orderId, productId, quantity, unitPrice, totalPrice) VALUES
+INSERT INTO OrderItems (order_id, product_id, quantity, unit_price, total_price) VALUES
 (1, 1, 1, 2500000, 2500000);
 -- Order 2 (User 3): Mua SP 13 (Áo Adidas), SP 14 (Quần Adidas)
-INSERT INTO OrderItems (orderId, productId, quantity, unitPrice, totalPrice) VALUES
+INSERT INTO OrderItems (order_id, product_id, quantity, unit_price, total_price) VALUES
 (2, 13, 1, 950000, 950000),
 (2, 14, 1, 750000, 750000);
 -- Order 3 (User 4): Mua SP 3 (Áo Nike)
-INSERT INTO OrderItems (orderId, productId, quantity, unitPrice, totalPrice) VALUES
+INSERT INTO OrderItems (order_id, product_id, quantity, unit_price, total_price) VALUES
 (3, 3, 1, 850000, 850000);
 -- Order 4 (User 5): Mua SP 31 (Giày UA)
-INSERT INTO OrderItems (orderId, productId, quantity, unitPrice, totalPrice) VALUES
+INSERT INTO OrderItems (order_id, product_id, quantity, unit_price, total_price) VALUES
 (4, 31, 1, 3200000, 3200000);
 -- Order 5 (User 2): Mua SP 8 (Tất Nike)
-INSERT INTO OrderItems (orderId, productId, quantity, unitPrice, totalPrice) VALUES
+INSERT INTO OrderItems (order_id, product_id, quantity, unit_price, total_price) VALUES
 (5, 8, 1, 450000, 450000);
 -- Order 6 (User 6): Mua SP 51 (Giày NB)
-INSERT INTO OrderItems (orderId, productId, quantity, unitPrice, totalPrice) VALUES
+INSERT INTO OrderItems (order_id, product_id, quantity, unit_price, total_price) VALUES
 (6, 51, 1, 1800000, 1800000);
 -- Order 7 (User 7): Mua SP 23 (Áo Puma)
-INSERT INTO OrderItems (orderId, productId, quantity, unitPrice, totalPrice) VALUES
+INSERT INTO OrderItems (order_id, product_id, quantity, unit_price, total_price) VALUES
 (7, 23, 1, 750000, 750000);
 -- Order 8 (User 8): Mua SP 61 (Giày Reebok)
-INSERT INTO OrderItems (orderId, productId, quantity, unitPrice, totalPrice) VALUES
+INSERT INTO OrderItems (order_id, product_id, quantity, unit_price, total_price) VALUES
 (8, 61, 1, 2100000, 2100000);
 -- Order 9 (User 9): Mua SP 40 (Găng tay UA)
-INSERT INTO OrderItems (orderId, productId, quantity, unitPrice, totalPrice) VALUES
+INSERT INTO OrderItems (order_id, product_id, quantity, unit_price, total_price) VALUES
 (9, 40, 1, 550000, 550000);
 -- Order 10 (User 10): Mua SP 93 (Áo Domyos), SP 95 (Quần Domyos)
-INSERT INTO OrderItems (orderId, productId, quantity, unitPrice, totalPrice) VALUES
+INSERT INTO OrderItems (order_id, product_id, quantity, unit_price, total_price) VALUES
 (10, 93, 2, 150000, 300000),
 (10, 95, 2, 250000, 500000),
 (10, 100, 1, 180000, 180000);
 
 -- OrderVouchers (Áp dụng voucher cho một số đơn hàng)
-INSERT INTO OrderVouchers (orderId, voucherId, discountAmount) VALUES
+INSERT INTO OrderVouchers (order_id, voucher_id, discount_amount) VALUES
 (2, 2, 30000), -- Order 2 dùng FREESHIP
 (5, 1, 45000), -- Order 5 dùng SALE10 (10% của 450k)
 (9, 4, 50000); -- Order 9 dùng GIAM50K
 
 -- Payments (Thanh toán cho các đơn hàng đã 'PAID')
-INSERT INTO Payments (orderId, amount, paymentMethod, transactionId, status) VALUES
+INSERT INTO Payments (order_id, amount, payment_method, transaction_id, status) VALUES
 (1, 2500000, 'CREDIT_CARD', 'VNPAY_001', 'SUCCESS'),
 (2, 1170000, 'COD', 'COD_002', 'SUCCESS'),
 (3, 850000, 'PAYPAL', 'PAYPAL_003', 'SUCCESS'),
@@ -495,7 +495,7 @@ INSERT INTO Payments (orderId, amount, paymentMethod, transactionId, status) VAL
 (10, 980000, 'BANK_TRANSFER', 'BANK_010', 'PENDING');
 
 -- Messages (10 tin nhắn trong cuộc hội thoại 1 và 3)
-INSERT INTO Messages (content, senderUsername, senderRole, senderFullName, receiverUsername, roomId) VALUES
+INSERT INTO Messages (content, sender_username, sender_role, sender_full_name, receiver_username, room_id) VALUES
 ('Chào shop, đơn hàng DH000001 của tôi đã giao chưa?', 'an.tran@gmail.com', 'CLIENT', 'Trần Văn An', 'admin@shop.com', 'CONV_1'),
 ('Chào bạn, để mình kiểm tra nhé.', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'an.tran@gmail.com', 'CONV_1'),
 ('Đơn hàng DH000001 đã được giao thành công ngày hôm qua ạ.', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'an.tran@gmail.com', 'CONV_1'),
@@ -516,15 +516,15 @@ BẢNG TIER 4 (PHỤ THUỘC TIER 3)
 
 -- ProductVariantImages (Ảnh cho các biến thể - VD: ảnh giày màu đen, màu trắng)
 -- Lấy 10 ID biến thể đầu tiên
-INSERT INTO ProductVariantImages (productVariantId, imageUrl) VALUES
+INSERT INTO ProductVariantImages (product_variant_id, image_url) VALUES
 (1, 'nike_peg40_blk.jpg'), (2, 'nike_peg40_blk.jpg'), (3, 'nike_peg40_blk.jpg'),
 (4, 'nike_peg40_gry.jpg'), (5, 'nike_peg40_gry.jpg'), (6, 'nike_peg40_gry.jpg'),
 (7, 'nike_merc9_red.jpg'), (8, 'nike_merc9_red.jpg'),
 (10, 'nike_merc9_yel.jpg'), (11, 'nike_merc9_yel.jpg');
 
 -- CartItems (Thêm sản phẩm vào giỏ hàng cho 5 user đầu)
--- (cartId, productId, productVariantId, quantity, unitPrice, totalPrice)
-INSERT INTO CartItems (cartId, productId, productVariantId, quantity, unitPrice, totalPrice) VALUES
+-- (cart_id, product_id, product_variant_id, quantity, unit_price, total_price)
+INSERT INTO CartItems (cart_id, product_id, product_variant_id, quantity, unit_price, total_price) VALUES
 (2, 1, 1, 1, 3200000, 3200000), -- User 2, SP 1 (variant 1: Đen, 40)
 (3, 11, 25, 1, 4800000, 4800000), -- User 3, SP 11 (variant 25: Trắng, 40)
 (3, 13, 31, 2, 950000, 1900000), -- User 3, SP 13 (variant 31: Đen, S)
@@ -537,7 +537,7 @@ INSERT INTO CartItems (cartId, productId, productVariantId, quantity, unitPrice,
 (10, 100, NULL, 1, 500000, 500000);
 
 -- WishlistItems (Thêm sản phẩm vào wishlist cho 5 user)
-INSERT INTO WishlistItems (wishlistId, productId, productVariantId) VALUES
+INSERT INTO WishlistItems (wishlist_id, product_id, product_variant_id) VALUES
 (2, 11, 26), -- User 2, SP 11 (variant 26: Trắng, 41)
 (3, 72, NULL), -- User 3, SP 72 (Áo khoác TNF)
 (4, 76, NULL), -- User 4, SP 76 (Áo lông vũ TNF)
@@ -550,7 +550,7 @@ INSERT INTO WishlistItems (wishlistId, productId, productVariantId) VALUES
 (1, 50, NULL);
 
 -- MessageAttachments (Đính kèm cho tin nhắn 9)
-INSERT INTO MessageAttachments (messageId, fileUrl, fileName, fileSize, fileType) VALUES
+INSERT INTO MessageAttachments (message_id, file_url, file_name, file_size, file_type) VALUES
 (9, 'uploads/attachments/loi_keo_giay.jpg', 'loi_keo_giay.jpg', 102400, 'image/jpeg'),
 (1, 'uploads/attachments/screenshot.png', 'screenshot.png', 204800, 'image/png'),
 (2, 'uploads/attachments/file.pdf', 'file.pdf', 512000, 'application/pdf'),

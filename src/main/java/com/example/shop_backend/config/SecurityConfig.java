@@ -12,9 +12,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.example.shop_backend.security.JwtAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
+
 @Configuration
+@EnableMethodSecurity
 @RequiredArgsConstructor
-@EnableMethodSecurity  // ✅ Cho phép dùng @PreAuthorize nếu cần sau này
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -26,6 +30,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // ✅ Các API public
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Cho phép truy cập GET public cho products, nhưng POST/PUT/DELETE cần ADMIN
+                        .requestMatchers("GET", "/api/products/**").permitAll()
+                        // .requestMatchers("POST", "/api/products/**").permitAll()
+                        // .requestMatchers("PUT", "/api/products/**").permitAll()
+                        // .requestMatchers("DELETE", "/api/products/**").permitAll()
+                        .requestMatchers("POST", "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers("PUT", "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers("DELETE", "/api/products/**").hasRole("ADMIN")
+                        // Các request khác cần có JWT
+                        .anyRequest().authenticated()
+                )
 
                         // ✅ Chỉ CUSTOMER mới được đổi mật khẩu và cập nhật thông tin cá nhân
                         .requestMatchers("/api/users/change-password", "/api/users/update-profile")
@@ -41,7 +56,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(form -> form.disable())
                 .logout(logout -> logout.disable())
-                // ✅ Thêm JWT filter
+
+                // ✅ Thêm JWT filter vào trước UsernamePasswordAuthenticationFilter
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

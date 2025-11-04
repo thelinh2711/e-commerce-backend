@@ -1,0 +1,98 @@
+package com.example.shop_backend.dto.request;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CreateProductRequest {
+    
+    @NotBlank(message = "Tên sản phẩm không được để trống")
+    private String name;
+    
+    private String description;
+    
+    @NotNull(message = "Giá sản phẩm không được để trống")
+    @Min(value = 0, message = "Giá sản phẩm phải lớn hơn hoặc bằng 0")
+    private BigDecimal price;
+    
+    private BigDecimal discountPrice;
+    
+    private Integer discountPercent;
+    
+    @NotNull(message = "Brand ID không được để trống")
+    private Integer brandId;
+    
+    @NotBlank(message = "SKU không được để trống")
+    private String sku;
+    
+    @NotNull(message = "Stock không được để trống")
+    @Min(value = 0, message = "Stock phải lớn hơn hoặc bằng 0")
+    private Integer stock;
+    
+    @NotBlank(message = "Slug không được để trống")
+    private String slug;
+    
+    private String status; // ACTIVE, INACTIVE, OUT_OF_STOCK, DISCONTINUED
+    
+    // Danh sách category IDs
+    private List<Integer> categoryIds;
+    
+    // Danh sách label IDs
+    private List<Integer> labelIds;
+    
+    // Danh sách ảnh sản phẩm
+    private List<ProductImageRequest> images;
+    
+    // Danh sách biến thể
+    private List<ProductVariantRequest> variants;
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ProductImageRequest {
+        @NotBlank(message = "Image URL không được để trống")
+        private String imageUrl;
+        
+        private String altText;
+        
+        @Builder.Default
+        private Boolean isThumbnail = false;
+        
+        @Builder.Default
+        private Integer displayOrder = 0;
+    }
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ProductVariantRequest {
+        private Integer colorId;
+        
+        private Integer sizeId;
+        
+        @NotBlank(message = "SKU biến thể không được để trống")
+        private String sku;
+        
+        @NotNull(message = "Stock biến thể không được để trống")
+        @Min(value = 0, message = "Stock biến thể phải lớn hơn hoặc bằng 0")
+        private Integer stock;
+        
+        private BigDecimal price; // Nếu null thì lấy giá của sản phẩm chính
+        
+        // Ảnh riêng của biến thể
+        private List<String> images;
+    }
+}
