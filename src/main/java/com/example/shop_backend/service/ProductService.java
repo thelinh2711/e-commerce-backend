@@ -156,6 +156,8 @@ public class ProductService {
 
         // Add variants
         if (request.getVariants() != null && !request.getVariants().isEmpty()) {
+            int totalVariantStock = 0;
+            
             for (CreateProductRequest.ProductVariantRequest variantReq : request.getVariants()) {
                 Color color = null;
                 Size size = null;
@@ -182,6 +184,7 @@ public class ProductService {
                         .build();
 
                 productVariant = productVariantRepository.save(productVariant);
+                totalVariantStock += variantReq.getStock();
 
                 // Add variant images
                 if (variantReq.getImages() != null && !variantReq.getImages().isEmpty()) {
@@ -195,6 +198,14 @@ public class ProductService {
                     }
                 }
             }
+            
+            // Set total_product = total stock from variants (initial creation)
+            product.setTotalProduct(totalVariantStock);
+            productRepository.save(product);
+        } else {
+            // No variants, use product stock
+            product.setTotalProduct(request.getStock());
+            productRepository.save(product);
         }
 
         // Return created product
@@ -247,7 +258,10 @@ public class ProductService {
         if (request.getCategoryIds() != null) {
             // Xóa tất cả categories cũ
             List<ProductCategory> oldCategories = productCategoryRepository.findByProductId(id);
-            productCategoryRepository.deleteAll(oldCategories);
+            if (!oldCategories.isEmpty()) {
+                productCategoryRepository.deleteAll(oldCategories);
+                productCategoryRepository.flush(); // Force delete trước khi insert
+            }
 
             // Thêm categories mới
             for (Integer categoryId : request.getCategoryIds()) {
@@ -267,7 +281,10 @@ public class ProductService {
         if (request.getLabelIds() != null) {
             // Xóa tất cả labels cũ
             List<ProductLabel> oldLabels = productLabelRepository.findByProductId(id);
-            productLabelRepository.deleteAll(oldLabels);
+            if (!oldLabels.isEmpty()) {
+                productLabelRepository.deleteAll(oldLabels);
+                productLabelRepository.flush(); // Force delete trước khi insert
+            }
 
             // Thêm labels mới
             for (Integer labelId : request.getLabelIds()) {
@@ -287,7 +304,10 @@ public class ProductService {
         if (request.getImages() != null) {
             // Xóa tất cả images cũ
             List<ProductImage> oldImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(id);
-            productImageRepository.deleteAll(oldImages);
+            if (!oldImages.isEmpty()) {
+                productImageRepository.deleteAll(oldImages);
+                productImageRepository.flush(); // Force delete trước khi insert
+            }
 
             // Thêm images mới
             for (UpdateProductRequest.ProductImageRequest imageReq : request.getImages()) {
@@ -305,16 +325,25 @@ public class ProductService {
 
         // Update variants: Xóa cũ và thêm mới
         if (request.getVariants() != null) {
-            // Xóa tất cả variants cũ (cascade sẽ xóa variant images)
+            // Get old total stock before deletion
+            int oldTotalStock = 0;
             List<ProductVariant> oldVariants = productVariantRepository.findByProductId(id);
             for (ProductVariant oldVariant : oldVariants) {
+                oldTotalStock += oldVariant.getStock();
                 // Xóa variant images trước
                 List<ProductVariantImage> variantImages = productVariantImageRepository.findByProductVariantId(oldVariant.getId());
-                productVariantImageRepository.deleteAll(variantImages);
+                if (!variantImages.isEmpty()) {
+                    productVariantImageRepository.deleteAll(variantImages);
+                }
             }
             productVariantRepository.deleteAll(oldVariants);
+            productVariantRepository.flush(); // Force delete trước khi insert
 
-            // Thêm variants mới
+            // Calculate sold items from old data
+            int soldItems = product.getTotalProduct() - oldTotalStock;
+            
+            // Thêm variants mới và tính tổng stock mới
+            int newTotalStock = 0;
             for (UpdateProductRequest.ProductVariantRequest variantReq : request.getVariants()) {
                 Color color = null;
                 Size size = null;
@@ -341,6 +370,7 @@ public class ProductService {
                         .build();
 
                 productVariant = productVariantRepository.save(productVariant);
+                newTotalStock += variantReq.getStock();
 
                 // Add variant images
                 if (variantReq.getImages() != null && !variantReq.getImages().isEmpty()) {
@@ -354,6 +384,10 @@ public class ProductService {
                     }
                 }
             }
+            
+            // Update total_product = new stock + sold items
+            product.setTotalProduct(newTotalStock + soldItems);
+            productRepository.save(product);
         }
 
         // Return updated product
@@ -396,10 +430,13 @@ public class ProductService {
     }
 
     private ProductResponse convertToProductResponse(Product product) {
-        // Get product images
+        String baseUrl = "http://localhost:8080";
+        // String baseUrl = "https://fnzv9bcp-8080.asse.devtunnels.ms";
+
+        // Get product images with base URL
         List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(product.getId());
         List<String> imageUrls = productImages.stream()
-                .map(ProductImage::getImageUrl)
+                .map(img -> baseUrl + "/" + img.getImageUrl())
                 .collect(Collectors.toList());
 
         // Get product variants with color and size
@@ -408,9 +445,11 @@ public class ProductService {
         int totalStock = 0;
 
         for (ProductVariant variant : variants) {
-            // Get variant image
+            // Get variant image with base URL
             List<ProductVariantImage> variantImages = productVariantImageRepository.findByProductVariantId(variant.getId());
-            String variantImageUrl = variantImages.isEmpty() ? "" : variantImages.get(0).getImageUrl();
+            String variantImageUrl = variantImages.isEmpty() 
+                ? "" 
+                : baseUrl + "/" + variantImages.get(0).getImageUrl();
 
             ProductResponse.VariantInfo variantInfo = ProductResponse.VariantInfo.builder()
                     .colorName(variant.getColor() != null ? variant.getColor().getName() : "")
@@ -445,7 +484,7 @@ public class ProductService {
                 .images(imageUrls)
                 .variants(variantInfos)
                 .totalCount(totalStock)
-                .totalProduct(product.getTotalProduct())
+                .sold(product.getTotalProduct() - totalStock)
                 .createdAt(product.getCreatedAt())
                 .build();
     }
