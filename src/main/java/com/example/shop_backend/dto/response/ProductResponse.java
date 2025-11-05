@@ -27,8 +27,8 @@ public class ProductResponse {
     @JsonProperty("total_count")
     private Integer totalCount;
     
-    @JsonProperty("total_product")
-    private Integer totalProduct;
+    @JsonProperty("sold")
+    private Integer sold;
     
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
