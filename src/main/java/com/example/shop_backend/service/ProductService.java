@@ -258,7 +258,10 @@ public class ProductService {
         if (request.getCategoryIds() != null) {
             // Xóa tất cả categories cũ
             List<ProductCategory> oldCategories = productCategoryRepository.findByProductId(id);
-            productCategoryRepository.deleteAll(oldCategories);
+            if (!oldCategories.isEmpty()) {
+                productCategoryRepository.deleteAll(oldCategories);
+                productCategoryRepository.flush(); // Force delete trước khi insert
+            }
 
             // Thêm categories mới
             for (Integer categoryId : request.getCategoryIds()) {
@@ -278,7 +281,10 @@ public class ProductService {
         if (request.getLabelIds() != null) {
             // Xóa tất cả labels cũ
             List<ProductLabel> oldLabels = productLabelRepository.findByProductId(id);
-            productLabelRepository.deleteAll(oldLabels);
+            if (!oldLabels.isEmpty()) {
+                productLabelRepository.deleteAll(oldLabels);
+                productLabelRepository.flush(); // Force delete trước khi insert
+            }
 
             // Thêm labels mới
             for (Integer labelId : request.getLabelIds()) {
@@ -298,7 +304,10 @@ public class ProductService {
         if (request.getImages() != null) {
             // Xóa tất cả images cũ
             List<ProductImage> oldImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(id);
-            productImageRepository.deleteAll(oldImages);
+            if (!oldImages.isEmpty()) {
+                productImageRepository.deleteAll(oldImages);
+                productImageRepository.flush(); // Force delete trước khi insert
+            }
 
             // Thêm images mới
             for (UpdateProductRequest.ProductImageRequest imageReq : request.getImages()) {
@@ -323,9 +332,12 @@ public class ProductService {
                 oldTotalStock += oldVariant.getStock();
                 // Xóa variant images trước
                 List<ProductVariantImage> variantImages = productVariantImageRepository.findByProductVariantId(oldVariant.getId());
-                productVariantImageRepository.deleteAll(variantImages);
+                if (!variantImages.isEmpty()) {
+                    productVariantImageRepository.deleteAll(variantImages);
+                }
             }
             productVariantRepository.deleteAll(oldVariants);
+            productVariantRepository.flush(); // Force delete trước khi insert
 
             // Calculate sold items from old data
             int soldItems = product.getTotalProduct() - oldTotalStock;
@@ -418,8 +430,9 @@ public class ProductService {
     }
 
     private ProductResponse convertToProductResponse(Product product) {
-        String baseUrl = "https://fnzv9bcp-8080.asse.devtunnels.ms";
-        
+        String baseUrl = "http://localhost:8080";
+        // String baseUrl = "https://fnzv9bcp-8080.asse.devtunnels.ms";
+
         // Get product images with base URL
         List<ProductImage> productImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(product.getId());
         List<String> imageUrls = productImages.stream()
