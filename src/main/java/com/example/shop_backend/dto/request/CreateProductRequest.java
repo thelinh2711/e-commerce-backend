@@ -26,24 +26,14 @@ public class CreateProductRequest {
     @Min(value = 0, message = "Giá sản phẩm phải lớn hơn hoặc bằng 0")
     private BigDecimal price;
     
-    private BigDecimal discountPrice;
-    
     private Integer discountPercent;
     
     @NotNull(message = "Brand ID không được để trống")
     private Integer brandId;
     
-    @NotBlank(message = "SKU không được để trống")
-    private String sku;
-    
     @NotNull(message = "Stock không được để trống")
     @Min(value = 0, message = "Stock phải lớn hơn hoặc bằng 0")
     private Integer stock;
-    
-    @NotBlank(message = "Slug không được để trống")
-    private String slug;
-    
-    private String status; // ACTIVE, INACTIVE, OUT_OF_STOCK, DISCONTINUED
     
     // Danh sách category IDs
     private List<Integer> categoryIds;
@@ -66,12 +56,6 @@ public class CreateProductRequest {
         private String imageUrl;
         
         private String altText;
-        
-        @Builder.Default
-        private Boolean isThumbnail = false;
-        
-        @Builder.Default
-        private Integer displayOrder = 0;
     }
     
     @Data
@@ -82,9 +66,6 @@ public class CreateProductRequest {
         private Integer colorId;
         
         private Integer sizeId;
-        
-        @NotBlank(message = "SKU biến thể không được để trống")
-        private String sku;
         
         @NotNull(message = "Stock biến thể không được để trống")
         @Min(value = 0, message = "Stock biến thể phải lớn hơn hoặc bằng 0")

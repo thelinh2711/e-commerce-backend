@@ -18,7 +18,6 @@ import lombok.NoArgsConstructor;
 public class ProductResponse {
     private String id;
     private String name;
-    private String slug;
     private String brand;
     private PriceInfo price;
     private List<String> images;
@@ -38,13 +37,15 @@ public class ProductResponse {
     @AllArgsConstructor
     @Builder
     public static class PriceInfo {
-        private BigDecimal current;
-        private BigDecimal original;
+        private BigDecimal price;
+        
+        @JsonProperty("cost_price")
+        private BigDecimal costPrice;
+        
+        private String currency;
         
         @JsonProperty("discount_percent")
         private Integer discountPercent;
-        
-        private String currency;
     }
 
     @Data
@@ -52,14 +53,14 @@ public class ProductResponse {
     @AllArgsConstructor
     @Builder
     public static class VariantInfo {
+        private String size;
+        private String image;
+        private Integer stock;
+        
         @JsonProperty("color_name")
         private String colorName;
         
         @JsonProperty("color_hex")
         private String colorHex;
-        
-        private String size;
-        private String image;
-        private Integer stock;
     }
 }
