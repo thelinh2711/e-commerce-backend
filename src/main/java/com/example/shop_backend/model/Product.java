@@ -8,13 +8,9 @@ import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import com.example.shop_backend.model.enums.ProductStatus;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -51,9 +47,6 @@ public class Product {
     @Column(precision = 10, scale = 2, name = "cost_price")
     private BigDecimal costPrice;
 
-    @Column(precision = 10, scale = 2, name = "discount_price")
-    private BigDecimal discountPrice;
-
     @Builder.Default
     @Column(name = "discount_percent", columnDefinition = "INT DEFAULT 0")
     private Integer discountPercent = 0;
@@ -61,9 +54,6 @@ public class Product {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id")
     private Brand brand;
-
-    @Column(unique = true, length = 100)
-    private String sku;
 
     @Builder.Default
     @Column(columnDefinition = "INT DEFAULT 0")
@@ -84,14 +74,6 @@ public class Product {
     @Builder.Default
     @Column(columnDefinition = "INT DEFAULT 0")
     private Integer view = 0;
-
-    @Builder.Default
-    @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('ACTIVE', 'INACTIVE', 'OUT_OF_STOCK') DEFAULT 'ACTIVE'")
-    private ProductStatus status = ProductStatus.ACTIVE;
-
-    @Column(unique = true)
-    private String slug;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
