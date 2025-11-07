@@ -18,10 +18,12 @@ import lombok.NoArgsConstructor;
 public class ProductResponse {
     private String id;
     private String name;
-    private String brand;
+    private BrandInfo brand;
     private PriceInfo price;
     private List<String> images;
     private List<VariantInfo> variants;
+    private List<CategoryInfo> categories;
+    private List<LabelInfo> labels;
     
     @JsonProperty("total_count")
     private Integer totalCount;
@@ -65,5 +67,32 @@ public class ProductResponse {
         
         @JsonProperty("color_hex")
         private String colorHex;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class CategoryInfo {
+        private Integer id;
+        private String name;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class LabelInfo {
+        private Integer id;
+        private String name;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class BrandInfo {
+        private Integer id;
+        private String name;
     }
 }

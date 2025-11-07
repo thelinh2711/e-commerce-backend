@@ -10,4 +10,6 @@ import com.example.shop_backend.model.ProductVariantImage;
 @Repository
 public interface ProductVariantImageRepository extends JpaRepository<ProductVariantImage, Integer> {
     List<ProductVariantImage> findByProductVariantId(Integer productVariantId);
+    
+    void deleteByProductVariantId(Integer productVariantId);
 }
