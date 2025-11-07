@@ -54,8 +54,11 @@ public class User implements UserDetails {
     private String avatar;
 
     @Builder.Default
+    @Column(nullable = false)
+    private Integer rewardPoints = 0;
+
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('ADMIN', 'USER', 'CUSTOMER') DEFAULT 'CUSTOMER'")
+    @Column(columnDefinition = "ENUM('ADMIN', 'OWNER', 'CUSTOMER', 'EMPLOYEE') DEFAULT 'CUSTOMER'")
     private Role role = Role.CUSTOMER;
 
     @Builder.Default
