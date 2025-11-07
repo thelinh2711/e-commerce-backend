@@ -13,8 +13,18 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.example.shop_backend.model.enums.Role;
 import com.example.shop_backend.model.enums.UserStatus;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "Users")
@@ -43,10 +53,12 @@ public class User implements UserDetails {
     @Column(length = 255)
     private String avatar;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "ENUM('ADMIN', 'USER', 'CUSTOMER') DEFAULT 'CUSTOMER'")
     private Role role = Role.CUSTOMER;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "ENUM('ACTIVE', 'INACTIVE', 'BLOCKED') DEFAULT 'ACTIVE'")
     private UserStatus status = UserStatus.ACTIVE;

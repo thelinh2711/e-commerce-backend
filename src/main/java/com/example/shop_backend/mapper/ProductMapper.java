@@ -53,11 +53,20 @@ public abstract class ProductMapper {
      */
     @Named("mapPriceInfo")
     protected ProductResponse.PriceInfo mapPriceInfo(Product product) {
+        java.math.BigDecimal price = product.getPrice();
+        Integer discountPercent = product.getDiscountPercent() != null ? product.getDiscountPercent() : 0;
+        
+        // Calculate discount_price = price * (100 - discountPercent) / 100
+        java.math.BigDecimal discountPrice = price.multiply(
+            java.math.BigDecimal.valueOf(100 - discountPercent)
+        ).divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+        
         return ProductResponse.PriceInfo.builder()
-                .price(product.getPrice())
-                .costPrice(product.getCostPrice())
+                .price(price)
                 .currency("VND")
-                .discountPercent(product.getDiscountPercent())
+                .costPrice(product.getCostPrice())
+                .discountPercent(discountPercent)
+                .discountPrice(discountPrice)
                 .build();
     }
 

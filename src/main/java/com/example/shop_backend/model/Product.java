@@ -51,6 +51,9 @@ public class Product {
     @Column(name = "discount_percent", columnDefinition = "INT DEFAULT 0")
     private Integer discountPercent = 0;
 
+    @Column(name = "discount_price", precision = 10, scale = 2, insertable = false, updatable = false)
+    private BigDecimal discountPrice;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id")
     private Brand brand;
