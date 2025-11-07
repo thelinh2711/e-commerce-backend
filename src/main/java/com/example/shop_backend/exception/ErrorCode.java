@@ -29,6 +29,7 @@ public enum ErrorCode {
 
     // ✅ Lỗi sản phẩm
     PRODUCT_NOT_FOUND(2001, "Sản phẩm không tồn tại", HttpStatus.NOT_FOUND),
+    PRODUCT_NOT_EXISTED(2001, "Sản phẩm không tồn tại", HttpStatus.NOT_FOUND),
     SLUG_EXISTED(2002, "Slug đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
     BRAND_NOT_FOUND(2003, "Thương hiệu không tồn tại", HttpStatus.NOT_FOUND),
     CATEGORY_NOT_FOUND(2004, "Danh mục không tồn tại", HttpStatus.NOT_FOUND),
@@ -36,6 +37,8 @@ public enum ErrorCode {
     COLOR_NOT_FOUND(2006, "Màu sắc không tồn tại", HttpStatus.NOT_FOUND),
     SIZE_NOT_FOUND(2007, "Kích thước không tồn tại", HttpStatus.NOT_FOUND),
     INVALID_PRODUCT_STATUS(2008, "Trạng thái sản phẩm không hợp lệ", HttpStatus.BAD_REQUEST),
+    PRODUCT_VARIANT_NOT_FOUND(2010, "Biến thể sản phẩm không tồn tại", HttpStatus.NOT_FOUND),
+    PRODUCT_VARIANT_EXISTED(2011, "Biến thể sản phẩm đã tồn tại", HttpStatus.BAD_REQUEST),
 
     ADDRESS_NOT_FOUND(2009, "Địa chỉ không tồn tại", HttpStatus.NOT_FOUND),
     CATEGORY_NAME_EXISTS(2010, "Tên danh mục đã tồn tại", HttpStatus.BAD_REQUEST),

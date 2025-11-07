@@ -51,6 +51,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
+                        // Cho phép GET product variants công khai
+                        .requestMatchers("GET", "/api/product-variants/**").permitAll()
+
+                        // Tạo product variant cần ADMIN
+                        .requestMatchers("POST", "/api/product-variants/**").hasRole("ADMIN")
+                        .requestMatchers("PUT", "/api/product-variants/**").hasRole("ADMIN")
+                        .requestMatchers("DELETE", "/api/product-variants/**").hasRole("ADMIN")
+
+                        // ✅ CUSTOMER được đổi mật khẩu, cập nhật profile
+                        .requestMatchers("/api/users/change-password", "/api/users/update-profile").hasRole("CUSTOMER")
                         // CUSTOMER thao tác user info
                         .requestMatchers("/api/users/change-password", "/api/users/update-profile")
                         .hasRole("CUSTOMER")

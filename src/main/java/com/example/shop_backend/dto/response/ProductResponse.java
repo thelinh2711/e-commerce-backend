@@ -39,13 +39,16 @@ public class ProductResponse {
     public static class PriceInfo {
         private BigDecimal price;
         
+        private String currency;
+        
         @JsonProperty("cost_price")
         private BigDecimal costPrice;
         
-        private String currency;
-        
         @JsonProperty("discount_percent")
         private Integer discountPercent;
+        
+        @JsonProperty("discount_price")
+        private BigDecimal discountPrice;
     }
 
     @Data

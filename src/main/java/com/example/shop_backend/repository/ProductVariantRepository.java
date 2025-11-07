@@ -18,4 +18,11 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     List<ProductVariant> findByProductIdWithColorAndSize(@Param("productId") Integer productId);
     
     List<ProductVariant> findByProductId(Integer productId);
+
+    @Query("SELECT pv FROM ProductVariant pv WHERE pv.product.id = :productId "
+        + "AND ((:colorId IS NULL AND pv.color IS NULL) OR pv.color.id = :colorId) "
+        + "AND ((:sizeId IS NULL AND pv.size IS NULL) OR pv.size.id = :sizeId)")
+    java.util.Optional<ProductVariant> findDuplicate(@Param("productId") Integer productId,
+                            @Param("colorId") Integer colorId,
+                            @Param("sizeId") Integer sizeId);
 }

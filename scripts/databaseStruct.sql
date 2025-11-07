@@ -241,6 +241,7 @@ CREATE TABLE products (
     price DECIMAL(10,2) NOT NULL,
     cost_price DECIMAL(10,2),
     discount_percent INT DEFAULT 0,
+    discount_price DECIMAL(10,2) GENERATED ALWAYS AS (price * (100 - discount_percent) / 100) STORED,
     brand_id INT,
     stock INT DEFAULT 0,
     total_product INT DEFAULT 0,
