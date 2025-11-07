@@ -32,13 +32,8 @@ public class Category {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    private String image;
-
     @Column(unique = true, length = 100)
     private String slug;
-
-    @Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
-    private Boolean isActive = true;
 
     @CreationTimestamp
     @Column(updatable = false)
