@@ -24,15 +24,8 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<CategoryListResponse> getAll() {
-        List<CategoryResponse> categories = categoryService.getAll();
-
-        CategoryListResponse response = CategoryListResponse.builder()
-                .success(true)
-                .data(categories)
-                .build();
-
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getAll() {
+        return ResponseEntity.ok(ApiResponse.success(categoryService.getAll()));
     }
 
     @GetMapping("/{id}")

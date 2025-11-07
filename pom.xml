@@ -81,6 +81,12 @@
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http44</artifactId>
+			<version>1.36.0</version> <!-- check version mới nhất -->
+		</dependency>
+
 		<!-- Mail -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
