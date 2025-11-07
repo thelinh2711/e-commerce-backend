@@ -10,7 +10,6 @@ public interface WishlistMapper {
 
     @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "name", source = "product.name")
-    @Mapping(target = "slug", source = "product.slug")
     @Mapping(target = "brand", source = "product.brand.name")
     @Mapping(
             target = "images",
@@ -27,8 +26,8 @@ public interface WishlistMapper {
     default WishlistResponse.PriceInfo mapPriceInfo(Wishlist wishlist) {
         var product = wishlist.getProduct();
         return WishlistResponse.PriceInfo.builder()
-                .current(product.getDiscountPrice() != null ? product.getDiscountPrice() : product.getPrice())
-                .original(product.getPrice())
+                .discountPrice(product.getDiscountPrice() != null ? product.getDiscountPrice() : product.getPrice())
+                .price(product.getPrice())
                 .discountPercent(product.getDiscountPercent())
                 .currency("VND")
                 .build();
