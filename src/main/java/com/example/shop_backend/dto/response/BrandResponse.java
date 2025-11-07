@@ -1,14 +1,16 @@
 package com.example.shop_backend.dto.response;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class BrandResponse {
     private Integer id;
     private String name;
-    private String logo;
     private String description;
+    private String logo;
     private Boolean isActive;
 }

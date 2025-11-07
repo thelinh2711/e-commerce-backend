@@ -13,8 +13,4 @@ public class CategoryRequest {
 
     @Size(max = 1000, message = "Mô tả không được vượt quá 1000 ký tự")
     private String description;
-
-    @NotBlank(message = "Slug không được để trống")
-    @Size(max = 100, message = "Slug không được vượt quá 100 ký tự")
-    private String slug;
 }

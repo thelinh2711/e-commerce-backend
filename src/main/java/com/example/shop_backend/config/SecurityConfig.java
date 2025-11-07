@@ -41,11 +41,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         // Cho phép ai cũng xem danh sách sản phẩm được thích nhiều nhất
                         .requestMatchers(HttpMethod.GET, "/api/wishlist/top-liked").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll()
 
                         // ADMIN quản lý Category & Product
                         .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
+
+                        // --- ADMIN: CRUD Brand ---
+                        .requestMatchers(HttpMethod.POST, "/api/brands/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/brands/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/brands/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
@@ -58,6 +64,7 @@ public class SecurityConfig {
                         .requestMatchers("POST", "/api/product-variants/**").hasRole("ADMIN")
                         .requestMatchers("PUT", "/api/product-variants/**").hasRole("ADMIN")
                         .requestMatchers("DELETE", "/api/product-variants/**").hasRole("ADMIN")
+
 
                         // ✅ CUSTOMER được đổi mật khẩu, cập nhật profile
                         .requestMatchers("/api/users/change-password", "/api/users/update-profile").hasRole("CUSTOMER")
