@@ -7,4 +7,5 @@ import com.example.shop_backend.model.Brand;
 
 @Repository
 public interface BrandRepository extends JpaRepository<Brand, Integer> {
+    boolean existsByName(String name);
 }

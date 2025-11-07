@@ -10,4 +10,8 @@ import com.example.shop_backend.model.ProductCategory;
 @Repository
 public interface ProductCategoryRepository extends JpaRepository<ProductCategory, Integer> {
     List<ProductCategory> findByProductId(Integer productId);
+
+    boolean existsByCategory_Id(Integer categoryId);
+
+    void deleteByCategory_Id(Integer categoryId);
 }

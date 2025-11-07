@@ -38,6 +38,9 @@ public enum ErrorCode {
     INVALID_PRODUCT_STATUS(2008, "Trạng thái sản phẩm không hợp lệ", HttpStatus.BAD_REQUEST),
 
     ADDRESS_NOT_FOUND(2009, "Địa chỉ không tồn tại", HttpStatus.NOT_FOUND),
+    CATEGORY_NAME_EXISTS(2010, "Tên danh mục đã tồn tại", HttpStatus.BAD_REQUEST),
+    CATEGORY_HAS_PRODUCTS(2011, "Danh mục đang chứa sản phẩm, không thể xóa", HttpStatus.BAD_REQUEST),
+
 
     ;
 
