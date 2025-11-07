@@ -131,6 +131,9 @@ public class ProductVariantService {
 
         ProductVariant savedVariant = productVariantRepository.save(variant);
 
+        // Update product's total_product (add new variant stock)
+        updateProductTotalStock(product.getId());
+
         // Add variant images if provided
         if (request.getImages() != null && !request.getImages().isEmpty()) {
             for (String imageUrl : request.getImages()) {
@@ -144,6 +147,73 @@ public class ProductVariantService {
         }
 
         return convertToResponse(savedVariant);
+    }
+
+    /**
+     * Update a product variant's stock
+     * Recalculates product's total_product after update
+     * 
+     * @param id Variant ID
+     * @param newStock New stock value
+     * @return ProductVariantResponse of updated variant
+     * @throws AppException if variant not found
+     */
+    @Transactional
+    public ProductVariantResponse updateVariantStock(Integer id, Integer newStock) {
+        ProductVariant variant = productVariantRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+
+        variant.setStock(newStock);
+        ProductVariant updatedVariant = productVariantRepository.save(variant);
+
+        // Update product's total_product
+        updateProductTotalStock(variant.getProduct().getId());
+
+        return convertToResponse(updatedVariant);
+    }
+
+    /**
+     * Delete a product variant
+     * Recalculates product's total_product after deletion
+     * 
+     * @param id Variant ID
+     * @throws AppException if variant not found
+     */
+    @Transactional
+    public void deleteVariant(Integer id) {
+        ProductVariant variant = productVariantRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+
+        Integer productId = variant.getProduct().getId();
+        
+        // Delete variant images first
+        productVariantImageRepository.deleteByProductVariantId(id);
+        
+        // Delete variant
+        productVariantRepository.delete(variant);
+
+        // Update product's total_product
+        updateProductTotalStock(productId);
+    }
+
+    /**
+     * Recalculate and update product's total_product based on all variants
+     * total_product = sum of all variant stocks
+     * 
+     * @param productId Product ID
+     */
+    private void updateProductTotalStock(Integer productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+
+        // Calculate total stock from all variants
+        Integer totalStock = productVariantRepository.findByProductId(productId)
+                .stream()
+                .mapToInt(ProductVariant::getStock)
+                .sum();
+
+        product.setTotalProduct(totalStock);
+        productRepository.save(product);
     }
 
     /**

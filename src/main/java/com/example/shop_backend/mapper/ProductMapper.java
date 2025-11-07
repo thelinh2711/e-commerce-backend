@@ -31,6 +31,12 @@ public abstract class ProductMapper {
     
     @Autowired
     protected ProductVariantImageRepository productVariantImageRepository;
+    
+    @Autowired
+    protected com.example.shop_backend.repository.ProductCategoryRepository productCategoryRepository;
+    
+    @Autowired
+    protected com.example.shop_backend.repository.ProductLabelRepository productLabelRepository;
 
     // Base URL cho images
     protected static final String BASE_URL = "http://localhost:8080";
@@ -40,10 +46,12 @@ public abstract class ProductMapper {
      * Convert Product entity sang ProductResponse DTO
      */
     @Mapping(target = "id", expression = "java(product.getId().toString())")
-    @Mapping(target = "brand", expression = "java(product.getBrand() != null ? product.getBrand().getName() : \"KHÁC\")")
+    @Mapping(target = "brand", source = "product", qualifiedByName = "mapBrand")
     @Mapping(target = "price", source = "product", qualifiedByName = "mapPriceInfo")
     @Mapping(target = "images", source = "product", qualifiedByName = "mapProductImages")
     @Mapping(target = "variants", source = "product", qualifiedByName = "mapVariants")
+    @Mapping(target = "categories", source = "product", qualifiedByName = "mapCategories")
+    @Mapping(target = "labels", source = "product", qualifiedByName = "mapLabels")
     @Mapping(target = "totalCount", source = "product", qualifiedByName = "calculateTotalCount")
     @Mapping(target = "sold", source = "product", qualifiedByName = "calculateSold")
     public abstract ProductResponse toProductResponse(Product product);
@@ -67,6 +75,23 @@ public abstract class ProductMapper {
                 .costPrice(product.getCostPrice())
                 .discountPercent(discountPercent)
                 .discountPrice(discountPrice)
+                .build();
+    }
+
+    /**
+     * Map brand information từ Product entity
+     */
+    @Named("mapBrand")
+    protected ProductResponse.BrandInfo mapBrand(Product product) {
+        if (product.getBrand() == null) {
+            return ProductResponse.BrandInfo.builder()
+                    .id(null)
+                    .name("KHÁC")
+                    .build();
+        }
+        return ProductResponse.BrandInfo.builder()
+                .id(product.getBrand().getId())
+                .name(product.getBrand().getName())
                 .build();
     }
 
@@ -127,5 +152,33 @@ public abstract class ProductMapper {
     @Named("calculateSold")
     protected Integer calculateSold(Product product) {
         return product.getTotalProduct() - calculateTotalCount(product);
+    }
+
+    /**
+     * Map categories từ ProductCategory
+     */
+    @Named("mapCategories")
+    protected List<ProductResponse.CategoryInfo> mapCategories(Product product) {
+        return productCategoryRepository.findByProductId(product.getId())
+                .stream()
+                .map(pc -> ProductResponse.CategoryInfo.builder()
+                        .id(pc.getCategory().getId())
+                        .name(pc.getCategory().getName())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Map labels từ ProductLabel
+     */
+    @Named("mapLabels")
+    protected List<ProductResponse.LabelInfo> mapLabels(Product product) {
+        return productLabelRepository.findByProductId(product.getId())
+                .stream()
+                .map(pl -> ProductResponse.LabelInfo.builder()
+                        .id(pl.getLabel().getId())
+                        .name(pl.getLabel().getName())
+                        .build())
+                .collect(Collectors.toList());
     }
 }
