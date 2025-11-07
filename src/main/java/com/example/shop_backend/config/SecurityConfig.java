@@ -1,7 +1,5 @@
 package com.example.shop_backend.config;
 
-import com.example.shop_backend.security.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,6 +10,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.example.shop_backend.security.JwtAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableMethodSecurity
@@ -32,6 +34,8 @@ public class SecurityConfig {
 
                         // Cho phép AI GET categories công khai
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                        // Cho phép truy cập static files (images, css, js)
+                        .requestMatchers("/public/**").permitAll()
 
                         // Cho phép GET sản phẩm công khai
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
