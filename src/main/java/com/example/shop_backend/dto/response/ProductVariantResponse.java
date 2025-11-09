@@ -1,6 +1,5 @@
 package com.example.shop_backend.dto.response;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,9 +17,7 @@ public class ProductVariantResponse {
     private Integer id;
     private Integer productId;
     private String productName;
-    private String sku;
     private Integer stock;
-    private BigDecimal price;
     private ColorInfo color;
     private SizeInfo size;
     private List<String> images;

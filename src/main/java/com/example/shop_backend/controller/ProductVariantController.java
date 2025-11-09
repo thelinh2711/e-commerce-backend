@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.shop_backend.dto.request.CreateProductVariantRequest;
+import com.example.shop_backend.dto.request.UpdateProductVariantStockRequest;
 import com.example.shop_backend.dto.response.ApiResponse;
 import com.example.shop_backend.dto.response.ProductVariantResponse;
 import com.example.shop_backend.service.ProductVariantService;
@@ -30,7 +30,7 @@ import jakarta.validation.Valid;
  * - GET    /api/product-variants/{id}           - Get variant by ID (PUBLIC)
  * - GET    /api/product-variants/product/{id}   - Get all variants of a product (PUBLIC)
  * - POST   /api/product-variants                - Create new variant (ADMIN only)
- * - PUT    /api/product-variants/{id}/stock     - Update variant stock (ADMIN only)
+ * - PUT    /api/product-variants/{id}           - Update variant stock (ADMIN only)
  * - DELETE /api/product-variants/{id}           - Delete variant (ADMIN only)
  * 
  * All endpoints return data in ApiResponse wrapper format
@@ -76,12 +76,12 @@ public class ProductVariantController {
                         .build());
     }
 
-    @PutMapping("/{id}/stock")
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ProductVariantResponse>> updateVariantStock(
             @PathVariable Integer id,
-            @RequestParam Integer stock) {
-        ProductVariantResponse variant = productVariantService.updateVariantStock(id, stock);
+            @Valid @RequestBody UpdateProductVariantStockRequest request) {
+        ProductVariantResponse variant = productVariantService.updateVariantStock(id, request.getImportNewStock());
         return ResponseEntity.ok(ApiResponse.<ProductVariantResponse>builder()
                 .code(1000)
                 .message("Variant stock updated successfully")

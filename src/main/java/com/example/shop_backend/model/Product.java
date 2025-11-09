@@ -51,7 +51,7 @@ public class Product {
     @Column(name = "discount_percent", columnDefinition = "INT DEFAULT 0")
     private Integer discountPercent = 0;
 
-    @Column(name = "discount_price", precision = 10, scale = 2, insertable = false, updatable = false)
+    @Column(name = "discount_price", precision = 10, scale = 2)
     private BigDecimal discountPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -60,23 +60,11 @@ public class Product {
 
     @Builder.Default
     @Column(columnDefinition = "INT DEFAULT 0")
-    private Integer stock = 0;
-
-    @Builder.Default
-    @Column(name = "total_product", columnDefinition = "INT DEFAULT 0")
-    private Integer totalProduct = 0;
-
-    @Builder.Default
-    @Column(columnDefinition = "INT DEFAULT 0")
     private Integer sold = 0;
 
     @Builder.Default
     @Column(precision = 3, scale = 2, columnDefinition = "DECIMAL(3,2) DEFAULT 0")
     private BigDecimal rating = BigDecimal.ZERO;
-
-    @Builder.Default
-    @Column(columnDefinition = "INT DEFAULT 0")
-    private Integer view = 0;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

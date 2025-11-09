@@ -43,9 +43,6 @@ public class ProductResponse {
         
         private String currency;
         
-        @JsonProperty("cost_price")
-        private BigDecimal costPrice;
-        
         @JsonProperty("discount_percent")
         private Integer discountPercent;
         
@@ -58,6 +55,7 @@ public class ProductResponse {
     @AllArgsConstructor
     @Builder
     public static class VariantInfo {
+        private Integer id;
         private String size;
         private String image;
         private Integer stock;
