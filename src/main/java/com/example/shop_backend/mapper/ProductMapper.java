@@ -38,10 +38,6 @@ public abstract class ProductMapper {
     @Autowired
     protected com.example.shop_backend.repository.ProductLabelRepository productLabelRepository;
 
-    // Base URL cho images
-    protected static final String BASE_URL = "http://localhost:8080";
-    // protected static final String BASE_URL = "https://fnzv9bcp-8080.asse.devtunnels.ms";
-
     /**
      * Convert Product entity sang ProductResponse DTO
      */
@@ -63,16 +59,13 @@ public abstract class ProductMapper {
     protected ProductResponse.PriceInfo mapPriceInfo(Product product) {
         java.math.BigDecimal price = product.getPrice();
         Integer discountPercent = product.getDiscountPercent() != null ? product.getDiscountPercent() : 0;
-        
-        // Calculate discount_price = price * (100 - discountPercent) / 100
-        java.math.BigDecimal discountPrice = price.multiply(
-            java.math.BigDecimal.valueOf(100 - discountPercent)
-        ).divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+        java.math.BigDecimal discountPrice = product.getDiscountPrice() != null 
+            ? product.getDiscountPrice() 
+            : price;
         
         return ProductResponse.PriceInfo.builder()
                 .price(price)
                 .currency("VND")
-                .costPrice(product.getCostPrice())
                 .discountPercent(discountPercent)
                 .discountPrice(discountPrice)
                 .build();
@@ -96,13 +89,13 @@ public abstract class ProductMapper {
     }
 
     /**
-     * Map product images với base URL
+     * Map product images - trả về danh sách URL ảnh
      */
     @Named("mapProductImages")
     protected List<String> mapProductImages(Product product) {
-        return productImageRepository.findByProductIdOrderByDisplayOrderAsc(product.getId())
+        return productImageRepository.findByProductId(product.getId())
                 .stream()
-                .map(img -> BASE_URL + "/" + img.getImageUrl())
+                .map(img -> img.getImageUrl())
                 .collect(Collectors.toList());
     }
 
@@ -121,9 +114,10 @@ public abstract class ProductMapper {
                     .findByProductVariantId(variant.getId());
             String variantImageUrl = variantImages.isEmpty() 
                 ? "" 
-                : BASE_URL + "/" + variantImages.get(0).getImageUrl();
+                : variantImages.get(0).getImageUrl();
 
             variantInfos.add(ProductResponse.VariantInfo.builder()
+                    .id(variant.getId())
                     .size(variant.getSize() != null ? variant.getSize().getName() : "")
                     .image(variantImageUrl)
                     .stock(variant.getStock())
@@ -147,11 +141,14 @@ public abstract class ProductMapper {
     }
 
     /**
-     * Calculate sold (số lượng đã bán = total_product - total_count)
+     * Calculate sold (số lượng đã bán)
+     * Lưu ý: Cần có logic riêng để tracking sold từ Order
      */
     @Named("calculateSold")
     protected Integer calculateSold(Product product) {
-        return product.getTotalProduct() - calculateTotalCount(product);
+        // TODO: Implement logic tính sold từ Order/OrderItem
+        // Hiện tại trả về giá trị mặc định từ product.sold
+        return product.getSold() != null ? product.getSold() : 0;
     }
 
     /**

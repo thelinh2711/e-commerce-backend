@@ -15,7 +15,6 @@ import com.example.shop_backend.exception.ErrorCode;
 import com.example.shop_backend.mapper.ProductMapper;
 import com.example.shop_backend.model.Brand;
 import com.example.shop_backend.model.Category;
-import com.example.shop_backend.model.Color;
 import com.example.shop_backend.model.Label;
 import com.example.shop_backend.model.Product;
 import com.example.shop_backend.model.ProductCategory;
@@ -23,10 +22,8 @@ import com.example.shop_backend.model.ProductImage;
 import com.example.shop_backend.model.ProductLabel;
 import com.example.shop_backend.model.ProductVariant;
 import com.example.shop_backend.model.ProductVariantImage;
-import com.example.shop_backend.model.Size;
 import com.example.shop_backend.repository.BrandRepository;
 import com.example.shop_backend.repository.CategoryRepository;
-import com.example.shop_backend.repository.ColorRepository;
 import com.example.shop_backend.repository.LabelRepository;
 import com.example.shop_backend.repository.ProductCategoryRepository;
 import com.example.shop_backend.repository.ProductImageRepository;
@@ -34,7 +31,6 @@ import com.example.shop_backend.repository.ProductLabelRepository;
 import com.example.shop_backend.repository.ProductRepository;
 import com.example.shop_backend.repository.ProductVariantImageRepository;
 import com.example.shop_backend.repository.ProductVariantRepository;
-import com.example.shop_backend.repository.SizeRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -50,8 +46,6 @@ public class ProductService {
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
     private final LabelRepository labelRepository;
-    private final ColorRepository colorRepository;
-    private final SizeRepository sizeRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductMapper productMapper;
 
@@ -108,26 +102,29 @@ public class ProductService {
      *    - name, description, price: từ request
      *    - costPrice: set NULL (không có trong request)
      *    - discountPercent: từ request hoặc mặc định 0
-     *    - stock: từ request
+     *    - discountPrice: tính = price * (1 - discountPercent/100)
      * 3. Lưu product vào database -> nhận ID tự động
      * 4. Thêm categories: Duyệt categoryIds và tạo ProductCategory
      * 5. Thêm labels: Duyệt labelIds và tạo ProductLabel
      * 6. Thêm images: Duyệt images và tạo ProductImage
      *    - displayOrder bắt đầu từ 1
      *    - Ảnh đầu tiên tự động là thumbnail
-     * 7. Thêm variants (nếu có):
-     *    - Tự động generate SKU: "VAR-{productId}-{counter}"
-     *    - Tính tổng stock từ tất cả variants
-     *    - Thêm variant images cho mỗi variant
-     *    - Set total_product = tổng stock của variants
-     * 8. Nếu không có variants: Set total_product = stock của product
-     * 9. Trả về ProductResponse của sản phẩm vừa tạo
+     * 7. Trả về ProductResponse của sản phẩm vừa tạo
      */
     @Transactional
     public ProductResponse createProduct(CreateProductRequest request) {
         // Get brand
         Brand brand = brandRepository.findById(request.getBrandId())
                 .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
+
+        // Calculate discount price
+        BigDecimal discountPrice = request.getPrice();
+        if (request.getDiscountPercent() != null && request.getDiscountPercent() > 0) {
+            BigDecimal discountMultiplier = BigDecimal.ONE.subtract(
+                new BigDecimal(request.getDiscountPercent()).divide(new BigDecimal(100))
+            );
+            discountPrice = request.getPrice().multiply(discountMultiplier);
+        }
 
         // Create product
         Product product = Product.builder()
@@ -136,8 +133,8 @@ public class ProductService {
                 .price(request.getPrice())
                 .costPrice(null) // Cost price is null if not provided
                 .discountPercent(request.getDiscountPercent() != null ? request.getDiscountPercent() : 0)
+                .discountPrice(discountPrice)
                 .brand(brand)
-                .stock(request.getStock())
                 .build();
 
         product = productRepository.save(product);
@@ -174,78 +171,15 @@ public class ProductService {
 
         // Add images
         if (request.getImages() != null && !request.getImages().isEmpty()) {
-            int displayOrder = 1;
             for (CreateProductRequest.ProductImageRequest imageReq : request.getImages()) {
                 ProductImage productImage = ProductImage.builder()
                         .product(product)
                         .imageUrl(imageReq.getImageUrl())
                         .altText(imageReq.getAltText())
-                        .isThumbnail(displayOrder == 1) // First image is thumbnail
-                        .displayOrder(displayOrder)
                         .build();
                 
                 productImageRepository.save(productImage);
-                displayOrder++;
             }
-        }
-
-        // Add variants
-        if (request.getVariants() != null && !request.getVariants().isEmpty()) {
-            int totalVariantStock = 0;
-            int variantCounter = 1;
-            
-            for (CreateProductRequest.ProductVariantRequest variantReq : request.getVariants()) {
-                Color color = null;
-                Size size = null;
-
-                if (variantReq.getColorId() != null) {
-                    color = colorRepository.findById(variantReq.getColorId())
-                            .orElseThrow(() -> new AppException(ErrorCode.COLOR_NOT_FOUND));
-                }
-
-                if (variantReq.getSizeId() != null) {
-                    size = sizeRepository.findById(variantReq.getSizeId())
-                            .orElseThrow(() -> new AppException(ErrorCode.SIZE_NOT_FOUND));
-                }
-
-                // Auto-generate variant SKU
-                String variantSku = "VAR-" + product.getId() + "-" + variantCounter;
-
-                BigDecimal variantPrice = variantReq.getPrice() != null ? variantReq.getPrice() : product.getPrice();
-
-                ProductVariant productVariant = ProductVariant.builder()
-                        .product(product)
-                        .color(color)
-                        .size(size)
-                        .sku(variantSku)
-                        .stock(variantReq.getStock())
-                        .price(variantPrice)
-                        .build();
-
-                productVariant = productVariantRepository.save(productVariant);
-                totalVariantStock += variantReq.getStock();
-                variantCounter++;
-
-                // Add variant images
-                if (variantReq.getImages() != null && !variantReq.getImages().isEmpty()) {
-                    for (String imageUrl : variantReq.getImages()) {
-                        ProductVariantImage variantImage = ProductVariantImage.builder()
-                                .productVariant(productVariant)
-                                .imageUrl(imageUrl)
-                                .build();
-                        
-                        productVariantImageRepository.save(variantImage);
-                    }
-                }
-            }
-            
-            // Set total_product = total stock from variants (initial creation)
-            product.setTotalProduct(totalVariantStock);
-            productRepository.save(product);
-        } else {
-            // No variants, use product stock
-            product.setTotalProduct(request.getStock());
-            productRepository.save(product);
         }
 
         // Return created product
@@ -261,31 +195,20 @@ public class ProductService {
      * @param id - ID của sản phẩm cần update
      * @param request - Dữ liệu cập nhật (UpdateProductRequest)
      * @return ProductResponse - Thông tin sản phẩm sau khi update
-     * @throws AppException nếu product/brand/category/label/color/size không tồn tại
+     * @throws AppException nếu product/brand/category/label không tồn tại
      * 
      * Logic:
      * 1. Tìm product hiện tại theo ID
      * 2. Validate và lấy brand mới
      * 3. Cập nhật thông tin cơ bản:
-     *    - name, description, price, stock: từ request
+     *    - name, description, price: từ request
      *    - costPrice: set NULL
      *    - discountPercent: từ request hoặc 0
-     * 4. Cập nhật categories:
-     *    - Xóa TẤT CẢ categories cũ
-     *    - Gọi flush() để đảm bảo xóa hoàn tất trước khi insert
-     *    - Thêm categories mới từ request
-     * 5. Cập nhật labels (tương tự categories)
-     * 6. Cập nhật images (tương tự)
-     * 7. Cập nhật variants:
-     *    - Tính sold items = total_product - old total stock
-     *    - Xóa variant images cũ trước
-     *    - Xóa variants cũ và flush()
-     *    - Thêm variants mới với SKU từ request
-     *    - Tính new total stock từ variants mới
-     *    - Update total_product = new stock + sold items (giữ nguyên số lượng đã bán)
-     * 8. Trả về ProductResponse đã update
-     * 
-     * Note: flush() rất quan trọng để tránh lỗi duplicate key khi xóa và insert lại
+     *    - discountPrice: tính lại = price * (1 - discountPercent/100)
+     * 4. Cập nhật categories: Xóa cũ và thêm mới
+     * 5. Cập nhật labels: Xóa cũ và thêm mới
+     * 6. Cập nhật images: Xóa cũ và thêm mới
+     * 7. Trả về ProductResponse đã update
      */
     @Transactional
     public ProductResponse updateProduct(Integer id, UpdateProductRequest request) {
@@ -297,14 +220,23 @@ public class ProductService {
         Brand brand = brandRepository.findById(request.getBrandId())
                 .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
 
+        // Calculate discount price
+        BigDecimal discountPrice = request.getPrice();
+        if (request.getDiscountPercent() != null && request.getDiscountPercent() > 0) {
+            BigDecimal discountMultiplier = BigDecimal.ONE.subtract(
+                new BigDecimal(request.getDiscountPercent()).divide(new BigDecimal(100))
+            );
+            discountPrice = request.getPrice().multiply(discountMultiplier);
+        }
+
         // Update product fields
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setCostPrice(null); // Cost price is null if not provided
         product.setDiscountPercent(request.getDiscountPercent() != null ? request.getDiscountPercent() : 0);
+        product.setDiscountPrice(discountPrice);
         product.setBrand(brand);
-        product.setStock(request.getStock());
 
         product = productRepository.save(product);
 
@@ -357,7 +289,7 @@ public class ProductService {
         // Update images: Xóa cũ và thêm mới
         if (request.getImages() != null) {
             // Xóa tất cả images cũ
-            List<ProductImage> oldImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(id);
+            List<ProductImage> oldImages = productImageRepository.findByProductId(id);
             if (!oldImages.isEmpty()) {
                 productImageRepository.deleteAll(oldImages);
                 productImageRepository.flush(); // Force delete trước khi insert
@@ -369,79 +301,10 @@ public class ProductService {
                         .product(product)
                         .imageUrl(imageReq.getImageUrl())
                         .altText(imageReq.getAltText())
-                        .isThumbnail(imageReq.getIsThumbnail())
-                        .displayOrder(imageReq.getDisplayOrder())
                         .build();
                 
                 productImageRepository.save(productImage);
             }
-        }
-
-        // Update variants: Xóa cũ và thêm mới
-        if (request.getVariants() != null) {
-            // Get old total stock before deletion
-            int oldTotalStock = 0;
-            List<ProductVariant> oldVariants = productVariantRepository.findByProductId(id);
-            for (ProductVariant oldVariant : oldVariants) {
-                oldTotalStock += oldVariant.getStock();
-                // Xóa variant images trước
-                List<ProductVariantImage> variantImages = productVariantImageRepository.findByProductVariantId(oldVariant.getId());
-                if (!variantImages.isEmpty()) {
-                    productVariantImageRepository.deleteAll(variantImages);
-                }
-            }
-            productVariantRepository.deleteAll(oldVariants);
-            productVariantRepository.flush(); // Force delete trước khi insert
-
-            // Calculate sold items from old data
-            int soldItems = product.getTotalProduct() - oldTotalStock;
-            
-            // Thêm variants mới và tính tổng stock mới
-            int newTotalStock = 0;
-            for (UpdateProductRequest.ProductVariantRequest variantReq : request.getVariants()) {
-                Color color = null;
-                Size size = null;
-
-                if (variantReq.getColorId() != null) {
-                    color = colorRepository.findById(variantReq.getColorId())
-                            .orElseThrow(() -> new AppException(ErrorCode.COLOR_NOT_FOUND));
-                }
-
-                if (variantReq.getSizeId() != null) {
-                    size = sizeRepository.findById(variantReq.getSizeId())
-                            .orElseThrow(() -> new AppException(ErrorCode.SIZE_NOT_FOUND));
-                }
-
-                BigDecimal variantPrice = variantReq.getPrice() != null ? variantReq.getPrice() : product.getPrice();
-
-                ProductVariant productVariant = ProductVariant.builder()
-                        .product(product)
-                        .color(color)
-                        .size(size)
-                        .sku(variantReq.getSku())
-                        .stock(variantReq.getStock())
-                        .price(variantPrice)
-                        .build();
-
-                productVariant = productVariantRepository.save(productVariant);
-                newTotalStock += variantReq.getStock();
-
-                // Add variant images
-                if (variantReq.getImages() != null && !variantReq.getImages().isEmpty()) {
-                    for (String imageUrl : variantReq.getImages()) {
-                        ProductVariantImage variantImage = ProductVariantImage.builder()
-                                .productVariant(productVariant)
-                                .imageUrl(imageUrl)
-                                .build();
-                        
-                        productVariantImageRepository.save(variantImage);
-                    }
-                }
-            }
-            
-            // Update total_product = new stock + sold items
-            product.setTotalProduct(newTotalStock + soldItems);
-            productRepository.save(product);
         }
 
         // Return updated product
@@ -486,7 +349,7 @@ public class ProductService {
         productVariantRepository.deleteAll(variants);
 
         // 2. Xóa product images
-        List<ProductImage> images = productImageRepository.findByProductIdOrderByDisplayOrderAsc(id);
+        List<ProductImage> images = productImageRepository.findByProductId(id);
         productImageRepository.deleteAll(images);
 
         // 3. Xóa product labels

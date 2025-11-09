@@ -9,5 +9,5 @@ import com.example.shop_backend.model.ProductImage;
 
 @Repository
 public interface ProductImageRepository extends JpaRepository<ProductImage, Integer> {
-    List<ProductImage> findByProductIdOrderByDisplayOrderAsc(Integer productId);
+    List<ProductImage> findByProductId(Integer productId);
 }

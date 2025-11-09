@@ -115,24 +115,15 @@ public class ProductVariantService {
                         throw new AppException(ErrorCode.PRODUCT_VARIANT_EXISTED);
                 }
 
-        // Generate SKU
-        int variantCount = productVariantRepository.findByProductId(request.getProductId()).size();
-        String sku = "VAR-" + request.getProductId() + "-" + (variantCount + 1);
-
         // Create variant
         ProductVariant variant = ProductVariant.builder()
                 .product(product)
                 .color(color)
                 .size(size)
-                .sku(sku)
                 .stock(request.getStock() != null ? request.getStock() : 0)
-                .price(request.getPrice())
                 .build();
 
         ProductVariant savedVariant = productVariantRepository.save(variant);
-
-        // Update product's total_product (add new variant stock)
-        updateProductTotalStock(product.getId());
 
         // Add variant images if provided
         if (request.getImages() != null && !request.getImages().isEmpty()) {
@@ -149,114 +140,78 @@ public class ProductVariantService {
         return convertToResponse(savedVariant);
     }
 
-    /**
-     * Update a product variant's stock
-     * Recalculates product's total_product after update
-     * 
-     * @param id Variant ID
-     * @param newStock New stock value
-     * @return ProductVariantResponse of updated variant
-     * @throws AppException if variant not found
-     */
-    @Transactional
-    public ProductVariantResponse updateVariantStock(Integer id, Integer newStock) {
-        ProductVariant variant = productVariantRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+        // Update a product variant's stock
+        @Transactional
+        public ProductVariantResponse updateVariantStock(Integer id, Integer newStock) {
+                ProductVariant variant = productVariantRepository.findById(id)
+                        .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
 
-        variant.setStock(newStock);
-        ProductVariant updatedVariant = productVariantRepository.save(variant);
+                int newStockValue = newStock + variant.getStock();
+                variant.setStock(newStockValue);
+                ProductVariant updatedVariant = productVariantRepository.save(variant);
 
-        // Update product's total_product
-        updateProductTotalStock(variant.getProduct().getId());
-
-        return convertToResponse(updatedVariant);
-    }
-
-    /**
-     * Delete a product variant
-     * Recalculates product's total_product after deletion
-     * 
-     * @param id Variant ID
-     * @throws AppException if variant not found
-     */
-    @Transactional
-    public void deleteVariant(Integer id) {
-        ProductVariant variant = productVariantRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
-
-        Integer productId = variant.getProduct().getId();
-        
-        // Delete variant images first
-        productVariantImageRepository.deleteByProductVariantId(id);
-        
-        // Delete variant
-        productVariantRepository.delete(variant);
-
-        // Update product's total_product
-        updateProductTotalStock(productId);
-    }
-
-    /**
-     * Recalculate and update product's total_product based on all variants
-     * total_product = sum of all variant stocks
-     * 
-     * @param productId Product ID
-     */
-    private void updateProductTotalStock(Integer productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
-
-        // Calculate total stock from all variants
-        Integer totalStock = productVariantRepository.findByProductId(productId)
-                .stream()
-                .mapToInt(ProductVariant::getStock)
-                .sum();
-
-        product.setTotalProduct(totalStock);
-        productRepository.save(product);
-    }
-
-    /**
-     * Convert ProductVariant entity to ProductVariantResponse DTO
-     * 
-     * @param variant ProductVariant entity
-     * @return ProductVariantResponse DTO
-     */
-    private ProductVariantResponse convertToResponse(ProductVariant variant) {
-        ProductVariantResponse.ColorInfo colorInfo = null;
-        if (variant.getColor() != null) {
-            colorInfo = ProductVariantResponse.ColorInfo.builder()
-                    .id(variant.getColor().getId())
-                    .name(variant.getColor().getName())
-                    .hexCode(variant.getColor().getHexCode())
-                    .build();
+                return convertToResponse(updatedVariant);
         }
 
-        ProductVariantResponse.SizeInfo sizeInfo = null;
-        if (variant.getSize() != null) {
-            sizeInfo = ProductVariantResponse.SizeInfo.builder()
-                    .id(variant.getSize().getId())
-                    .name(variant.getSize().getName())
-                    .build();
+        /**
+         * Delete a product variant
+         * Recalculates product's total_product after deletion
+         * 
+         * @param id Variant ID
+         * @throws AppException if variant not found
+         */
+        @Transactional
+        public void deleteVariant(Integer id) {
+                ProductVariant variant = productVariantRepository.findById(id)
+                        .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+
+                
+                // Delete variant images first
+                productVariantImageRepository.deleteByProductVariantId(id);
+                
+                // Delete variant
+                productVariantRepository.delete(variant);
         }
 
-        // Get variant images with base URL
-        List<String> images = productVariantImageRepository.findByProductVariantId(variant.getId())
-                .stream()
-                .map(img -> "http://localhost:8080/" + img.getImageUrl())
-                .collect(Collectors.toList());
+        /**
+         * Convert ProductVariant entity to ProductVariantResponse DTO
+         * 
+         * @param variant ProductVariant entity
+         * @return ProductVariantResponse DTO
+         */
+        private ProductVariantResponse convertToResponse(ProductVariant variant) {
+                ProductVariantResponse.ColorInfo colorInfo = null;
+                if (variant.getColor() != null) {
+                colorInfo = ProductVariantResponse.ColorInfo.builder()
+                        .id(variant.getColor().getId())
+                        .name(variant.getColor().getName())
+                        .hexCode(variant.getColor().getHexCode())
+                        .build();
+                }
 
-        return ProductVariantResponse.builder()
-                .id(variant.getId())
-                .productId(variant.getProduct().getId())
-                .productName(variant.getProduct().getName())
-                .sku(variant.getSku())
-                .stock(variant.getStock())
-                .price(variant.getPrice())
-                .color(colorInfo)
-                .size(sizeInfo)
-                .images(images)
-                .createdAt(variant.getCreatedAt())
-                .build();
-    }
+                ProductVariantResponse.SizeInfo sizeInfo = null;
+                if (variant.getSize() != null) {
+                sizeInfo = ProductVariantResponse.SizeInfo.builder()
+                        .id(variant.getSize().getId())
+                        .name(variant.getSize().getName())
+                        .build();
+                }
+
+                // Get variant images with base URL
+                List<String> images = productVariantImageRepository.findByProductVariantId(variant.getId())
+                        .stream()
+                        .map(img -> img.getImageUrl())
+                        .collect(Collectors.toList());
+
+                return ProductVariantResponse.builder()
+                        .id(variant.getId())
+                        .productId(variant.getProduct().getId())
+                        .productName(variant.getProduct().getName())
+                        .stock(variant.getStock())
+                        .color(colorInfo)
+                        .size(sizeInfo)
+                        .images(images)
+                        .createdAt(variant.getCreatedAt())
+                        .build();
+        }
 }

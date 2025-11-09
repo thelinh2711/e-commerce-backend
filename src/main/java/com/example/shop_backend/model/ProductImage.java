@@ -39,14 +39,6 @@ public class ProductImage {
     @Column(name = "alt_text")
     private String altText;
 
-    @Builder.Default
-    @Column(name = "is_thumbnail", columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean isThumbnail = false;
-
-    @Builder.Default
-    @Column(name = "display_order", columnDefinition = "INT DEFAULT 0")
-    private Integer displayOrder = 0;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

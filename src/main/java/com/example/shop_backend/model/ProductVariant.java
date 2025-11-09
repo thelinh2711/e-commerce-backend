@@ -1,6 +1,5 @@
 package com.example.shop_backend.model;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -42,15 +41,9 @@ public class ProductVariant {
     @JoinColumn(name = "size_id")
     private Size size;
 
-    @Column(unique = true, length = 100)
-    private String sku;
-
     @Builder.Default
     @Column(columnDefinition = "INT DEFAULT 0")
     private Integer stock = 0;
-
-    @Column(precision = 10, scale = 2)
-    private BigDecimal price;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

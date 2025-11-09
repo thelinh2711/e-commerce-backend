@@ -5,6 +5,7 @@ import java.util.List;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,17 +32,15 @@ public class CreateProductRequest {
     @NotNull(message = "Brand ID không được để trống")
     private Integer brandId;
     
-    @NotNull(message = "Stock không được để trống")
-    @Min(value = 0, message = "Stock phải lớn hơn hoặc bằng 0")
-    private Integer stock;
-    
-    // Danh sách category IDs
+    // Danh sách category IDs - bắt buộc phải có ít nhất 1 category
+    @NotNull(message = "Sản phẩm phải thuộc ít nhất 1 danh mục")
     private List<Integer> categoryIds;
     
     // Danh sách label IDs
     private List<Integer> labelIds;
     
-    // Danh sách ảnh sản phẩm
+    // Danh sách ảnh sản phẩm (có thể null hoặc rỗng)
+    @NotNull(message = "Ảnh không được để trống")
     private List<ProductImageRequest> images;
     
     // Danh sách biến thể
@@ -66,12 +65,10 @@ public class CreateProductRequest {
         private Integer colorId;
         
         private Integer sizeId;
-        
+
         @NotNull(message = "Stock biến thể không được để trống")
         @Min(value = 0, message = "Stock biến thể phải lớn hơn hoặc bằng 0")
         private Integer stock;
-        
-        private BigDecimal price; // Nếu null thì lấy giá của sản phẩm chính
         
         // Ảnh riêng của biến thể
         private List<String> images;
