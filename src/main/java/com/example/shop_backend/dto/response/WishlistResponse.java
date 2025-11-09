@@ -14,7 +14,6 @@ import lombok.*;
 public class WishlistResponse {
     private Integer productId;
     private String name;
-    private String slug;
     private String brand;
     private PriceInfo price;
     private List<String> images;
@@ -28,8 +27,8 @@ public class WishlistResponse {
     @AllArgsConstructor
     @Builder
     public static class PriceInfo {
-        private BigDecimal current;
-        private BigDecimal original;
+        private BigDecimal discountPrice;
+        private BigDecimal price;
         @JsonProperty("discount_percent")
         private Integer discountPercent;
         private String currency;

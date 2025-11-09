@@ -32,9 +32,6 @@ public class Category {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(unique = true, length = 100)
-    private String slug;
-
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
