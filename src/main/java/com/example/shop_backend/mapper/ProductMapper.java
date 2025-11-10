@@ -89,13 +89,16 @@ public abstract class ProductMapper {
     }
 
     /**
-     * Map product images - trả về danh sách URL ảnh
+     * Map product images - trả về danh sách ImageInfo với URL và alt text
      */
     @Named("mapProductImages")
-    protected List<String> mapProductImages(Product product) {
+    protected List<ProductResponse.ImageInfo> mapProductImages(Product product) {
         return productImageRepository.findByProductId(product.getId())
                 .stream()
-                .map(img -> img.getImageUrl())
+                .map(img -> ProductResponse.ImageInfo.builder()
+                        .imageUrl(img.getImageUrl())
+                        .altText(img.getAltText())
+                        .build())
                 .collect(Collectors.toList());
     }
 
