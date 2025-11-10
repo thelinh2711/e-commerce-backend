@@ -20,7 +20,7 @@ public class ProductResponse {
     private String name;
     private BrandInfo brand;
     private PriceInfo price;
-    private List<String> images;
+    private List<ImageInfo> images;
     private List<VariantInfo> variants;
     private List<CategoryInfo> categories;
     private List<LabelInfo> labels;
@@ -48,6 +48,18 @@ public class ProductResponse {
         
         @JsonProperty("discount_price")
         private BigDecimal discountPrice;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ImageInfo {
+        @JsonProperty("image_url")
+        private String imageUrl;
+        
+        @JsonProperty("alt_text")
+        private String altText;
     }
 
     @Data
