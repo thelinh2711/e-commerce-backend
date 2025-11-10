@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import com.example.shop_backend.exception.AppException;
 import com.example.shop_backend.exception.ErrorCode;
 import com.example.shop_backend.repository.ProductCategoryRepository;
-import com.example.shop_backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +24,9 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
     private final ProductCategoryRepository productCategoryRepository;
+    private final CloudinaryService cloudinaryService; // Thêm service upload ảnh
 
+    @Transactional(readOnly = true)
     public List<CategoryResponse> getAll() {
         return categoryRepository.findAll()
                 .stream()
@@ -33,6 +34,7 @@ public class CategoryService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public CategoryResponse getById(Integer id) {
         var category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -45,13 +47,20 @@ public class CategoryService {
             throw new AppException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
 
-        var category = categoryMapper.toEntity(request);
+        // Map name + description
+        Category category = categoryMapper.toEntity(request);
+
+        // Upload ảnh lên Cloudinary và gán vào category
+        var imageFile = request.getImage();
+        String imageUrl = cloudinaryService.uploadImage(imageFile);
+        category.setImage(imageUrl);
+
         return categoryMapper.toResponse(categoryRepository.save(category));
     }
 
     @Transactional
     public CategoryResponse update(Integer id, CategoryRequest request) {
-        var category = categoryRepository.findById(id)
+        Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         // Kiểm tra name trùng với danh mục khác
@@ -60,14 +69,21 @@ public class CategoryService {
             throw new AppException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
 
+        // Map lại name + description (image bỏ qua)
         categoryMapper.updateEntityFromRequest(request, category);
+
+        // Nếu client gửi ảnh mới → upload và cập nhật
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
+            String imageUrl = cloudinaryService.uploadImage(request.getImage());
+            category.setImage(imageUrl);
+        }
+
         return categoryMapper.toResponse(categoryRepository.save(category));
     }
 
     @Transactional
     public void delete(Integer id) {
-
-        var category = categoryRepository.findById(id)
+        Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         // Kiểm tra xem danh mục có đang liên kết với sản phẩm không
@@ -78,7 +94,4 @@ public class CategoryService {
 
         categoryRepository.delete(category);
     }
-
-
 }
-

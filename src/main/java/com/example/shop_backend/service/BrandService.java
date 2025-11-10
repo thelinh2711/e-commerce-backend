@@ -11,7 +11,6 @@ import com.example.shop_backend.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,7 +22,6 @@ public class BrandService {
     private final BrandRepository brandRepository;
     private final ProductRepository productRepository;
     private final BrandMapper brandMapper;
-    private final CloudinaryService cloudinaryService;
 
     @Transactional(readOnly = true)
     public List<BrandResponse> getAllBrands() {
@@ -40,13 +38,6 @@ public class BrandService {
         }
 
         Brand brand = brandMapper.toEntity(request);
-
-        MultipartFile logoFile = request.getLogo();
-        if (logoFile != null && !logoFile.isEmpty()) {
-            String logoUrl = cloudinaryService.uploadImage(logoFile);
-            brand.setLogo(logoUrl);
-        }
-
         Brand saved = brandRepository.save(brand);
         return brandMapper.toResponse(saved);
     }
@@ -57,12 +48,6 @@ public class BrandService {
                 .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
 
         brandMapper.updateEntity(brand, request);
-
-        MultipartFile logoFile = request.getLogo();
-        if (logoFile != null && !logoFile.isEmpty()) {
-            String logoUrl = cloudinaryService.uploadImage(logoFile);
-            brand.setLogo(logoUrl);
-        }
 
         Brand updated = brandRepository.save(brand);
         return brandMapper.toResponse(updated);

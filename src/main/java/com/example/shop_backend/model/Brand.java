@@ -29,8 +29,6 @@ public class Brand {
     @Column(unique = true, nullable = false, length = 100)
     private String name;
 
-    private String logo;
-
     @Column(columnDefinition = "TEXT")
     private String description;
 

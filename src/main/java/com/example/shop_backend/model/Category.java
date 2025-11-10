@@ -32,6 +32,9 @@ public class Category {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(nullable = false, name = "image")
+    private String image;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

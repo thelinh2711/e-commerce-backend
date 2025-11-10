@@ -15,6 +15,4 @@ public class BrandRequest {
     private String name;
 
     private String description;
-
-    private MultipartFile logo; // upload ảnh Cloudinary
 }

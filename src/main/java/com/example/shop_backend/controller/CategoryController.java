@@ -7,14 +7,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.shop_backend.dto.request.CategoryRequest;
 import com.example.shop_backend.dto.response.ApiResponse;
-import com.example.shop_backend.dto.response.CategoryListResponse;
 import com.example.shop_backend.dto.response.CategoryResponse;
 import com.example.shop_backend.service.CategoryService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -25,7 +26,15 @@ public class CategoryController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> getAll() {
-        return ResponseEntity.ok(ApiResponse.success(categoryService.getAll()));
+        List<CategoryResponse> categories = categoryService.getAll();
+
+        ApiResponse<List<CategoryResponse>> response = ApiResponse.<List<CategoryResponse>>builder()
+                .code(1000)
+                .message("Lấy danh sách danh mục thành công")
+                .result(categories)
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -41,9 +50,11 @@ public class CategoryController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<CategoryResponse>> create(@Valid @RequestBody CategoryRequest request) {
+    public ResponseEntity<ApiResponse<CategoryResponse>> create(
+            @Valid @ModelAttribute CategoryRequest request) {
+
         CategoryResponse category = categoryService.create(request);
 
         ApiResponse<CategoryResponse> response = ApiResponse.<CategoryResponse>builder()
@@ -55,11 +66,11 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<CategoryResponse>> update(
             @PathVariable Integer id,
-            @Valid @RequestBody CategoryRequest request) {
+            @Valid @ModelAttribute CategoryRequest request) {
 
         CategoryResponse category = categoryService.update(id, request);
 
