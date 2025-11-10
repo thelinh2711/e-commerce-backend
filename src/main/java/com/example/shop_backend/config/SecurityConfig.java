@@ -42,6 +42,14 @@ public class SecurityConfig {
                         // Cho phép ai cũng xem danh sách sản phẩm được thích nhiều nhất
                         .requestMatchers(HttpMethod.GET, "/api/wishlist/top-liked").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll()
+                        // Public GET Labels
+                        .requestMatchers(HttpMethod.GET, "/api/labels/**").permitAll()
+
+                        // Public GET Colors
+                        .requestMatchers(HttpMethod.GET, "/api/colors/**").permitAll()
+
+                        // Public GET Sizes
+                        .requestMatchers(HttpMethod.GET, "/api/sizes/**").permitAll()
 
                         // ADMIN quản lý Category & Product
                         .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
