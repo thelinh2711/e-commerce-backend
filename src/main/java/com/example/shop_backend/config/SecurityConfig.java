@@ -37,6 +37,8 @@ public class SecurityConfig {
                         // Cho phép truy cập static files (images, css, js)
                         .requestMatchers("/public/**").permitAll()
 
+                        .requestMatchers("/api/users/change-password", "/api/users/update-profile").authenticated()
+
                         // Cho phép GET sản phẩm công khai
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         // Cho phép ai cũng xem danh sách sản phẩm được thích nhiều nhất
@@ -72,13 +74,6 @@ public class SecurityConfig {
                         .requestMatchers("POST", "/api/product-variants/**").hasRole("ADMIN")
                         .requestMatchers("PUT", "/api/product-variants/**").hasRole("ADMIN")
                         .requestMatchers("DELETE", "/api/product-variants/**").hasRole("ADMIN")
-
-
-                        // ✅ CUSTOMER được đổi mật khẩu, cập nhật profile
-                        .requestMatchers("/api/users/change-password", "/api/users/update-profile").hasRole("CUSTOMER")
-                        // CUSTOMER thao tác user info
-                        .requestMatchers("/api/users/change-password", "/api/users/update-profile")
-                        .hasRole("CUSTOMER")
 
                         // ADMIN area
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

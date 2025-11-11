@@ -46,6 +46,10 @@ public enum ErrorCode {
     BRAND_EXISTED(2012, "Tên thương hiệu đã tồn tại", HttpStatus.BAD_REQUEST),
     BRAND_HAS_PRODUCTS(2013, "Không thể xóa thương hiệu vì đang có sản phẩm liên quan", HttpStatus.BAD_REQUEST),
 
+    // Lỗi giỏ hàng
+    CART_NOT_FOUND(3001, "Giỏ hàng không tồn tại", HttpStatus.NOT_FOUND),
+    CART_ITEM_NOT_FOUND(3002, "Sản phẩm trong giỏ hàng không tồn tại", HttpStatus.NOT_FOUND),
+
     ;
 
     ErrorCode(int code, String message, HttpStatus httpStatusCode) {

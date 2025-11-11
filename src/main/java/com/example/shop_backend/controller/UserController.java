@@ -55,10 +55,6 @@ public class UserController {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        if (user.getRole() != Role.CUSTOMER) {
-            throw new AppException(ErrorCode.FORBIDDEN);
-        }
-
         userService.updateUserInfo(user.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật thông tin thành công", null));
     }
