@@ -35,6 +35,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(unique = true)
+    private String sku;
+
     @Column(nullable = false)
     private String name;
 
@@ -51,7 +54,7 @@ public class Product {
     @Column(name = "discount_percent", columnDefinition = "INT DEFAULT 0")
     private Integer discountPercent = 0;
 
-    @Column(name = "discount_price", precision = 10, scale = 2)
+    @Column(name = "discount_price", precision = 20, scale = 0)
     private BigDecimal discountPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -13,31 +13,32 @@ BẢNG CƠ SỞ (TIER 1) - KHÔNG PHỤ THUỘC
 
 -- Brands (10)
 -- Thêm: is_active để khớp với model Brand
-INSERT INTO brands (name, description, logo, is_active) VALUES
-('Nike', 'Thương hiệu thể thao hàng đầu thế giới.', 'nike_logo.png', TRUE),
-('Adidas', 'Thương hiệu thể thao nổi tiếng từ Đức.', 'adidas_logo.png', TRUE),
-('Puma', 'Thương hiệu thể thao với logo báo đốm.', 'puma_logo.png', TRUE),
-('Under Armour', 'Thương hiệu chuyên về quần áo và phụ kiện thể thao hiệu suất cao.', 'under_armour_logo.png', TRUE),
-('ASICS', 'Thương hiệu nổi tiếng về giày chạy bộ từ Nhật Bản.', 'asics_logo.png', TRUE),
-('New Balance', 'Thương hiệu giày thể thao thoải mái và thời trang.', 'new_balance_logo.png', TRUE),
-('Reebok', 'Thương hiệu con của Adidas, tập trung vào CrossFit và training.', 'reebok_logo.png', TRUE),
-('The North Face', 'Chuyên về đồ dã ngoại, leo núi và thời tiết lạnh.', 'the_north_face_logo.png', TRUE),
-('Columbia', 'Thương hiệu đồ outdoor và dã ngoại.', 'columbia_logo.png', TRUE),
-('Decathlon (Quechua)', 'Thương hiệu bán lẻ thể thao giá cả phải chăng.', 'decathlon_logo.png', TRUE);
+INSERT INTO brands (name, description, is_active) VALUES
+('Nike', 'Thương hiệu thể thao hàng đầu thế giới.', TRUE),
+('Adidas', 'Thương hiệu thể thao nổi tiếng từ Đức.', TRUE),
+('Puma', 'Thương hiệu thể thao với logo báo đốm.', TRUE),
+('Under Armour', 'Thương hiệu chuyên về quần áo và phụ kiện thể thao hiệu suất cao.', TRUE),
+('ASICS', 'Thương hiệu nổi tiếng về giày chạy bộ từ Nhật Bản.', TRUE),
+('New Balance', 'Thương hiệu giày thể thao thoải mái và thời trang.', TRUE),
+('Reebok', 'Thương hiệu con của Adidas, tập trung vào CrossFit và training.', TRUE),
+('The North Face', 'Chuyên về đồ dã ngoại, leo núi và thời tiết lạnh.', TRUE),
+('Columbia', 'Thương hiệu đồ outdoor và dã ngoại.', TRUE),
+('Decathlon (Quechua)', 'Thương hiệu bán lẻ thể thao giá cả phải chăng.', TRUE);
 
 -- Categories (10)
 -- Đã bỏ: slug (không có trong model Category)
-INSERT INTO categories (name, description) VALUES
-('Giày Chạy Bộ', 'Giày chuyên dụng cho chạy bộ đường trường và đường mòn.'),
-('Giày Đá Banh', 'Giày đinh cho sân cỏ tự nhiên và nhân tạo.'),
-('Áo Thun & Áo Ba Lỗ', 'Áo thun, áo tank top cho tập luyện và mặc hàng ngày.'),
-('Quần Short', 'Quần short cho mọi hoạt động thể thao.'),
-('Quần Dài & Legging', 'Quần jogger, quần legging, quần nỉ.'),
-('Áo Khoác', 'Áo khoác gió, áo khoác nỉ, áo khoác chống nước.'),
-('Đồ Tập Gym', 'Quần áo chuyên dụng cho tập gym và fitness.'),
-('Phụ Kiện', 'Tất, mũ, găng tay, băng đô.'),
-('Balo & Túi', 'Balo, túi trống, túi đeo chéo thể thao.'),
-('Dụng Cụ Thể Thao', 'Bóng, thảm tập yoga, dây nhảy.');
+-- Thêm: image (bắt buộc trong model Category)
+INSERT INTO categories (name, description, image) VALUES
+('Giày Chạy Bộ', 'Giày chuyên dụng cho chạy bộ đường trường và đường mòn.', 'category_running_shoes.jpg'),
+('Giày Đá Banh', 'Giày đinh cho sân cỏ tự nhiên và nhân tạo.', 'category_football_shoes.jpg'),
+('Áo Thun & Áo Ba Lỗ', 'Áo thun, áo tank top cho tập luyện và mặc hàng ngày.', 'category_tshirts.jpg'),
+('Quần Short', 'Quần short cho mọi hoạt động thể thao.', 'category_shorts.jpg'),
+('Quần Dài & Legging', 'Quần jogger, quần legging, quần nỉ.', 'category_pants.jpg'),
+('Áo Khoác', 'Áo khoác gió, áo khoác nỉ, áo khoác chống nước.', 'category_jackets.jpg'),
+('Đồ Tập Gym', 'Quần áo chuyên dụng cho tập gym và fitness.', 'category_gym.jpg'),
+('Phụ Kiện', 'Tất, mũ, găng tay, băng đô.', 'category_accessories.jpg'),
+('Balo & Túi', 'Balo, túi trống, túi đeo chéo thể thao.', 'category_bags.jpg'),
+('Dụng Cụ Thể Thao', 'Bóng, thảm tập yoga, dây nhảy.', 'category_equipment.jpg');
 
 -- Colors (10)
 INSERT INTO colors (name, hex_code) VALUES
@@ -221,126 +222,126 @@ Tạo 10 sản phẩm cho mỗi thương hiệu (10 thương hiệu)
 Đã bỏ: stock, total_product, sku, slug, status, discount_price (GENERATED COLUMN)
 =====================================================
 */
-INSERT INTO products (name, description, price, cost_price, discount_percent, brand_id, sold, created_at) VALUES
+INSERT INTO products (name, description, price, cost_price, discount_percent, brand_id, sold, sku, created_at) VALUES
 -- Nike (1-10)
-('Nike Air Zoom Pegasus 40', 'Giày chạy bộ huyền thoại, êm ái và ổn định.', 3200000, NULL, 0, 1, 0, '2025-09-15 10:00:00'),
-('Nike Mercurial Superfly 9', 'Giày đá banh tốc độ, thiết kế cho sân cỏ tự nhiên.', 4500000, NULL, 0, 1, 0, '2025-09-20 14:30:00'),
-('Áo Thun Nike Dri-FIT Miller', 'Áo thun chạy bộ, công nghệ Dri-FIT thoáng khí.', 850000, NULL, 10, 1, 0, '2025-10-01 09:15:00'),
-('Quần Short Nike Challenger', 'Quần short chạy bộ 2 lớp, có túi đựng điện thoại.', 1100000, NULL, 0, 1, 0, '2025-10-05 11:20:00'),
-('Quần Legging Nike Pro', 'Quần legging tập luyện, co giãn và hỗ trợ cơ bắp.', 1300000, NULL, 0, 1, 0, '2025-10-10 16:45:00'),
-('Áo Khoác Nike Windrunner', 'Áo khoác gió, chống nước nhẹ, thiết kế cổ điển.', 2500000, NULL, 15, 1, 0, '2025-10-12 13:30:00'),
-('Áo Bra Nike Swoosh', 'Áo lót thể thao hỗ trợ vừa, thoải mái.', 900000, NULL, 0, 1, 0, '2025-10-15 10:00:00'),
-('Tất Nike Everyday Plus', 'Tất thể thao, đệm êm, thấm hút mồ hôi (bộ 3 đôi).', 450000, NULL, 0, 1, 0, '2025-10-18 15:20:00'),
-('Balo Nike Brasilia', 'Balo thể thao, dung tích lớn, nhiều ngăn.', 1200000, NULL, 0, 1, 0, '2025-10-20 12:00:00'),
-('Bóng Rổ Nike Everyday', 'Bóng rổ size 7, chất liệu cao su bền bỉ.', 700000, NULL, 0, 1, 0, '2025-10-22 14:15:00'),
+('Nike Air Zoom Pegasus 40', 'Giày chạy bộ huyền thoại, êm ái và ổn định.', 3200000, NULL, 0, 1, 0, 'SP1', '2025-09-15 10:00:00'),
+('Nike Mercurial Superfly 9', 'Giày đá banh tốc độ, thiết kế cho sân cỏ tự nhiên.', 4500000, NULL, 0, 1, 0, 'SP2', '2025-09-20 14:30:00'),
+('Áo Thun Nike Dri-FIT Miller', 'Áo thun chạy bộ, công nghệ Dri-FIT thoáng khí.', 850000, NULL, 10, 1, 0, 'SP3', '2025-10-01 09:15:00'),
+('Quần Short Nike Challenger', 'Quần short chạy bộ 2 lớp, có túi đựng điện thoại.', 1100000, NULL, 0, 1, 0, 'SP4', '2025-10-05 11:20:00'),
+('Quần Legging Nike Pro', 'Quần legging tập luyện, co giãn và hỗ trợ cơ bắp.', 1300000, NULL, 0, 1, 0, 'SP5', '2025-10-10 16:45:00'),
+('Áo Khoác Nike Windrunner', 'Áo khoác gió, chống nước nhẹ, thiết kế cổ điển.', 2500000, NULL, 15, 1, 0, 'SP6', '2025-10-12 13:30:00'),
+('Áo Bra Nike Swoosh', 'Áo lót thể thao hỗ trợ vừa, thoải mái.', 900000, NULL, 0, 1, 0, 'SP7', '2025-10-15 10:00:00'),
+('Tất Nike Everyday Plus', 'Tất thể thao, đệm êm, thấm hút mồ hôi (bộ 3 đôi).', 450000, NULL, 0, 1, 0, 'SP8', '2025-10-18 15:20:00'),
+('Balo Nike Brasilia', 'Balo thể thao, dung tích lớn, nhiều ngăn.', 1200000, NULL, 0, 1, 0, 'SP9', '2025-10-20 12:00:00'),
+('Bóng Rổ Nike Everyday', 'Bóng rổ size 7, chất liệu cao su bền bỉ.', 700000, NULL, 0, 1, 0, 'SP10', '2025-10-22 14:15:00'),
 
 -- Adidas (11-20)
-('Adidas Ultraboost Light', 'Giày chạy bộ với đệm Boost nhẹ nhất từ trước đến nay.', 4800000, NULL, 0, 2, 0, '2025-09-18 11:00:00'),
-('Adidas Predator Accuracy', 'Giày đá banh kiểm soát, upper công nghệ mới.', 5200000, NULL, 0, 2, 0, '2025-09-25 15:30:00'),
-('Áo Thun Adidas Own The Run', 'Áo thun chạy bộ, chất liệu tái chế, thoáng mát.', 950000, NULL, 12, 2, 0, '2025-10-02 10:45:00'),
-('Quần Short Adidas 3-Stripes', 'Quần short thể thao, phong cách 3 sọc cổ điển.', 750000, NULL, 0, 2, 0, '2025-10-06 12:30:00'),
-('Quần Dài Adidas Tiro 23', 'Quần dài thể thao, dáng ôm, khóa kéo ở cổ chân.', 1400000, NULL, 0, 2, 0, '2025-10-08 14:00:00'),
-('Áo Khoác Nỉ Adidas Essentials', 'Áo khoác nỉ 3 sọc, giữ ấm tốt.', 1800000, NULL, 20, 2, 0, '2025-10-11 10:30:00'),
-('Áo Bra Tập Luyện Adidas TLRD', 'Áo lót thể thao hỗ trợ cao, tùy chỉnh.', 1100000, NULL, 0, 2, 0, '2025-10-14 09:00:00'),
-('Mũ Adidas Baseball', 'Mũ lưỡi trai, logo thêu, quai điều chỉnh.', 550000, NULL, 0, 2, 0, '2025-10-17 15:45:00'),
-('Túi Trống Adidas Defender', 'Túi trống tập gym, size M, chống nước.', 1300000, NULL, 0, 2, 0, '2025-10-19 11:15:00'),
-('Bóng Đá Adidas Al Rihla', 'Bóng đá thi đấu chính thức World Cup 2022.', 3500000, NULL, 0, 2, 0, '2025-10-21 16:20:00'),
+('Adidas Ultraboost Light', 'Giày chạy bộ với đệm Boost nhẹ nhất từ trước đến nay.', 4800000, NULL, 0, 2, 0, 'SP11', '2025-09-18 11:00:00'),
+('Adidas Predator Accuracy', 'Giày đá banh kiểm soát, upper công nghệ mới.', 5200000, NULL, 0, 2, 0, 'SP12', '2025-09-25 15:30:00'),
+('Áo Thun Adidas Own The Run', 'Áo thun chạy bộ, chất liệu tái chế, thoáng mát.', 950000, NULL, 12, 2, 0, 'SP13', '2025-10-02 10:45:00'),
+('Quần Short Adidas 3-Stripes', 'Quần short thể thao, phong cách 3 sọc cổ điển.', 750000, NULL, 0, 2, 0, 'SP14', '2025-10-06 12:30:00'),
+('Quần Dài Adidas Tiro 23', 'Quần dài thể thao, dáng ôm, khóa kéo ở cổ chân.', 1400000, NULL, 0, 2, 0, 'SP15', '2025-10-08 14:00:00'),
+('Áo Khoác Nỉ Adidas Essentials', 'Áo khoác nỉ 3 sọc, giữ ấm tốt.', 1800000, NULL, 20, 2, 0, 'SP16', '2025-10-11 10:30:00'),
+('Áo Bra Tập Luyện Adidas TLRD', 'Áo lót thể thao hỗ trợ cao, tùy chỉnh.', 1100000, NULL, 0, 2, 0, 'SP17', '2025-10-14 09:00:00'),
+('Mũ Adidas Baseball', 'Mũ lưỡi trai, logo thêu, quai điều chỉnh.', 550000, NULL, 0, 2, 0, 'SP18', '2025-10-17 15:45:00'),
+('Túi Trống Adidas Defender', 'Túi trống tập gym, size M, chống nước.', 1300000, NULL, 0, 2, 0, 'SP19', '2025-10-19 11:15:00'),
+('Bóng Đá Adidas Al Rihla', 'Bóng đá thi đấu chính thức World Cup 2022.', 3500000, NULL, 0, 2, 0, 'SP20', '2025-10-21 16:20:00'),
 
 -- Puma (21-30)
-('Puma Velocity Nitro 2', 'Giày chạy bộ, đệm Nitro Foam êm ái.', 2800000, NULL, 0, 3, 0, '2025-09-22 10:00:00'),
-('Puma Future Ultimate', 'Giày đá banh linh hoạt, không dây.', 4300000, NULL, 5, 3, 0, '2025-09-28 14:30:00'),
-('Áo Thun Puma Essentials Logo', 'Áo thun cotton, logo Puma lớn trước ngực.', 600000, NULL, 0, 3, 0, '2025-10-03 09:30:00'),
-('Quần Short Puma Fit Woven', 'Quần short tập luyện, vải dệt nhẹ, co giãn.', 800000, NULL, 0, 3, 0, '2025-10-07 13:15:00'),
-('Quần Jogger Puma T7', 'Quần jogger, viền T7 cổ điển 2 bên.', 1200000, NULL, 0, 3, 0, '2025-10-09 11:45:00'),
-('Áo Khoác Puma Iconic T7', 'Áo khoác thể thao, phong cách T7 cổ điển.', 1700000, NULL, 10, 3, 0, '2025-10-13 14:30:00'),
-('Đồ Tập Gym Puma Fit', 'Bộ đồ tập gym nữ, chất liệu co giãn.', 1500000, NULL, 0, 3, 0, '2025-10-16 10:20:00'),
-('Tất Puma Quarter (3 đôi)', 'Tất cổ ngắn, chất liệu cotton.', 300000, NULL, 0, 3, 0, '2025-10-19 16:00:00'),
-('Balo Puma Phase', 'Balo đi học, đi làm, thiết kế đơn giản.', 700000, NULL, 0, 3, 0, '2025-10-22 12:45:00'),
-('Thảm Tập Yoga Puma', 'Thảm tập yoga, chống trơn trượt.', 900000, NULL, 0, 3, 0, '2025-10-24 15:30:00'),
+('Puma Velocity Nitro 2', 'Giày chạy bộ, đệm Nitro Foam êm ái.', 2800000, NULL, 0, 3, 0, 'SP21', '2025-09-22 10:00:00'),
+('Puma Future Ultimate', 'Giày đá banh linh hoạt, không dây.', 4300000, NULL, 5, 3, 0, 'SP22', '2025-09-28 14:30:00'),
+('Áo Thun Puma Essentials Logo', 'Áo thun cotton, logo Puma lớn trước ngực.', 600000, NULL, 0, 3, 0, 'SP23', '2025-10-03 09:30:00'),
+('Quần Short Puma Fit Woven', 'Quần short tập luyện, vải dệt nhẹ, co giãn.', 800000, NULL, 0, 3, 0, 'SP24', '2025-10-07 13:15:00'),
+('Quần Jogger Puma T7', 'Quần jogger, viền T7 cổ điển 2 bên.', 1200000, NULL, 0, 3, 0, 'SP25', '2025-10-09 11:45:00'),
+('Áo Khoác Puma Iconic T7', 'Áo khoác thể thao, phong cách T7 cổ điển.', 1700000, NULL, 10, 3, 0, 'SP26', '2025-10-13 14:30:00'),
+('Đồ Tập Gym Puma Fit', 'Bộ đồ tập gym nữ, chất liệu co giãn.', 1500000, NULL, 0, 3, 0, 'SP27', '2025-10-16 10:20:00'),
+('Tất Puma Quarter (3 đôi)', 'Tất cổ ngắn, chất liệu cotton.', 300000, NULL, 0, 3, 0, 'SP28', '2025-10-19 16:00:00'),
+('Balo Puma Phase', 'Balo đi học, đi làm, thiết kế đơn giản.', 700000, NULL, 0, 3, 0, 'SP29', '2025-10-22 12:45:00'),
+('Thảm Tập Yoga Puma', 'Thảm tập yoga, chống trơn trượt.', 900000, NULL, 0, 3, 0, 'SP30', '2025-10-24 15:30:00'),
 
 -- Under Armour (31-40)
-('UA HOVR Phantom 3', 'Giày chạy bộ thông minh, kết nối app.', 3800000, NULL, 0, 4, 0, '2025-09-25 11:30:00'),
-('Giày Đá Banh UA Clone Magnetico', 'Giày đá banh, upper ôm sát như lớp da thứ 2.', 4100000, NULL, 8, 4, 0, '2025-09-30 15:00:00'),
-('Áo Thun UA HeatGear', 'Áo thun nén cơ, giữ mát và khô ráo.', 900000, NULL, 0, 4, 0, '2025-10-04 10:00:00'),
-('Quần Short UA Launch Run', 'Quần short chạy bộ, siêu nhẹ, có túi.', 1000000, NULL, 0, 4, 0, '2025-10-08 13:45:00'),
-('Quần Legging UA RUSH', 'Quần legging, công nghệ RUSH hoàn trả năng lượng.', 1800000, NULL, 15, 4, 0, '2025-10-11 09:30:00'),
-('Áo Khoác UA Storm', 'Áo khoác chống nước, chống gió, siêu nhẹ.', 2800000, NULL, 0, 4, 0, '2025-10-14 14:15:00'),
-('Áo Bra UA Infinity High', 'Áo lót thể thao hỗ trợ cao, đệm mút liền.', 1500000, NULL, 0, 4, 0, '2025-10-17 11:00:00'),
-('Mũ UA Iso-Chill', 'Mũ tập luyện, công nghệ làm mát Iso-Chill.', 750000, NULL, 0, 4, 0, '2025-10-20 16:30:00'),
-('Túi Trống UA Undeniable 5.0', 'Túi trống, công nghệ Storm chống nước.', 1400000, NULL, 0, 4, 0, '2025-10-23 12:20:00'),
-('Găng Tay Tập Gym UA', 'Găng tay tập tạ, đệm êm, bám dính tốt.', 600000, NULL, 0, 4, 0, '2025-10-25 15:45:00'),
+('UA HOVR Phantom 3', 'Giày chạy bộ thông minh, kết nối app.', 3800000, NULL, 0, 4, 0, 'SP31', '2025-09-25 11:30:00'),
+('Giày Đá Banh UA Clone Magnetico', 'Giày đá banh, upper ôm sát như lớp da thứ 2.', 4100000, NULL, 8, 4, 0, 'SP32', '2025-09-30 15:00:00'),
+('Áo Thun UA HeatGear', 'Áo thun nén cơ, giữ mát và khô ráo.', 900000, NULL, 0, 4, 0, 'SP33', '2025-10-04 10:00:00'),
+('Quần Short UA Launch Run', 'Quần short chạy bộ, siêu nhẹ, có túi.', 1000000, NULL, 0, 4, 0, 'SP34', '2025-10-08 13:45:00'),
+('Quần Legging UA RUSH', 'Quần legging, công nghệ RUSH hoàn trả năng lượng.', 1800000, NULL, 15, 4, 0, 'SP35', '2025-10-11 09:30:00'),
+('Áo Khoác UA Storm', 'Áo khoác chống nước, chống gió, siêu nhẹ.', 2800000, NULL, 0, 4, 0, 'SP36', '2025-10-14 14:15:00'),
+('Áo Bra UA Infinity High', 'Áo lót thể thao hỗ trợ cao, đệm mút liền.', 1500000, NULL, 0, 4, 0, 'SP37', '2025-10-17 11:00:00'),
+('Mũ UA Iso-Chill', 'Mũ tập luyện, công nghệ làm mát Iso-Chill.', 750000, NULL, 0, 4, 0, 'SP38', '2025-10-20 16:30:00'),
+('Túi Trống UA Undeniable 5.0', 'Túi trống, công nghệ Storm chống nước.', 1400000, NULL, 0, 4, 0, 'SP39', '2025-10-23 12:20:00'),
+('Găng Tay Tập Gym UA', 'Găng tay tập tạ, đệm êm, bám dính tốt.', 600000, NULL, 0, 4, 0, 'SP40', '2025-10-25 15:45:00'),
 
 -- ASICS (41-50)
-('ASICS GEL-Kayano 30', 'Giày chạy bộ ổn định, công nghệ GEL êm ái.', 4200000, NULL, 12, 5, 0, '2025-09-16 12:00:00'),
-('ASICS GEL-Nimbus 25', 'Giày chạy bộ siêu êm, đệm dày.', 4000000, NULL, 0, 5, 0, '2025-09-21 15:30:00'),
-('Áo Thun ASICS Ventilate', 'Áo thun chạy bộ, siêu thoáng khí.', 1000000, NULL, 0, 5, 0, '2025-10-01 10:45:00'),
-('Quần Short ASICS Road 2-in-1', 'Quần short chạy bộ 2 lớp, có túi gel.', 1200000, NULL, 0, 5, 0, '2025-10-05 14:00:00'),
-('Quần Legging ASICS Lite-Show', 'Quần legging chạy tối, phản quang 360 độ.', 1500000, NULL, 18, 5, 0, '2025-10-10 12:30:00'),
-('Áo Khoác ASICS Accelerate', 'Áo khoác chạy bộ, chống gió, chống mưa nhẹ.', 2200000, NULL, 0, 5, 0, '2025-10-13 09:45:00'),
-('Áo Bra ASICS Sakura', 'Áo lót thể thao, thiết kế hoa anh đào.', 950000, NULL, 0, 5, 0, '2025-10-16 11:20:00'),
-('Tất Chạy Bộ ASICS (3 đôi)', 'Tất chạy bộ, mỏng nhẹ, chống phồng rộp.', 500000, NULL, 0, 5, 0, '2025-10-19 14:50:00'),
-('Balo Chạy Bộ ASICS', 'Balo/vest chạy bộ, đựng nước và gel.', 1800000, NULL, 0, 5, 0, '2025-10-22 10:30:00'),
-('Băng Đô ASICS', 'Băng đô thể thao, thấm hút mồ hôi.', 300000, NULL, 0, 5, 0, '2025-10-24 16:15:00'),
+('ASICS GEL-Kayano 30', 'Giày chạy bộ ổn định, công nghệ GEL êm ái.', 4200000, NULL, 12, 5, 0, 'SP41', '2025-09-16 12:00:00'),
+('ASICS GEL-Nimbus 25', 'Giày chạy bộ siêu êm, đệm dày.', 4000000, NULL, 0, 5, 0, 'SP42', '2025-09-21 15:30:00'),
+('Áo Thun ASICS Ventilate', 'Áo thun chạy bộ, siêu thoáng khí.', 1000000, NULL, 0, 5, 0, 'SP43', '2025-10-01 10:45:00'),
+('Quần Short ASICS Road 2-in-1', 'Quần short chạy bộ 2 lớp, có túi gel.', 1200000, NULL, 0, 5, 0, 'SP44', '2025-10-05 14:00:00'),
+('Quần Legging ASICS Lite-Show', 'Quần legging chạy tối, phản quang 360 độ.', 1500000, NULL, 18, 5, 0, 'SP45', '2025-10-10 12:30:00'),
+('Áo Khoác ASICS Accelerate', 'Áo khoác chạy bộ, chống gió, chống mưa nhẹ.', 2200000, NULL, 0, 5, 0, 'SP46', '2025-10-13 09:45:00'),
+('Áo Bra ASICS Sakura', 'Áo lót thể thao, thiết kế hoa anh đào.', 950000, NULL, 0, 5, 0, 'SP47', '2025-10-16 11:20:00'),
+('Tất Chạy Bộ ASICS (3 đôi)', 'Tất chạy bộ, mỏng nhẹ, chống phồng rộp.', 500000, NULL, 0, 5, 0, 'SP48', '2025-10-19 14:50:00'),
+('Balo Chạy Bộ ASICS', 'Balo/vest chạy bộ, đựng nước và gel.', 1800000, NULL, 0, 5, 0, 'SP49', '2025-10-22 10:30:00'),
+('Băng Đô ASICS', 'Băng đô thể thao, thấm hút mồ hôi.', 300000, NULL, 0, 5, 0, 'SP50', '2025-10-24 16:15:00'),
 
 -- New Balance (51-60)
-('New Balance Fresh Foam X 1080v13', 'Giày chạy bộ, đệm Fresh Foam X siêu êm.', 3900000, NULL, 0, 6, 0, '2025-09-19 13:00:00'),
-('New Balance 550', 'Giày thể thao thời trang, phong cách bóng rổ cổ điển.', 2800000, NULL, 10, 6, 0, '2025-09-24 16:00:00'),
-('Áo Thun NB Essentials', 'Áo thun cotton, logo NB cổ điển.', 700000, NULL, 0, 6, 0, '2025-10-02 11:30:00'),
-('Quần Short NB Accelerate', 'Quần short chạy bộ, chất liệu nhẹ, khô nhanh.', 850000, NULL, 0, 6, 0, '2025-10-06 14:45:00'),
-('Quần Jogger NB Athletics', 'Quần jogger nỉ, thời trang, thoải mái.', 1400000, NULL, 0, 6, 0, '2025-10-09 10:15:00'),
-('Áo Khoác Gió NB Impact Run', 'Áo khoác chạy bộ, siêu mỏng, gấp gọn được.', 2100000, NULL, 15, 6, 0, '2025-10-12 15:00:00'),
-('Đồ Tập Gym NB Relentless', 'Bộ đồ tập gym nữ, thiết kế thời trang.', 1600000, NULL, 0, 6, 0, '2025-10-15 12:30:00'),
-('Mũ NB Classic', 'Mũ lưỡi trai, logo NB.', 500000, NULL, 0, 6, 0, '2025-10-18 09:45:00'),
-('Túi Đeo Chéo NB', 'Túi đeo chéo nhỏ gọn, tiện lợi.', 650000, NULL, 0, 6, 0, '2025-10-21 14:20:00'),
-('Giày NB 574', 'Giày thời trang, thiết kế 574 huyền thoại.', 2300000, NULL, 20, 6, 0, '2025-10-23 16:00:00'),
+('New Balance Fresh Foam X 1080v13', 'Giày chạy bộ, đệm Fresh Foam X siêu êm.', 3900000, NULL, 0, 6, 0, 'SP51', '2025-09-19 13:00:00'),
+('New Balance 550', 'Giày thể thao thời trang, phong cách bóng rổ cổ điển.', 2800000, NULL, 10, 6, 0, 'SP52', '2025-09-24 16:00:00'),
+('Áo Thun NB Essentials', 'Áo thun cotton, logo NB cổ điển.', 700000, NULL, 0, 6, 0, 'SP53', '2025-10-02 11:30:00'),
+('Quần Short NB Accelerate', 'Quần short chạy bộ, chất liệu nhẹ, khô nhanh.', 850000, NULL, 0, 6, 0, 'SP54', '2025-10-06 14:45:00'),
+('Quần Jogger NB Athletics', 'Quần jogger nỉ, thời trang, thoải mái.', 1400000, NULL, 0, 6, 0, 'SP55', '2025-10-09 10:15:00'),
+('Áo Khoác Gió NB Impact Run', 'Áo khoác chạy bộ, siêu mỏng, gấp gọn được.', 2100000, NULL, 15, 6, 0, 'SP56', '2025-10-12 15:00:00'),
+('Đồ Tập Gym NB Relentless', 'Bộ đồ tập gym nữ, thiết kế thời trang.', 1600000, NULL, 0, 6, 0, 'SP57', '2025-10-15 12:30:00'),
+('Mũ NB Classic', 'Mũ lưỡi trai, logo NB.', 500000, NULL, 0, 6, 0, 'SP58', '2025-10-18 09:45:00'),
+('Túi Đeo Chéo NB', 'Túi đeo chéo nhỏ gọn, tiện lợi.', 650000, NULL, 0, 6, 0, 'SP59', '2025-10-21 14:20:00'),
+('Giày NB 574', 'Giày thời trang, thiết kế 574 huyền thoại.', 2300000, NULL, 20, 6, 0, 'SP60', '2025-10-23 16:00:00'),
 
 -- Reebok (61-70)
-('Reebok Nano X4', 'Giày tập gym, CrossFit, đế ổn định.', 3300000, NULL, 0, 7, 0, '2025-09-17 10:30:00'),
-('Reebok Classic Leather', 'Giày thời trang, da thật, phong cách cổ điển.', 2100000, NULL, 0, 7, 0, '2025-09-23 14:00:00'),
-('Áo Thun Reebok CrossFit', 'Áo thun chuyên dụng cho CrossFit.', 800000, NULL, 0, 7, 0, '2025-10-01 11:15:00'),
-('Quần Short Reebok Speedwick', 'Quần short tập luyện, thấm hút mồ hôi.', 900000, NULL, 10, 7, 0, '2025-10-04 15:30:00'),
-('Quần Legging Reebok Lux', 'Quần legging cao cấp, mềm mại, co giãn tốt.', 1300000, NULL, 0, 7, 0, '2025-10-08 12:00:00'),
-('Áo Hoodie Reebok Classic', 'Áo hoodie nỉ, logo vector lớn.', 1600000, NULL, 25, 7, 0, '2025-10-11 14:45:00'),
-('Áo Bra Reebok Lux High-Support', 'Áo lót thể thao hỗ trợ cao, cho CrossFit.', 1100000, NULL, 0, 7, 0, '2025-10-14 10:30:00'),
-('Tất Reebok Classic (3 đôi)', 'Tất cổ cao, logo Reebok.', 350000, NULL, 0, 7, 0, '2025-10-17 16:15:00'),
-('Balo Reebok Training', 'Balo tập luyện, ngăn đựng giày riêng.', 1100000, NULL, 0, 7, 0, '2025-10-20 13:00:00'),
-('Dây Nhảy Reebok', 'Dây nhảy tốc độ, tay cầm bọc đệm.', 400000, NULL, 0, 7, 0, '2025-10-22 15:45:00'),
+('Reebok Nano X4', 'Giày tập gym, CrossFit, đế ổn định.', 3300000, NULL, 0, 7, 0, 'SP61', '2025-09-17 10:30:00'),
+('Reebok Classic Leather', 'Giày thời trang, da thật, phong cách cổ điển.', 2100000, NULL, 0, 7, 0, 'SP62', '2025-09-23 14:00:00'),
+('Áo Thun Reebok CrossFit', 'Áo thun chuyên dụng cho CrossFit.', 800000, NULL, 0, 7, 0, 'SP63', '2025-10-01 11:15:00'),
+('Quần Short Reebok Speedwick', 'Quần short tập luyện, thấm hút mồ hôi.', 900000, NULL, 10, 7, 0, 'SP64', '2025-10-04 15:30:00'),
+('Quần Legging Reebok Lux', 'Quần legging cao cấp, mềm mại, co giãn tốt.', 1300000, NULL, 0, 7, 0, 'SP65', '2025-10-08 12:00:00'),
+('Áo Hoodie Reebok Classic', 'Áo hoodie nỉ, logo vector lớn.', 1600000, NULL, 25, 7, 0, 'SP66', '2025-10-11 14:45:00'),
+('Áo Bra Reebok Lux High-Support', 'Áo lót thể thao hỗ trợ cao, cho CrossFit.', 1100000, NULL, 0, 7, 0, 'SP67', '2025-10-14 10:30:00'),
+('Tất Reebok Classic (3 đôi)', 'Tất cổ cao, logo Reebok.', 350000, NULL, 0, 7, 0, 'SP68', '2025-10-17 16:15:00'),
+('Balo Reebok Training', 'Balo tập luyện, ngăn đựng giày riêng.', 1100000, NULL, 0, 7, 0, 'SP69', '2025-10-20 13:00:00'),
+('Dây Nhảy Reebok', 'Dây nhảy tốc độ, tay cầm bọc đệm.', 400000, NULL, 0, 7, 0, 'SP70', '2025-10-22 15:45:00'),
 
 -- The North Face (71-80)
-('Giày Leo Núi TNF VECTIV', 'Giày leo núi, công nghệ VECTIV trợ lực.', 4500000, NULL, 0, 8, 0, '2025-09-20 12:30:00'),
-('Áo Khoác TNF Resolve 2', 'Áo khoác chống nước, công nghệ DryVent 2L.', 2900000, NULL, 20, 8, 0, '2025-09-26 15:00:00'),
-('Áo Thun TNF Simple Dome', 'Áo thun cotton, logo TNF nhỏ.', 750000, NULL, 0, 8, 0, '2025-10-02 09:45:00'),
-('Quần Short TNF Movmynt', 'Quần short chạy trail, siêu nhẹ.', 1300000, NULL, 0, 8, 0, '2025-10-05 13:30:00'),
-('Quần Dài TNF Paramount', 'Quần dã ngoại, tháo ống thành quần short.', 2200000, NULL, 0, 8, 0, '2025-10-09 11:00:00'),
-('Áo Khoác Lông Vũ TNF Nuptse', 'Áo khoác lông vũ, giữ ấm, kiểu dáng retro.', 7500000, NULL, 0, 8, 0, '2025-10-12 14:15:00'),
-('Áo Nỉ TNF Glacier', 'Áo nỉ mỏng, giữ ấm, mặc lót.', 1500000, NULL, 0, 8, 0, '2025-10-15 10:45:00'),
-('Mũ Nồi TNF', 'Mũ len giữ ấm, logo thêu.', 600000, NULL, 0, 8, 0, '2025-10-18 16:30:00'),
-('Balo TNF Borealis', 'Balo đa năng, đi học, đi làm, đi phượt.', 2600000, NULL, 15, 8, 0, '2025-10-21 12:15:00'),
-('Găng Tay TNF Etip', 'Găng tay nỉ, cảm ứng điện thoại được.', 900000, NULL, 0, 8, 0, '2025-10-23 14:45:00'),
+('Giày Leo Núi TNF VECTIV', 'Giày leo núi, công nghệ VECTIV trợ lực.', 4500000, NULL, 0, 8, 0, 'SP71', '2025-09-20 12:30:00'),
+('Áo Khoác TNF Resolve 2', 'Áo khoác chống nước, công nghệ DryVent 2L.', 2900000, NULL, 20, 8, 0, 'SP72', '2025-09-26 15:00:00'),
+('Áo Thun TNF Simple Dome', 'Áo thun cotton, logo TNF nhỏ.', 750000, NULL, 0, 8, 0, 'SP73', '2025-10-02 09:45:00'),
+('Quần Short TNF Movmynt', 'Quần short chạy trail, siêu nhẹ.', 1300000, NULL, 0, 8, 0, 'SP74', '2025-10-05 13:30:00'),
+('Quần Dài TNF Paramount', 'Quần dã ngoại, tháo ống thành quần short.', 2200000, NULL, 0, 8, 0, 'SP75', '2025-10-09 11:00:00'),
+('Áo Khoác Lông Vũ TNF Nuptse', 'Áo khoác lông vũ, giữ ấm, kiểu dáng retro.', 7500000, NULL, 0, 8, 0, 'SP76', '2025-10-12 14:15:00'),
+('Áo Nỉ TNF Glacier', 'Áo nỉ mỏng, giữ ấm, mặc lót.', 1500000, NULL, 0, 8, 0, 'SP77', '2025-10-15 10:45:00'),
+('Mũ Nồi TNF', 'Mũ len giữ ấm, logo thêu.', 600000, NULL, 0, 8, 0, 'SP78', '2025-10-18 16:30:00'),
+('Balo TNF Borealis', 'Balo đa năng, đi học, đi làm, đi phượt.', 2600000, NULL, 15, 8, 0, 'SP79', '2025-10-21 12:15:00'),
+('Găng Tay TNF Etip', 'Găng tay nỉ, cảm ứng điện thoại được.', 900000, NULL, 0, 8, 0, 'SP80', '2025-10-23 14:45:00'),
 
 -- Columbia (81-90)
-('Giày Lội Nước Columbia Drainmaker', 'Giày lội nước, đi biển, thoát nước nhanh.', 2400000, NULL, 0, 9, 0, '2025-09-21 11:00:00'),
-('Áo Khoác Columbia Watertight II', 'Áo khoác chống nước, công nghệ Omni-Tech.', 2300000, NULL, 0, 9, 0, '2025-09-27 14:30:00'),
-('Áo Thun Columbia PFG', 'Áo thun câu cá, chống tia UV.', 900000, NULL, 0, 9, 0, '2025-10-02 10:15:00'),
-('Quần Short Columbia Silver Ridge', 'Quần short dã ngoại, vải mỏng nhẹ.', 1100000, NULL, 0, 9, 0, '2025-10-05 13:45:00'),
-('Quần Dài Columbia Omni-Heat', 'Quần giữ nhiệt, công nghệ phản nhiệt Omni-Heat.', 1900000, NULL, 0, 9, 0, '2025-10-09 11:30:00'),
-('Áo Sơ Mi Columbia Bahama', 'Áo sơ mi dã ngoại, câu cá, nhanh khô.', 1300000, NULL, 10, 9, 0, '2025-10-12 14:45:00'),
-('Áo Nỉ Columbia Steens Mountain', 'Áo nỉ dày, giữ ấm tốt.', 1200000, NULL, 0, 9, 0, '2025-10-15 11:15:00'),
-('Mũ Rộng Vành Columbia Bora Bora', 'Mũ dã ngoại, chống UV, thoáng khí.', 800000, NULL, 0, 9, 0, '2025-10-18 15:00:00'),
-('Balo Columbia Newton Ridge', 'Balo dã ngoại, dung tích 25L.', 1700000, NULL, 0, 9, 0, '2025-10-21 12:45:00'),
-('Khăn Đa Năng Columbia', 'Khăn ống đa năng, chống nắng.', 400000, NULL, 0, 9, 0, '2025-10-23 15:30:00'),
+('Giày Lội Nước Columbia Drainmaker', 'Giày lội nước, đi biển, thoát nước nhanh.', 2400000, NULL, 0, 9, 0, 'SP81', '2025-09-21 11:00:00'),
+('Áo Khoác Columbia Watertight II', 'Áo khoác chống nước, công nghệ Omni-Tech.', 2300000, NULL, 0, 9, 0, 'SP82', '2025-09-27 14:30:00'),
+('Áo Thun Columbia PFG', 'Áo thun câu cá, chống tia UV.', 900000, NULL, 0, 9, 0, 'SP83', '2025-10-02 10:15:00'),
+('Quần Short Columbia Silver Ridge', 'Quần short dã ngoại, vải mỏng nhẹ.', 1100000, NULL, 0, 9, 0, 'SP84', '2025-10-05 13:45:00'),
+('Quần Dài Columbia Omni-Heat', 'Quần giữ nhiệt, công nghệ phản nhiệt Omni-Heat.', 1900000, NULL, 0, 9, 0, 'SP85', '2025-10-09 11:30:00'),
+('Áo Sơ Mi Columbia Bahama', 'Áo sơ mi dã ngoại, câu cá, nhanh khô.', 1300000, NULL, 10, 9, 0, 'SP86', '2025-10-12 14:45:00'),
+('Áo Nỉ Columbia Steens Mountain', 'Áo nỉ dày, giữ ấm tốt.', 1200000, NULL, 0, 9, 0, 'SP87', '2025-10-15 11:15:00'),
+('Mũ Rộng Vành Columbia Bora Bora', 'Mũ dã ngoại, chống UV, thoáng khí.', 800000, NULL, 0, 9, 0, 'SP88', '2025-10-18 15:00:00'),
+('Balo Columbia Newton Ridge', 'Balo dã ngoại, dung tích 25L.', 1700000, NULL, 0, 9, 0, 'SP89', '2025-10-21 12:45:00'),
+('Khăn Đa Năng Columbia', 'Khăn ống đa năng, chống nắng.', 400000, NULL, 0, 9, 0, 'SP90', '2025-10-23 15:30:00'),
 
 -- Decathlon (Quechua/Kipsta/Domyos) (91-100)
-('Giày Chạy Bộ Kiprun KD900X', 'Giày chạy bộ thi đấu, đệm carbon.', 3000000, NULL, 0, 10, 0, '2025-09-18 12:15:00'),
-('Giày Đá Banh Kipsta Viralto IV', 'Giày đá banh da thật, giá tốt.', 1500000, NULL, 0, 10, 0, '2025-09-24 15:45:00'),
-('Áo Thun Domyos Fit', 'Áo thun tập gym, giá rẻ, thoáng mát.', 150000, NULL, 0, 10, 0, '2025-10-01 09:00:00'),
-('Quần Short Domyos 2-in-1', 'Quần short tập gym, có lớp lót.', 350000, NULL, 0, 10, 0, '2025-10-04 12:30:00'),
-('Quần Legging Domyos Nữ', 'Quần legging tập yoga, co giãn.', 250000, NULL, 0, 10, 0, '2025-10-07 10:45:00'),
-('Áo Khoác Gió Quechua MH100', 'Áo khoác gió dã ngoại, chống nước nhẹ.', 400000, NULL, 0, 10, 0, '2025-10-10 14:15:00'),
-('Áo Bra Domyos', 'Áo lót thể thao, hỗ trợ vừa.', 200000, NULL, 0, 10, 0, '2025-10-13 11:30:00'),
-('Tất Chạy Bộ Kiprun (2 đôi)', 'Tất chạy bộ, chống phồng rộp.', 180000, NULL, 0, 10, 0, '2025-10-16 15:45:00'),
-('Balo Quechua NH100 (20L)', 'Balo dã ngoại, đi học, giá rẻ.', 250000, NULL, 0, 10, 0, '2025-10-19 12:30:00'),
-('Thảm Tập Yoga Domyos 8mm', 'Thảm tập yoga, dày 8mm, êm ái.', 500000, NULL, 0, 10, 0, '2025-10-22 16:00:00');
+('Giày Chạy Bộ Kiprun KD900X', 'Giày chạy bộ thi đấu, đệm carbon.', 3000000, NULL, 0, 10, 0, 'SP91', '2025-09-18 12:15:00'),
+('Giày Đá Banh Kipsta Viralto IV', 'Giày đá banh da thật, giá tốt.', 1500000, NULL, 0, 10, 0, 'SP92', '2025-09-24 15:45:00'),
+('Áo Thun Domyos Fit', 'Áo thun tập gym, giá rẻ, thoáng mát.', 150000, NULL, 0, 10, 0, 'SP93', '2025-10-01 09:00:00'),
+('Quần Short Domyos 2-in-1', 'Quần short tập gym, có lớp lót.', 350000, NULL, 0, 10, 0, 'SP94', '2025-10-04 12:30:00'),
+('Quần Legging Domyos Nữ', 'Quần legging tập yoga, co giãn.', 250000, NULL, 0, 10, 0, 'SP95', '2025-10-07 10:45:00'),
+('Áo Khoác Gió Quechua MH100', 'Áo khoác gió dã ngoại, chống nước nhẹ.', 400000, NULL, 0, 10, 0, 'SP96', '2025-10-10 14:15:00'),
+('Áo Bra Domyos', 'Áo lót thể thao, hỗ trợ vừa.', 200000, NULL, 0, 10, 0, 'SP97', '2025-10-13 11:30:00'),
+('Tất Chạy Bộ Kiprun (2 đôi)', 'Tất chạy bộ, chống phồng rộp.', 180000, NULL, 0, 10, 0, 'SP98', '2025-10-16 15:45:00'),
+('Balo Quechua NH100 (20L)', 'Balo dã ngoại, đi học, giá rẻ.', 250000, NULL, 0, 10, 0, 'SP99', '2025-10-19 12:30:00'),
+('Thảm Tập Yoga Domyos 8mm', 'Thảm tập yoga, dày 8mm, êm ái.', 500000, NULL, 0, 10, 0, 'SP100', '2025-10-22 16:00:00');
 
 
 /*
@@ -547,19 +548,20 @@ INSERT INTO product_variant_images (product_variant_id, image_url) VALUES
 (7, 'public/product_image/nike_merc9_red.jpg'), (8, 'public/product_image/nike_merc9_red.jpg'),
 (10, 'public/product_image/nike_merc9_yel.jpg'), (11, 'public/product_image/nike_merc9_yel.jpg');
 
--- CartItems (Thêm sản phẩm vào giỏ hàng cho 5 user đầu)
--- (cart_id, product_id, product_variant_id, quantity, unit_price, total_price)
-INSERT INTO cart_items (cart_id, product_id, product_variant_id, quantity, unit_price, total_price) VALUES
-(2, 1, 1, 1, 3200000, 3200000), -- User 2, SP 1 (variant 1: Đen, 40)
-(3, 11, 25, 1, 4800000, 4800000), -- User 3, SP 11 (variant 25: Trắng, 40)
-(3, 13, 31, 2, 950000, 1900000), -- User 3, SP 13 (variant 31: Đen, S)
-(4, 99, NULL, 1, 250000, 250000), -- User 4, SP 99 (ko có variant)
-(5, 79, NULL, 1, 2600000, 2600000), -- User 5, SP 79 (Balo TNF)
-(6, 3, 13, 1, 850000, 850000),
-(7, 4, 19, 1, 1100000, 1100000),
-(8, 21, 40, 1, 2800000, 2800000),
-(9, 31, 46, 1, 3800000, 3800000),
-(10, 100, NULL, 1, 500000, 500000);
+-- CartItems (Thêm sản phẩm vào giỏ hàng cho 10 user)
+-- Model CartItem: cart_id, product_variant_id (bắt buộc), quantity, item_total_price
+-- Lưu ý: KHÔNG có product_id, unit_price, total_price
+INSERT INTO cart_items (cart_id, product_variant_id, quantity, item_total_price) VALUES
+(2, 1, 1, 3200000), -- User 2, Cart 2, Variant 1 (SP1: Nike Air Zoom - Đen, 40)
+(3, 25, 1, 4800000), -- User 3, Cart 3, Variant 25 (SP11: Adidas Ultraboost - Trắng, 40)
+(3, 31, 2, 1672000), -- User 3, Cart 3, Variant 31 (SP13: Áo Adidas - Đen, S) - giá đã giảm 12%
+(4, 19, 1, 1100000), -- User 4, Cart 4, Variant 19 (SP4: Quần Nike - Đen, S)
+(5, 46, 1, 3230000), -- User 5, Cart 5, Variant 46 (SP31: UA HOVR - size variant)
+(6, 13, 1, 765000), -- User 6, Cart 6, Variant 13 (SP3: Áo Nike - Đen, S) - giá đã giảm 10%
+(7, 19, 1, 1100000), -- User 7, Cart 7, Variant 19 (SP4: Quần Nike - Đen, S)
+(8, 40, 1, 2800000), -- User 8, Cart 8, Variant 40 (SP21: Giày Puma)
+(9, 46, 1, 3230000), -- User 9, Cart 9, Variant 46 (SP31: UA HOVR)
+(10, 1, 1, 3200000); -- User 10, Cart 10, Variant 1 (SP1: Nike Air Zoom - Đen, 40)
 
 -- MessageAttachments (Đính kèm cho tin nhắn 9)
 INSERT INTO message_attachments (message_id, file_url, file_name, file_size, file_type) VALUES
