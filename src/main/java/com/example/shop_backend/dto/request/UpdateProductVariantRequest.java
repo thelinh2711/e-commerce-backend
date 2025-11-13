@@ -2,8 +2,6 @@ package com.example.shop_backend.dto.request;
 
 import java.util.List;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
