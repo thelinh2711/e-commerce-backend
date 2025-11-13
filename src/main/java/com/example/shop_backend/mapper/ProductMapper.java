@@ -42,6 +42,7 @@ public abstract class ProductMapper {
      * Convert Product entity sang ProductResponse DTO
      */
     @Mapping(target = "id", expression = "java(product.getId().toString())")
+    @Mapping(target = "sku", source = "sku")
     @Mapping(target = "brand", source = "product", qualifiedByName = "mapBrand")
     @Mapping(target = "price", source = "product", qualifiedByName = "mapPriceInfo")
     @Mapping(target = "images", source = "product", qualifiedByName = "mapProductImages")
@@ -59,9 +60,14 @@ public abstract class ProductMapper {
     protected ProductResponse.PriceInfo mapPriceInfo(Product product) {
         java.math.BigDecimal price = product.getPrice();
         Integer discountPercent = product.getDiscountPercent() != null ? product.getDiscountPercent() : 0;
-        java.math.BigDecimal discountPrice = product.getDiscountPrice() != null 
-            ? product.getDiscountPrice() 
-            : price;
+        
+        // Convert discountPrice to Long (remove decimal part)
+        Long discountPrice = null;
+        if (product.getDiscountPrice() != null) {
+            discountPrice = product.getDiscountPrice().longValue();
+        } else {
+            discountPrice = price.longValue();
+        }
         
         return ProductResponse.PriceInfo.builder()
                 .price(price)

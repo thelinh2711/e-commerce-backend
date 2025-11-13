@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 public class ProductResponse {
     private String id;
     private String name;
+    private String sku;
     private BrandInfo brand;
     private PriceInfo price;
     private List<ImageInfo> images;
@@ -47,7 +48,7 @@ public class ProductResponse {
         private Integer discountPercent;
         
         @JsonProperty("discount_price")
-        private BigDecimal discountPrice;
+        private Long discountPrice;
     }
 
     @Data

@@ -140,18 +140,84 @@ public class ProductVariantService {
         return convertToResponse(savedVariant);
     }
 
-        // Update a product variant's stock
-        @Transactional
-        public ProductVariantResponse updateVariantStock(Integer id, Integer newStock) {
-                ProductVariant variant = productVariantRepository.findById(id)
-                        .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+    /**
+     * Update a product variant (color, size, stock, images)
+     * Only updates fields that are provided (not null) in request
+     * 
+     * @param id Variant ID
+     * @param request UpdateProductVariantRequest containing fields to update
+     * @return ProductVariantResponse of updated variant
+     * @throws AppException if variant not found, or duplicate variant exists
+     */
+    @Transactional
+    public ProductVariantResponse updateVariant(Integer id, com.example.shop_backend.dto.request.UpdateProductVariantRequest request) {
+        ProductVariant variant = productVariantRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
 
-                int newStockValue = newStock + variant.getStock();
-                variant.setStock(newStockValue);
-                ProductVariant updatedVariant = productVariantRepository.save(variant);
-
-                return convertToResponse(updatedVariant);
+        boolean hasChanges = false;
+        
+        // Update color if provided
+        Color newColor = variant.getColor();
+        if (request.getColorId() != null) {
+            newColor = colorRepository.findById(request.getColorId())
+                    .orElseThrow(() -> new AppException(ErrorCode.COLOR_NOT_FOUND));
+            hasChanges = true;
         }
+        
+        // Update size if provided
+        Size newSize = variant.getSize();
+        if (request.getSizeId() != null) {
+            newSize = sizeRepository.findById(request.getSizeId())
+                    .orElseThrow(() -> new AppException(ErrorCode.SIZE_NOT_FOUND));
+            hasChanges = true;
+        }
+        
+        // Check duplicate variant if color or size changed
+        if (hasChanges) {
+            java.util.Optional<ProductVariant> existing = productVariantRepository.findDuplicate(
+                    variant.getProduct().getId(),
+                    newColor != null ? newColor.getId() : null,
+                    newSize != null ? newSize.getId() : null
+            );
+            
+            // Check if duplicate exists and it's not the same variant we're updating
+            if (existing.isPresent() && !existing.get().getId().equals(id)) {
+                throw new AppException(ErrorCode.PRODUCT_VARIANT_EXISTED);
+            }
+            
+            variant.setColor(newColor);
+            variant.setSize(newSize);
+        }
+        
+        // Update stock if provided (ADD to existing stock, not replace)
+        if (request.getStock() != null) {
+            int newStock = variant.getStock() + request.getStock();
+            variant.setStock(newStock);
+        }
+        
+        // Save variant with updated color/size/stock
+        ProductVariant updatedVariant = productVariantRepository.save(variant);
+        
+        // Update images if provided
+        if (request.getImages() != null) {
+            // Delete existing images
+            productVariantImageRepository.deleteByProductVariantId(id);
+            
+            // Add new images
+            if (!request.getImages().isEmpty()) {
+                for (String imageUrl : request.getImages()) {
+                    ProductVariantImage variantImage = ProductVariantImage.builder()
+                            .productVariant(updatedVariant)
+                            .imageUrl(imageUrl)
+                            .build();
+                    
+                    productVariantImageRepository.save(variantImage);
+                }
+            }
+        }
+
+        return convertToResponse(updatedVariant);
+    }
 
         /**
          * Delete a product variant

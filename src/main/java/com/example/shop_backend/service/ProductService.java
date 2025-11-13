@@ -138,6 +138,10 @@ public class ProductService {
                 .build();
 
         product = productRepository.save(product);
+        
+        // Auto-generate SKU after product is saved (format: SP{id})
+        product.setSku("SP" + product.getId());
+        product = productRepository.save(product);
 
         // Add categories
         if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {

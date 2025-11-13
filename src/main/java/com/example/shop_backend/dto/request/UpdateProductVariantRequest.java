@@ -1,5 +1,7 @@
 package com.example.shop_backend.dto.request;
 
+import java.util.List;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -11,9 +13,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UpdateProductVariantStockRequest {
+public class UpdateProductVariantRequest {
     
-    @NotNull(message = "Import new stock is required")
-    @PositiveOrZero(message = "Import new stock must be zero or positive")
-    private Integer importNewStock;
+    private Integer colorId;
+    
+    private Integer sizeId;
+    
+    private Integer stock;
+    
+    private List<String> images;
 }

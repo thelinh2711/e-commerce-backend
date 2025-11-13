@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.shop_backend.dto.request.CreateProductVariantRequest;
-import com.example.shop_backend.dto.request.UpdateProductVariantStockRequest;
+import com.example.shop_backend.dto.request.UpdateProductVariantRequest;
 import com.example.shop_backend.dto.response.ApiResponse;
 import com.example.shop_backend.dto.response.ProductVariantResponse;
 import com.example.shop_backend.service.ProductVariantService;
@@ -30,7 +30,7 @@ import jakarta.validation.Valid;
  * - GET    /api/product-variants/{id}           - Get variant by ID (PUBLIC)
  * - GET    /api/product-variants/product/{id}   - Get all variants of a product (PUBLIC)
  * - POST   /api/product-variants                - Create new variant (ADMIN only)
- * - PUT    /api/product-variants/{id}           - Update variant stock (ADMIN only)
+ * - PUT    /api/product-variants/{id}           - Update variant (color, size, stock, images) (ADMIN only)
  * - DELETE /api/product-variants/{id}           - Delete variant (ADMIN only)
  * 
  * All endpoints return data in ApiResponse wrapper format
@@ -78,13 +78,13 @@ public class ProductVariantController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ProductVariantResponse>> updateVariantStock(
+    public ResponseEntity<ApiResponse<ProductVariantResponse>> updateVariant(
             @PathVariable Integer id,
-            @Valid @RequestBody UpdateProductVariantStockRequest request) {
-        ProductVariantResponse variant = productVariantService.updateVariantStock(id, request.getImportNewStock());
+            @Valid @RequestBody UpdateProductVariantRequest request) {
+        ProductVariantResponse variant = productVariantService.updateVariant(id, request);
         return ResponseEntity.ok(ApiResponse.<ProductVariantResponse>builder()
                 .code(1000)
-                .message("Variant stock updated successfully")
+                .message("Variant updated successfully")
                 .result(variant)
                 .build());
     }
