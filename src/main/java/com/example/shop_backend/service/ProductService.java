@@ -123,7 +123,8 @@ public class ProductService {
             BigDecimal discountMultiplier = BigDecimal.ONE.subtract(
                 new BigDecimal(request.getDiscountPercent()).divide(new BigDecimal(100))
             );
-            discountPrice = request.getPrice().multiply(discountMultiplier);
+            discountPrice = request.getPrice().multiply(discountMultiplier)
+                .setScale(0, java.math.RoundingMode.HALF_UP);
         }
 
         // Create product
@@ -220,27 +221,50 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        // Get brand
-        Brand brand = brandRepository.findById(request.getBrandId())
-                .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
-
-        // Calculate discount price
-        BigDecimal discountPrice = request.getPrice();
-        if (request.getDiscountPercent() != null && request.getDiscountPercent() > 0) {
-            BigDecimal discountMultiplier = BigDecimal.ONE.subtract(
-                new BigDecimal(request.getDiscountPercent()).divide(new BigDecimal(100))
-            );
-            discountPrice = request.getPrice().multiply(discountMultiplier);
+        // Update name if provided
+        if (request.getName() != null) {
+            product.setName(request.getName());
         }
 
-        // Update product fields
-        product.setName(request.getName());
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setCostPrice(null); // Cost price is null if not provided
-        product.setDiscountPercent(request.getDiscountPercent() != null ? request.getDiscountPercent() : 0);
-        product.setDiscountPrice(discountPrice);
-        product.setBrand(brand);
+        // Update description if provided
+        if (request.getDescription() != null) {
+            product.setDescription(request.getDescription());
+        }
+
+        // Update brand if provided
+        if (request.getBrandId() != null) {
+            Brand brand = brandRepository.findById(request.getBrandId())
+                    .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
+            product.setBrand(brand);
+        }
+
+        // Update price and recalculate discount price if price or discountPercent changed
+        boolean priceChanged = request.getPrice() != null;
+        boolean discountPercentChanged = request.getDiscountPercent() != null;
+
+        if (priceChanged) {
+            product.setPrice(request.getPrice());
+        }
+
+        if (discountPercentChanged) {
+            product.setDiscountPercent(request.getDiscountPercent());
+        }
+
+        // Recalculate discount price if price or discount percent changed
+        if (priceChanged || discountPercentChanged) {
+            BigDecimal currentPrice = product.getPrice();
+            Integer currentDiscountPercent = product.getDiscountPercent();
+            
+            BigDecimal discountPrice = currentPrice;
+            if (currentDiscountPercent != null && currentDiscountPercent > 0) {
+                BigDecimal discountMultiplier = BigDecimal.ONE.subtract(
+                    new BigDecimal(currentDiscountPercent).divide(new BigDecimal(100))
+                );
+                discountPrice = currentPrice.multiply(discountMultiplier)
+                    .setScale(0, java.math.RoundingMode.HALF_UP);
+            }
+            product.setDiscountPrice(discountPrice);
+        }
 
         product = productRepository.save(product);
 
