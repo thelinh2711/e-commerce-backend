@@ -13,12 +13,12 @@ import lombok.*;
 @Builder
 public class WishlistResponse {
     private Integer productId;
+    private String sku;
     private String name;
     private String brand;
     private PriceInfo price;
     private List<String> images;
-    private Integer totalProduct;
-    private Integer totalCount;
+    private Integer sold;
     private Integer likeCount; // số lượt yêu thích
     private LocalDateTime createdAt;
 
