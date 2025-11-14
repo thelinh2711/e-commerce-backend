@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.example.shop_backend.model.enums.StatusVoucher;
 import com.example.shop_backend.model.enums.VoucherDiscountType;
 
 import jakarta.persistence.Column;
@@ -34,27 +35,36 @@ public class Voucher {
     @Column(unique = true, nullable = false, length = 50)
     private String code;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('PERCENTAGE', 'FIXED_AMOUNT') DEFAULT 'PERCENTAGE'")
-    private VoucherDiscountType discountType = VoucherDiscountType.PERCENTAGE;
+    @Column(nullable = false)
+    private VoucherDiscountType discountType;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2)
     private BigDecimal discountValue;
 
-    private Integer maxUsageCount;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal maxDiscountValue;
 
-    @Column(columnDefinition = "INT DEFAULT 0")
+    @Column(precision = 10, scale = 2)
+    private BigDecimal minOrderValue;
+
+    @Column(nullable = false)
+    private Integer usageLimit;
+
+    @Column(nullable = false)
     private Integer usageCount = 0;
 
     private LocalDateTime startDate;
 
     private LocalDateTime endDate;
 
-    @Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
-    private Boolean isActive = true;
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatusVoucher status = StatusVoucher.ACTIVE;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @CreationTimestamp
     @Column(updatable = false)

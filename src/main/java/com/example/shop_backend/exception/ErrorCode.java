@@ -50,6 +50,14 @@ public enum ErrorCode {
     CART_NOT_FOUND(3001, "Giỏ hàng không tồn tại", HttpStatus.NOT_FOUND),
     CART_ITEM_NOT_FOUND(3002, "Sản phẩm trong giỏ hàng không tồn tại", HttpStatus.NOT_FOUND),
 
+    // Lỗi voucher
+    VOUCHER_NOT_FOUND(4001, "Voucher không tồn tại", HttpStatus.NOT_FOUND),
+    VOUCHER_CODE_EXISTED(4002, "Mã voucher đã tồn tại", HttpStatus.BAD_REQUEST),
+    VOUCHER_EXPIRED(4003, "Voucher đã hết hạn", HttpStatus.BAD_REQUEST),
+    VOUCHER_NOT_ACTIVE(4004, "Voucher chưa được kích hoạt", HttpStatus.BAD_REQUEST),
+    VOUCHER_OUT_OF_USES(4005, "Voucher đã hết lượt sử dụng", HttpStatus.BAD_REQUEST),
+    VOUCHER_INVALID_DATE(4006, "Ngày kết thúc phải sau ngày bắt đầu", HttpStatus.BAD_REQUEST),
+
     ;
 
     ErrorCode(int code, String message, HttpStatus httpStatusCode) {
