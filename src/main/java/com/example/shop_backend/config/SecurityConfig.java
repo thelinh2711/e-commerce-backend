@@ -53,6 +53,14 @@ public class SecurityConfig {
                         // Public GET Sizes
                         .requestMatchers(HttpMethod.GET, "/api/sizes/**").permitAll()
 
+                        // Public GET Vouchers (để validate, xem danh sách)
+                        .requestMatchers(HttpMethod.GET, "/api/vouchers/**").permitAll()
+                        
+                        // ADMIN quản lý Vouchers
+                        .requestMatchers(HttpMethod.POST, "/api/vouchers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/vouchers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/vouchers/**").hasRole("ADMIN")
+
                         // ADMIN quản lý Category & Product
                         .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")

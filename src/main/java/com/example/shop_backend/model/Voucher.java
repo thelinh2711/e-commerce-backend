@@ -36,8 +36,8 @@ public class Voucher {
     private String code;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "ENUM('PERCENTAGE', 'FIXED_AMOUNT', 'FREE') DEFAULT 'PERCENTAGE'")
-    private VoucherDiscountType discountType = VoucherDiscountType.PERCENTAGE;
+    @Column(nullable = false)
+    private VoucherDiscountType discountType;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal discountValue;
@@ -51,7 +51,7 @@ public class Voucher {
     @Column(nullable = false)
     private Integer usageLimit;
 
-    @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
+    @Column(nullable = false)
     private Integer usageCount = 0;
 
     private LocalDateTime startDate;
@@ -60,7 +60,7 @@ public class Voucher {
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "ENUM('ACTIVE', 'INACTIVE', 'EXPIRED', 'OUT_OF_STOCK') DEFAULT 'ACTIVE'")
+    @Column(nullable = false)
     private StatusVoucher status = StatusVoucher.ACTIVE;
 
     @Column(columnDefinition = "TEXT")
