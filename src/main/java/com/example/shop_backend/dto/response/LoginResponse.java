@@ -26,6 +26,7 @@ public class LoginResponse {
         private String email;
         private String phone;
         private String role;
+        private Integer rewardPoints;
         private boolean email_verified;
         private String status;
         private LocalDateTime created_at;

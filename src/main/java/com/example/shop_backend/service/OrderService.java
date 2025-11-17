@@ -240,6 +240,7 @@ public class OrderService {
                     .transactionId(null)
                     .build();
             paymentRepository.save(payment);
+            order.setPayment(payment);
         }
 
         // SAVE ITEMS
@@ -273,15 +274,32 @@ public class OrderService {
         return response;
     }
 
+    @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByUser(User user) {
-        return orderRepository.findByUser(user).stream()
+        // ĐỔI từ findByUser → findByUserWithPayment
+        List<Order> orders = orderRepository.findByUserWithPayment(user);
+
+        // DEBUG - Xem payment có null không
+        System.out.println("===== DEBUG ORDERS =====");
+        for (Order order : orders) {
+            System.out.println("Order ID: " + order.getId());
+            System.out.println("Payment: " + (order.getPayment() != null ? order.getPayment().getId() : "NULL"));
+        }
+
+        return orders.stream()
                 .map(orderMapper::toOrderResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public OrderResponse getOrderDetail(User user, Integer orderId) {
-        Order order = orderRepository.findById(orderId)
+        // ĐỔI từ findById → findByIdWithPayment
+        Order order = orderRepository.findByIdWithPayment(orderId)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        System.out.println("===== DEBUG ORDER DETAIL =====");
+        System.out.println("Order ID: " + order.getId());
+        System.out.println("Payment: " + (order.getPayment() != null ? order.getPayment().getId() : "NULL"));
 
         if (!order.getUser().getId().equals(user.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);

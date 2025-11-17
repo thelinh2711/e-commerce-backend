@@ -25,6 +25,7 @@ public interface UserMapper {
     @Mapping(target = "email_verified", expression = "java(false)")
     @Mapping(target = "status", expression = "java(user.getStatus().name().toLowerCase())")
     @Mapping(target = "role", expression = "java(user.getRole().name())")
+    @Mapping(target = "rewardPoints", source = "rewardPoints")
     @Mapping(target = "created_at", source = "createdAt")
     LoginResponse.UserInfo toLoginUserInfo(User user);
 
@@ -32,6 +33,7 @@ public interface UserMapper {
     @Mapping(target = "email_verified", expression = "java(false)")
     @Mapping(target = "status", expression = "java(user.getStatus().name().toLowerCase())")
     @Mapping(target = "role", expression = "java(user.getRole().name())")
+    @Mapping(target = "rewardPoints", source = "rewardPoints")
     @Mapping(target = "created_at", source = "createdAt")
     RegisterResponse.UserInfo toRegisterUserInfo(User user);
 }

@@ -2,6 +2,7 @@ package com.example.shop_backend.dto.response;
 
 import com.example.shop_backend.model.enums.OrderStatus;
 import com.example.shop_backend.model.enums.PaymentMethod;
+import com.example.shop_backend.model.enums.PaymentStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -40,6 +41,9 @@ public class OrderResponse {
     private Integer rewardPointsEarned;
     private Integer userRemainingRewardPoints;
 
+    // Payment information
+    private PaymentResponse payment;
+
     @Getter
     @Setter
     @NoArgsConstructor
@@ -57,5 +61,19 @@ public class OrderResponse {
         private Integer quantity;
         private BigDecimal unitPrice;   // giá bán tại thời điểm mua
         private BigDecimal totalPrice;  // unitPrice * quantity
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class PaymentResponse {
+        private Integer id;
+        private PaymentStatus status;           // PAID, UNPAID, FAILED
+        private PaymentMethod paymentMethod;    // COD, BANK_TRANSFER, VNPAY
+        private BigDecimal amount;
+        private String transactionId;           // Mã giao dịch VNPay (nếu có)
+        private LocalDateTime createdAt;
     }
 }
