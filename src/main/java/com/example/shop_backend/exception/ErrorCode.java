@@ -58,6 +58,12 @@ public enum ErrorCode {
     VOUCHER_OUT_OF_USES(4005, "Voucher đã hết lượt sử dụng", HttpStatus.BAD_REQUEST),
     VOUCHER_INVALID_DATE(4006, "Ngày kết thúc phải sau ngày bắt đầu", HttpStatus.BAD_REQUEST),
 
+    INVALID_ORDER_REQUEST(1001, "Dữ liệu tạo đơn không hợp lệ", HttpStatus.BAD_REQUEST),
+    INSUFFICIENT_STOCK(1002, "Sản phẩm không đủ số lượng", HttpStatus.BAD_REQUEST),
+    INVALID_REWARD_POINTS(1003, "Reward points không hợp lệ", HttpStatus.BAD_REQUEST),
+    VOUCHER_MIN_ORDER_NOT_MET(4007, "Giá trị đơn hàng chưa đủ điều kiện voucher", HttpStatus.BAD_REQUEST),
+    VOUCHER_INVALID_COMBINATION(4009, "Voucher kết hợp không hợp lệ", HttpStatus.BAD_REQUEST);
+
     ;
 
     ErrorCode(int code, String message, HttpStatus httpStatusCode) {

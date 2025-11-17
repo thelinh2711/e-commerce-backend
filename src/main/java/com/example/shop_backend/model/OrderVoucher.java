@@ -23,18 +23,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class OrderVoucher {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "orderId", nullable = false)
+    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "voucherId", nullable = false)
+    @JoinColumn(name = "voucher_id", nullable = false)
     private Voucher voucher;
-
-    @Column(precision = 10, scale = 2)
-    private BigDecimal discountAmount;
 }
