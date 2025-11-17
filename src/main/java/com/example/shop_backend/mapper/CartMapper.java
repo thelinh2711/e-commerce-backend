@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface CartMapper {
     @Mapping(target = "productVariantId", source = "productVariant.id")
     @Mapping(target = "productName", source = "productVariant.product.name")
+    @Mapping(target = "productSku", source = "productVariant.product.sku")
     @Mapping(target = "colorName", source = "productVariant.color.name")
     @Mapping(target = "sizeName", source = "productVariant.size.name")
     @Mapping(target = "price", source = "productVariant.product.price")

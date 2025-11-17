@@ -1,18 +1,20 @@
 package com.example.shop_backend.exception;
 
-public class AppException extends RuntimeException{
-    private ErrorCode errorCode;
+public class AppException extends RuntimeException {
+    private final ErrorCode errorCode;
 
     public AppException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
     }
 
-    public ErrorCode getErrorCode() {
-        return errorCode;
+    // Constructor mới: nhận ErrorCode + message tùy chỉnh
+    public AppException(ErrorCode errorCode, String message) {
+        super(message);
+        this.errorCode = errorCode;
     }
 
-    public void setErrorCode(ErrorCode errorCode) {
-        this.errorCode = errorCode;
+    public ErrorCode getErrorCode() {
+        return errorCode;
     }
 }

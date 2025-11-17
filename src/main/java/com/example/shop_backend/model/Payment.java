@@ -39,7 +39,7 @@ public class Payment {
     @JoinColumn(name = "orderId", nullable = false)
     private Order order;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(nullable = false, precision = 12, scale = 0)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
@@ -50,7 +50,7 @@ public class Payment {
     private String transactionId;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('PENDING', 'SUCCESS', 'FAILED') DEFAULT 'PENDING'")
+    @Column(nullable = false, length = 20)
     private PaymentStatus status = PaymentStatus.UNPAID;
 
     @CreationTimestamp

@@ -83,8 +83,13 @@ public class SecurityConfig {
                         .requestMatchers("PUT", "/api/product-variants/**").hasRole("ADMIN")
                         .requestMatchers("DELETE", "/api/product-variants/**").hasRole("ADMIN")
 
+                        .requestMatchers(HttpMethod.POST, "/api/orders/**").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasRole("CUSTOMER")
+
                         // ADMIN area
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        .requestMatchers("/api/v1/payments/**").permitAll()
 
                         // Tất cả còn lại yêu cầu đăng nhập
                         .anyRequest().authenticated()
