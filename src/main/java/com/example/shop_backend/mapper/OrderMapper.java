@@ -2,10 +2,7 @@ package com.example.shop_backend.mapper;
 
 import com.example.shop_backend.dto.request.CreateOrderRequest;
 import com.example.shop_backend.dto.response.OrderResponse;
-import com.example.shop_backend.model.CartItem;
-import com.example.shop_backend.model.Order;
-import com.example.shop_backend.model.OrderItem;
-import com.example.shop_backend.model.ProductVariant;
+import com.example.shop_backend.model.*;
 import org.mapstruct.*;
 
 import java.math.BigDecimal;
@@ -16,12 +13,25 @@ public interface OrderMapper {
 
     // ================================
     // Order -> OrderResponse
+    // payment sẽ được map tự động
     // rewardPoints phải set thủ công trong service
     // ================================
     @Mapping(target = "items", source = "items")
+    @Mapping(target = "payment", source = "payment")
     OrderResponse toOrderResponse(Order order);
 
     List<OrderResponse> toOrderResponses(List<Order> orders);
+
+    // ================================
+    // Payment -> PaymentResponse
+    // ================================
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "paymentMethod", source = "paymentMethod")
+    @Mapping(target = "amount", source = "amount")
+    @Mapping(target = "transactionId", source = "transactionId")
+    @Mapping(target = "createdAt", source = "createdAt")
+    OrderResponse.PaymentResponse toPaymentResponse(Payment payment);
 
     // ================================
     // OrderItem -> OrderItemResponse
@@ -43,6 +53,8 @@ public interface OrderMapper {
     // unitPrice lấy từ product discountPrice hoặc price
     // totalPrice = unitPrice * quantity
     // ================================
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "order", ignore = true)
     @Mapping(target = "productVariant", source = "productVariant")
     @Mapping(target = "quantity", source = "quantity")
     @Mapping(target = "unitPrice", expression =

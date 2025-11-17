@@ -81,6 +81,9 @@ public class Order {
     @Builder.Default
     private List<OrderVoucher> appliedVouchers = new ArrayList<>();
 
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Payment payment;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

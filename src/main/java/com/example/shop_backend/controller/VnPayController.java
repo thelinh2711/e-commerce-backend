@@ -43,14 +43,26 @@ public class VnPayController {
         // Lấy txnRef từ URL
         String txnRef = paymentUrl.split("vnp_TxnRef=")[1].split("&")[0];
 
-        Payment payment = Payment.builder()
-                .order(order)
-                .amount(order.getTotalAmount())
-                .paymentMethod(order.getPaymentMethod())
-                .status(PaymentStatus.UNPAID)
-                .transactionId(txnRef)
-                .build();
-        paymentRepository.save(payment);
+        // Kiểm tra xem Order đã có Payment chưa
+        Payment payment = order.getPayment();
+
+        if (payment == null) {
+            // Chưa có payment → Tạo mới
+            payment = Payment.builder()
+                    .order(order)
+                    .amount(order.getTotalAmount())
+                    .paymentMethod(order.getPaymentMethod())
+                    .status(PaymentStatus.UNPAID)
+                    .transactionId(txnRef)
+                    .build();
+            paymentRepository.save(payment);
+        } else {
+            // Đã có payment → Cập nhật transaction_id và status
+            payment.setTransactionId(txnRef);
+            payment.setStatus(PaymentStatus.UNPAID);
+            payment.setAmount(order.getTotalAmount());
+            paymentRepository.save(payment);
+        }
 
         return ResponseEntity.ok(Map.of(
                 "paymentUrl", paymentUrl,
@@ -100,8 +112,8 @@ public class VnPayController {
             paymentRepository.save(payment);
 
             Order order = payment.getOrder();
-            order.setStatus(OrderStatus.CONFIRMED);
-            orderRepository.save(order);
+            //order.setStatus(OrderStatus.CONFIRMED);
+            //orderRepository.save(order);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
