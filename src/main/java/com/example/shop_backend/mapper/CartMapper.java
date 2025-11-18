@@ -8,6 +8,7 @@ import java.util.Optional;
 @Mapper(componentModel = "spring")
 public interface CartMapper {
     @Mapping(target = "productVariantId", source = "productVariant.id")
+    @Mapping(target = "productId", source = "productVariant.product.id")
     @Mapping(target = "productName", source = "productVariant.product.name")
     @Mapping(target = "productSku", source = "productVariant.product.sku")
     @Mapping(target = "colorName", source = "productVariant.color.name")
