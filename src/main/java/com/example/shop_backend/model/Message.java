@@ -1,24 +1,10 @@
 package com.example.shop_backend.model;
 
 import java.time.LocalDateTime;
-
 import org.hibernate.annotations.CreationTimestamp;
-
 import com.example.shop_backend.model.enums.MessageType;
-import com.example.shop_backend.model.enums.SenderRole;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "Messages")
@@ -31,36 +17,23 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(columnDefinition = "TEXT")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", nullable = false)
+    private User sender;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id")
+    private User receiver;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(length = 100)
-    private String senderUsername;
-
-    @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('ADMIN', 'CLIENT') DEFAULT 'CLIENT'")
-    private SenderRole senderRole = SenderRole.CLIENT;
-
-    @Column(length = 100)
-    private String senderFullName;
-
-    @Column(length = 100)
-    private String receiverUsername;
-
-    @Column(length = 100)
+    @Column(name = "room_id", nullable = false)
     private String roomId;
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "ENUM('TEXT', 'IMAGE', 'FILE') DEFAULT 'TEXT'")
     private MessageType messageType = MessageType.TEXT;
-
-    private String attachmentName;
-
-    @Column(length = 50)
-    private String attachmentType;
-
-    @Column(length = 500)
-    private String attachmentUrl;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isRead = false;

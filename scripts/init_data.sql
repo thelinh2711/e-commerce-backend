@@ -521,17 +521,66 @@ INSERT INTO payments (order_id, amount, payment_method, transaction_id, status) 
 
 -- Messages (10 tin nhắn trong cuộc hội thoại 1 và 3)
 -- Thêm: message_type, attachment_name, attachment_type, attachment_url, is_read để khớp với model Message
-INSERT INTO messages (content, sender_username, sender_role, sender_full_name, receiver_username, room_id, message_type, is_read) VALUES
-('Chào shop, đơn hàng DH000001 của tôi đã giao chưa?', 'an.tran@gmail.com', 'CLIENT', 'Trần Văn An', 'admin@shop.com', 'CONV_1', 'TEXT', FALSE),
-('Chào bạn, để mình kiểm tra nhé.', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'an.tran@gmail.com', 'CONV_1', 'TEXT', FALSE),
-('Đơn hàng DH000001 đã được giao thành công ngày hôm qua ạ.', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'an.tran@gmail.com', 'CONV_1', 'TEXT', FALSE),
-('OK, cảm ơn shop.', 'an.tran@gmail.com', 'CLIENT', 'Trần Văn An', 'admin@shop.com', 'CONV_1', 'TEXT', FALSE),
-('Shop ơi, tôi muốn tư vấn size giày Adidas.', 'binh.le@yahoo.com', 'CLIENT', 'Lê Thị Bình', 'admin@shop.com', 'CONV_2', 'TEXT', FALSE),
-('Chào bạn, bạn thường đi size bao nhiêu?', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'binh.le@yahoo.com', 'CONV_2', 'TEXT', FALSE),
-('Tôi mua sản phẩm Nike Mercurial, bị lỗi keo ở mũi giày.', 'cuong.pham@outlook.com', 'CLIENT', 'Phạm Văn Cường', 'admin@shop.com', 'CONV_3', 'TEXT', FALSE),
-('Bạn vui lòng chụp ảnh sản phẩm gửi cho shop nhé.', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'cuong.pham@outlook.com', 'CONV_3', 'TEXT', FALSE),
-('Đây nhé shop. [hình ảnh]', 'cuong.pham@outlook.com', 'CLIENT', 'Phạm Văn Cường', 'admin@shop.com', 'CONV_3', 'TEXT', FALSE),
-('Shop đã nhận được. Shop sẽ xử lý khiếu nại này ngay.', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'cuong.pham@outlook.com', 'CONV_3', 'TEXT', FALSE);
+-- Cuộc hội thoại 1: User An (id=2) chat với Admin (id=1)
+-- room_id = "2" (userId của customer)
+
+-- Tin nhắn 1: User An gửi cho Admin (2 giờ trước)
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(2, 1, 'Chào shop, đơn hàng DH000001 của tôi đã giao chưa?', '2', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 120 MINUTE));
+
+-- Tin nhắn 2: Admin trả lời User An (1 giờ 55 phút trước = 115 phút)
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(1, 2, 'Chào bạn, để mình kiểm tra nhé.', '2', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 115 MINUTE));
+
+-- Tin nhắn 3: Admin gửi tiếp cho User An (1 giờ 50 phút trước = 110 phút)
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(1, 2, 'Đơn hàng DH000001 đã được giao thành công ngày hôm qua ạ.', '2', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 110 MINUTE));
+
+-- Tin nhắn 4: User An cảm ơn (1 giờ 45 phút trước = 105 phút)
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(2, 1, 'OK, cảm ơn shop.', '2', 'TEXT', FALSE, DATE_SUB(NOW(), INTERVAL 105 MINUTE));
+
+-- =====================================================
+
+-- Cuộc hội thoại 2: User Bình (id=3) chat với Admin (id=1)
+-- room_id = "3"
+
+-- Tin nhắn 5: User Bình gửi cho Admin (30 phút trước)
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(3, 1, 'Shop ơi, tôi muốn tư vấn size giày Adidas.', '3', 'TEXT', FALSE, DATE_SUB(NOW(), INTERVAL 30 MINUTE));
+
+-- Tin nhắn 6: Admin trả lời User Bình (25 phút trước)
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(1, 3, 'Chào bạn, bạn thường đi size bao nhiêu?', '3', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 25 MINUTE));
+
+-- =====================================================
+
+-- Cuộc hội thoại 3: User Cường (id=4) chat với Admin (id=1)
+-- room_id = "4"
+
+-- Tin nhắn 7: User Cường khiếu nại (15 phút trước)
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(4, 1, 'Tôi mua sản phẩm Nike Mercurial, bị lỗi keo ở mũi giày.', '4', 'TEXT', FALSE, DATE_SUB(NOW(), INTERVAL 15 MINUTE));
+-- Tin nhắn 8: Admin yêu cầu ảnh (10 phút trước)
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(1, 4, 'Bạn vui lòng chụp ảnh sản phẩm gửi cho shop nhé.', '4', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 10 MINUTE));
+-- Tin nhắn 9: User Cường gửi ảnh (5 phút trước)
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(4, 1, 'Đây nhé shop, sản phẩm bị lỗi như thế này.', '4', 'TEXT', FALSE, DATE_SUB(NOW(), INTERVAL 5 MINUTE));
+-- Tin nhắn 10: Admin xác nhận (2 phút trước)
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(1, 4, 'Shop đã nhận được. Shop sẽ xử lý khiếu nại này ngay.', '4', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 2 MINUTE));
+
 
 
 /*
