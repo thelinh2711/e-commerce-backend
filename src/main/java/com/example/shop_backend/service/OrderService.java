@@ -2,6 +2,7 @@ package com.example.shop_backend.service;
 
 import com.example.shop_backend.dto.request.CreateOrderRequest;
 import com.example.shop_backend.dto.response.OrderResponse;
+import com.example.shop_backend.dto.response.PageResponse;
 import com.example.shop_backend.exception.AppException;
 import com.example.shop_backend.exception.ErrorCode;
 import com.example.shop_backend.mapper.OrderMapper;
@@ -9,11 +10,15 @@ import com.example.shop_backend.model.*;
 import com.example.shop_backend.model.enums.*;
 import com.example.shop_backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -274,6 +279,66 @@ public class OrderService {
         return response;
     }
 
+    @Transactional
+    public OrderResponse updateOrderStatus(Integer orderId, OrderStatus newStatus){
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+        // check flow
+        validateTransition(order.getStatus(), newStatus);
+
+        // cập nhật trạng thái đơn
+        order.setStatus(newStatus);
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        // Nếu đơn giao thành công → cập nhật payment
+        if(newStatus == OrderStatus.DELIVERED){
+            Payment payment = order.getPayment();
+            if (payment!=null && payment.getPaymentMethod() == PaymentMethod.COD && payment.getStatus()== PaymentStatus.UNPAID){
+                payment.setStatus(PaymentStatus.PAID);
+                paymentRepository.save(payment);
+            }
+        }
+
+        return orderMapper.toOrderResponse(order);
+    }
+
+    public PageResponse<OrderResponse> getOrdersByStatus(String status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Order> orderPage;
+
+        if (status == null || status.isEmpty()) {
+            orderPage = orderRepository.findAll(pageable);
+        } else {
+            OrderStatus orderStatus;
+
+            try {
+                orderStatus = OrderStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new AppException(ErrorCode.INVALID_ORDER_REQUEST);
+            }
+
+            orderPage = orderRepository.findByStatus(orderStatus, pageable);
+        }
+
+        List<OrderResponse> data = orderPage
+                .stream()
+                .map(orderMapper::toOrderResponse)
+                .toList();
+
+        return PageResponse.<OrderResponse>builder()
+                .data(data)
+                .page(page)
+                .size(size)
+                .totalElements(orderPage.getTotalElements())
+                .totalPages(orderPage.getTotalPages())
+                .build();
+    }
+
+
+
     @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByUser(User user) {
         // ĐỔI từ findByUser → findByUserWithPayment
@@ -306,5 +371,28 @@ public class OrderService {
         }
 
         return orderMapper.toOrderResponse(order);
+    }
+
+    private void validateTransition(OrderStatus current, OrderStatus next) {
+
+        switch (current) {
+            case PENDING:
+                if (next != OrderStatus.CONFIRMED && next != OrderStatus.CANCELLED)
+                    throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
+                break;
+
+            case CONFIRMED:
+                if (next != OrderStatus.SHIPPED && next != OrderStatus.CANCELLED)
+                    throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
+                break;
+
+            case SHIPPED:
+                if (next != OrderStatus.DELIVERED)
+                    throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
+                break;
+
+            default:
+                throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
+        }
     }
 }
