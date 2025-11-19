@@ -20,7 +20,7 @@ public interface CartMapper {
 
     // Lấy ảnh đầu tiên của ProductVariant (nếu có)
     default String getFirstImage(CartItem cartItem) {
-        return Optional.ofNullable(cartItem.getProductVariant().getProduct().getImages())
+        return Optional.ofNullable(cartItem.getProductVariant().getImages())
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(0).getImageUrl())
                 .orElse(null);
