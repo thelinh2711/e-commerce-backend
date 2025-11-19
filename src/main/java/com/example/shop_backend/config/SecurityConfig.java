@@ -86,6 +86,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/orders/**").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/api/orders/**").hasRole("CUSTOMER")
 
+                        .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
+
                         // ADMIN area
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 

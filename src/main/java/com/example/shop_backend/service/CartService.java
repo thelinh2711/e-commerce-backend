@@ -1,5 +1,6 @@
 package com.example.shop_backend.service;
 
+import com.example.shop_backend.dto.request.CartItemBulkDeleteRequest;
 import com.example.shop_backend.dto.request.CartItemRequest;
 import com.example.shop_backend.dto.response.CartItemResponse;
 import com.example.shop_backend.dto.response.CartResponse;
@@ -122,6 +123,36 @@ public class CartService {
                 });
         return buildCartResponse(cart);
     }
+
+    @Transactional
+    public CartResponse removeSelectedItems(CartItemBulkDeleteRequest request, User user) {
+
+        if (user == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        if (request.getCartItemIds() == null || request.getCartItemIds().isEmpty()) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+
+        Cart cart = getUserCart(user);
+
+        // Lọc ra các cartItem hợp lệ (thuộc về user)
+        List<CartItem> itemsToRemove = cart.getItems().stream()
+                .filter(item -> request.getCartItemIds().contains(item.getId()))
+                .collect(Collectors.toList());
+
+        if (itemsToRemove.isEmpty()) {
+            throw new AppException(ErrorCode.CART_ITEM_NOT_FOUND);
+        }
+
+        // Xóa
+        cart.getItems().removeAll(itemsToRemove);
+        cartItemRepository.deleteAll(itemsToRemove);
+
+        return buildCartResponse(cart);
+    }
+
 
     // ===================== Helper =====================
 

@@ -61,6 +61,7 @@ public class OrderResponse {
         private Integer quantity;
         private BigDecimal unitPrice;   // giá bán tại thời điểm mua
         private BigDecimal totalPrice;  // unitPrice * quantity
+        private String imageUrl;
     }
 
     @Getter
