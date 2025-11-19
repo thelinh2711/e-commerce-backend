@@ -72,9 +72,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/brands/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/brands/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                        // .requestMatchers(HttpMethod.POST, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
+                        // .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
+                        // .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
 
                         // Cho phép GET product variants công khai
                         .requestMatchers("GET", "/api/product-variants/**").permitAll()

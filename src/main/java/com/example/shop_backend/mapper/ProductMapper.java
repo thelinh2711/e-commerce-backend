@@ -17,9 +17,6 @@ import com.example.shop_backend.repository.ProductImageRepository;
 import com.example.shop_backend.repository.ProductVariantImageRepository;
 import com.example.shop_backend.repository.ProductVariantRepository;
 
-/**
- * ProductMapper - MapStruct mapper để convert Product entity sang ProductResponse DTO
- */
 @Mapper(componentModel = "spring")
 public abstract class ProductMapper {
 
@@ -39,7 +36,7 @@ public abstract class ProductMapper {
     protected com.example.shop_backend.repository.ProductLabelRepository productLabelRepository;
 
     /**
-     * Convert Product entity sang ProductResponse DTO
+     * Convert Product entity sang ProductResponse DTO (cho PUBLIC/ADMIN)
      */
     @Mapping(target = "id", expression = "java(product.getId().toString())")
     @Mapping(target = "sku", source = "sku")
@@ -54,14 +51,28 @@ public abstract class ProductMapper {
     public abstract ProductResponse toProductResponse(Product product);
 
     /**
-     * Map price information từ Product entity
+     * Convert Product entity sang ProductResponse DTO (cho OWNER - bao gồm costPrice)
+     */
+    @Mapping(target = "id", expression = "java(product.getId().toString())")
+    @Mapping(target = "sku", source = "sku")
+    @Mapping(target = "brand", source = "product", qualifiedByName = "mapBrand")
+    @Mapping(target = "price", source = "product", qualifiedByName = "mapPriceInfoForOwner")
+    @Mapping(target = "images", source = "product", qualifiedByName = "mapProductImages")
+    @Mapping(target = "variants", source = "product", qualifiedByName = "mapVariants")
+    @Mapping(target = "categories", source = "product", qualifiedByName = "mapCategories")
+    @Mapping(target = "labels", source = "product", qualifiedByName = "mapLabels")
+    @Mapping(target = "totalCount", source = "product", qualifiedByName = "calculateTotalCount")
+    @Mapping(target = "sold", source = "product", qualifiedByName = "calculateSold")
+    public abstract ProductResponse toProductResponseForOwner(Product product);
+
+    /**
+     * Map price information (không bao gồm costPrice)
      */
     @Named("mapPriceInfo")
     protected ProductResponse.PriceInfo mapPriceInfo(Product product) {
         java.math.BigDecimal price = product.getPrice();
         Integer discountPercent = product.getDiscountPercent() != null ? product.getDiscountPercent() : 0;
         
-        // Convert discountPrice to Long (remove decimal part)
         Long discountPrice = null;
         if (product.getDiscountPrice() != null) {
             discountPrice = product.getDiscountPrice().longValue();
@@ -71,6 +82,7 @@ public abstract class ProductMapper {
         
         return ProductResponse.PriceInfo.builder()
                 .price(price)
+                .costPrice(null) // Không trả về costPrice
                 .currency("VND")
                 .discountPercent(discountPercent)
                 .discountPrice(discountPrice)
@@ -78,8 +90,29 @@ public abstract class ProductMapper {
     }
 
     /**
-     * Map brand information từ Product entity
+     * Map price information cho OWNER (bao gồm costPrice)
      */
+    @Named("mapPriceInfoForOwner")
+    protected ProductResponse.PriceInfo mapPriceInfoForOwner(Product product) {
+        java.math.BigDecimal price = product.getPrice();
+        Integer discountPercent = product.getDiscountPercent() != null ? product.getDiscountPercent() : 0;
+        
+        Long discountPrice = null;
+        if (product.getDiscountPrice() != null) {
+            discountPrice = product.getDiscountPrice().longValue();
+        } else {
+            discountPrice = price.longValue();
+        }
+        
+        return ProductResponse.PriceInfo.builder()
+                .price(price)
+                .costPrice(product.getCostPrice()) // ✅ Trả về costPrice cho OWNER
+                .currency("VND")
+                .discountPercent(discountPercent)
+                .discountPrice(discountPrice)
+                .build();
+    }
+
     @Named("mapBrand")
     protected ProductResponse.BrandInfo mapBrand(Product product) {
         if (product.getBrand() == null) {
@@ -94,9 +127,6 @@ public abstract class ProductMapper {
                 .build();
     }
 
-    /**
-     * Map product images - trả về danh sách ImageInfo với URL và alt text
-     */
     @Named("mapProductImages")
     protected List<ProductResponse.ImageInfo> mapProductImages(Product product) {
         return productImageRepository.findByProductId(product.getId())
@@ -108,9 +138,6 @@ public abstract class ProductMapper {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Map product variants với color, size, images
-     */
     @Named("mapVariants")
     protected List<ProductResponse.VariantInfo> mapVariants(Product product) {
         List<ProductVariant> variants = productVariantRepository
@@ -138,9 +165,6 @@ public abstract class ProductMapper {
         return variantInfos;
     }
 
-    /**
-     * Calculate total_count (tổng stock hiện tại từ variants)
-     */
     @Named("calculateTotalCount")
     protected Integer calculateTotalCount(Product product) {
         return productVariantRepository.findByProductIdWithColorAndSize(product.getId())
@@ -149,20 +173,11 @@ public abstract class ProductMapper {
                 .sum();
     }
 
-    /**
-     * Calculate sold (số lượng đã bán)
-     * Lưu ý: Cần có logic riêng để tracking sold từ Order
-     */
     @Named("calculateSold")
     protected Integer calculateSold(Product product) {
-        // TODO: Implement logic tính sold từ Order/OrderItem
-        // Hiện tại trả về giá trị mặc định từ product.sold
         return product.getSold() != null ? product.getSold() : 0;
     }
 
-    /**
-     * Map categories từ ProductCategory
-     */
     @Named("mapCategories")
     protected List<ProductResponse.CategoryInfo> mapCategories(Product product) {
         return productCategoryRepository.findByProductId(product.getId())
@@ -174,9 +189,6 @@ public abstract class ProductMapper {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Map labels từ ProductLabel
-     */
     @Named("mapLabels")
     protected List<ProductResponse.LabelInfo> mapLabels(Product product) {
         return productLabelRepository.findByProductId(product.getId())
