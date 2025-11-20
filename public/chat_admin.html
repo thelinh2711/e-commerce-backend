@@ -231,7 +231,7 @@
         let currentRoomId = null;
         
         // ✅ THAY TOKEN Ở ĐÂY
-        const token = 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbkBzaG9wLmNvbSIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc2MzM5Nzc4OCwiZXhwIjoxNzYzNDIyOTg4fQ.PoJt-FRN-WrvXAEtlBzHuptuNXdlSs7pN2OPoyQQ416q8nLfh_w0Ojw6yex2cPjBu_a2UEzmxG5g3oo6LvYZ3Q';
+        const token = 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJlbXBsb3llZUBzaG9wLmNvbSIsInJvbGUiOiJFTVBMT1lFRSIsImlhdCI6MTc2MzYyMjY3MywiZXhwIjoxNzYzNjQ3ODczfQ.sXkmTZ1qmjfMoU8yb53DQ8xH7oK-KkErKCt4rNSO3WLRzzmlT5sXAyqqEIhywMtnLpjA37qOB1zm5N8zoDxgow';
 
         async function init() {
             console.log('🚀 Khởi tạo...');
@@ -253,7 +253,7 @@
                     email: parseJwt(token).sub
                 };
 
-                if (data.result.userRole === 'ADMIN') {
+                if (data.result.userRole === 'EMPLOYEE') {
                     document.getElementById('chatRooms').style.display = 'flex';
                     displayChatRooms(data.result.chatRooms);
                 } else {
@@ -299,7 +299,7 @@
         function handleIncomingMessage(message) {
             console.log('💬 Xử lý tin nhắn:', message);
 
-            if (currentUser.role === 'ADMIN') {
+            if (currentUser.role === 'EMPLOYEE') {
                 if (currentRoomId === message.roomId) {
                     displayMessage(message);
                 }

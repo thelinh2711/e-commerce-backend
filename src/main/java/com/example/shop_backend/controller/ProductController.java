@@ -59,7 +59,7 @@ public class ProductController {
                 .success(true)
                 .data(products)
                 .build();
-        System.out.println("Current user: " + currentUser.getEmail() + ", role: " + currentUser.getRole());
+        // System.out.println("Current user: " + currentUser.getEmail() + ", role: " + currentUser.getRole());
         return ResponseEntity.ok(response);
     }
 
