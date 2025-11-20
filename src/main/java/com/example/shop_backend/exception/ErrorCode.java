@@ -72,7 +72,8 @@ public enum ErrorCode {
 
     PAYMENT_NOT_FOUND(5004, "Thông tin thanh toán không tồn tại", HttpStatus.NOT_FOUND),
     PAYMENT_ALREADY_PAID(5005, "Đơn hàng đã được thanh toán", HttpStatus.BAD_REQUEST),
-
+    REVIEW_NOT_FOUND(6001, "Review không tồn tại", HttpStatus.NOT_FOUND),
+    REVIEW_ALREADY_EXISTS(6002, "Sản phẩm này đã được đánh giá trong đơn hàng", HttpStatus.BAD_REQUEST),
 
 
     ;

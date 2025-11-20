@@ -1,72 +1,55 @@
 package com.example.shop_backend.model;
 
+import jakarta.persistence.*;
+import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import com.example.shop_backend.model.enums.ReviewStatus;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Entity
-@Table(name = "Reviews")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Entity
+@Table(
+        name = "reviews",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"user_id", "product_variant_id", "order_id"})
+        }
+)
 public class Review {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "productId", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    // Biến thể sản phẩm được đánh giá
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_variant_id", nullable = false)
+    private ProductVariant productVariant;
+
+    // 1–5 sao
     @Column(nullable = false)
     private Integer rating;
 
+    // Tên tiêu đề đánh giá (tự sinh theo rating)
+    @Column(length = 255)
     private String title;
 
+    // Nội dung đánh giá
     @Column(columnDefinition = "TEXT")
-    private String content;
-
-    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean isVerified = false;
-
-    @Column(columnDefinition = "INT DEFAULT 0")
-    private Integer helpful = 0;
-
-    @Column(columnDefinition = "INT DEFAULT 0")
-    private Integer unhelpful = 0;
-
-    @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('PENDING', 'APPROVED', 'REJECTED') DEFAULT 'PENDING'")
-    private ReviewStatus status = ReviewStatus.PENDING;
+    private String comment;
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 }
