@@ -45,6 +45,7 @@ public interface OrderMapper {
     // OrderItem -> OrderItemResponse
     // totalPrice tự tính = unitPrice * quantity
     // ================================
+    @Mapping(target = "productId", source = "productVariant.product.id")
     @Mapping(target = "productVariantId", source = "productVariant.id")
     @Mapping(target = "productSku", source = "productVariant.product.sku")
     @Mapping(target = "productName", source = "productVariant.product.name")
@@ -56,6 +57,7 @@ public interface OrderMapper {
     @Mapping(target = "imageUrl",
             source = "productVariant",
             qualifiedByName = "mapFirstImage")
+    @Mapping(target = "reviewed", ignore = true)
     OrderResponse.OrderItemResponse toOrderItemResponse(OrderItem orderItem);
     List<OrderResponse.OrderItemResponse> toOrderItemResponses(List<OrderItem> items);
 
