@@ -23,4 +23,21 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.payment WHERE o.id = :id")
     Optional<Order> findByIdWithPayment(@Param("id") Integer id);
+
+    @Query("""
+    SELECT o FROM Order o
+    WHERE (:keyword IS NULL OR
+        CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%')
+        OR EXISTS (
+            SELECT 1 FROM Order o2
+            WHERE LOWER(o2.fullName) LIKE CONCAT('% ', :keyword, ' %')
+               OR LOWER(o2.fullName) LIKE CONCAT(:keyword, ' %')
+               OR LOWER(o2.fullName) LIKE CONCAT('% ', :keyword)
+               OR LOWER(o2.fullName) = :keyword
+        )
+        OR o.phone LIKE CONCAT('%', :keyword, '%')
+    )
+""")
+    Page<Order> searchOrders(@Param("keyword") String keyword, Pageable pageable);
+
 }
