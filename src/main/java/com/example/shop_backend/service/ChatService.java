@@ -31,8 +31,8 @@ public class ChatService {
         InitChatResponse.InitChatResponseBuilder responseBuilder = InitChatResponse.builder()
                 .userRole(currentUser.getRole().name());
 
-        if (currentUser.getRole() == Role.ADMIN) {
-            System.out.println("👨‍💼 User là ADMIN - Lấy danh sách phòng");
+        if (currentUser.getRole() == Role.EMPLOYEE) {
+            System.out.println("👨‍💼 User là EMPLOYEE - Lấy danh sách phòng");
             
             List<String> roomIds = messageRepository.findAllRoomIdsOrderByLatestMessage();
             System.out.println("📋 Tìm thấy " + roomIds.size() + " phòng chat");
@@ -94,7 +94,7 @@ public class ChatService {
     public List<ChatMessageResponse> getMessagesByRoom(String roomId, User currentUser) {
         System.out.println("📋 ChatService.getMessagesByRoom() - Room: " + roomId);
         
-        if (currentUser.getRole() != Role.ADMIN) {
+        if (currentUser.getRole() != Role.EMPLOYEE) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
@@ -134,18 +134,18 @@ public class ChatService {
         // Xác định người nhận
         User receiver;
         
-        if (sender.getRole() == Role.ADMIN) {
-            System.out.println("👨‍💼 Admin gửi tin cho user trong room: " + request.getRoomId());
+        if (sender.getRole() == Role.EMPLOYEE) {
+            System.out.println("👨‍💼 Employee gửi tin cho user trong room: " + request.getRoomId());
             receiver = userRepository.findById(Integer.parseInt(request.getRoomId()))
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
             System.out.println("✅ Receiver: " + receiver.getEmail());
         } else {
-            System.out.println("👤 User gửi tin, tìm admin...");
+            System.out.println("👤 User gửi tin, tìm employee...");
             receiver = userRepository.findAll().stream()
-                    .filter(u -> u.getRole() == Role.ADMIN)
+                    .filter(u -> u.getRole() == Role.EMPLOYEE)
                     .findFirst()
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-            System.out.println("✅ Receiver (Admin): " + receiver.getEmail());
+            System.out.println("✅ Receiver (Employee): " + receiver.getEmail());
         }
 
         Message message = Message.builder()

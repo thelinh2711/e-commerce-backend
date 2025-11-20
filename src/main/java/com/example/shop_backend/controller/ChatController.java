@@ -118,9 +118,9 @@ public class ChatController {
             if (sender.getRole() == Role.CUSTOMER) {
                 System.out.println("👤 Xử lý tin từ CUSTOMER");
                 handleUserMessage(request, response);
-            } else if (sender.getRole() == Role.ADMIN) {
-                System.out.println("👨‍💼 Xử lý tin từ ADMIN");
-                handleAdminMessage(request, response);
+            } else if (sender.getRole() == Role.EMPLOYEE) {
+                System.out.println("👨‍💼 Xử lý tin từ EMPLOYEE");
+                handleEmployeeMessage(request, response);
             }
 
             System.out.println("✅ Hoàn thành");
@@ -134,28 +134,27 @@ public class ChatController {
     }
 
     private void handleUserMessage(ChatMessageRequest request, ChatMessageResponse response) {
-        List<User> admins = userRepository.findAll().stream()
-                .filter(u -> u.getRole() == Role.ADMIN)
+        List<User> employees = userRepository.findAll().stream()
+                .filter(u -> u.getRole() == Role.EMPLOYEE)
                 .toList();
 
-        System.out.println("📋 Tìm thấy " + admins.size() + " admin(s)");
-
-        for (User admin : admins) {
+        System.out.println("📋 Tìm thấy " + employees.size() + " employee(s)");
+        for (User employee : employees) {
             try {
-                System.out.println("📤 Gửi đến ADMIN: " + admin.getEmail());
+                System.out.println("📤 Gửi đến EMPLOYEE: " + employee.getEmail());
                 messagingTemplate.convertAndSendToUser(
-                        admin.getEmail(),
+                        employee.getEmail(),
                         "/queue/messages",
                         response
                 );
                 System.out.println("✅ Đã gửi thành công");
             } catch (Exception e) {
-                System.out.println("❌ Lỗi gửi đến " + admin.getEmail());
+                System.out.println("❌ Lỗi gửi đến " + employee.getEmail());
             }
         }
     }
 
-    private void handleAdminMessage(ChatMessageRequest request, ChatMessageResponse response) {
+    private void handleEmployeeMessage(ChatMessageRequest request, ChatMessageResponse response) {
         try {
             Integer userId = Integer.parseInt(request.getRoomId());
             User targetUser = userRepository.findById(userId).orElse(null);
