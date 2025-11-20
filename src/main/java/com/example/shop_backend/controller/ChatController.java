@@ -20,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -37,12 +38,33 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    /**
+     * ✅ SỬA: Lấy 40 tin nhắn mới nhất của room
+     */
     @GetMapping("/rooms/{roomId}/messages")
     public ResponseEntity<ApiResponse<List<ChatMessageResponse>>> getRoomMessages(
             @PathVariable String roomId,
             @AuthenticationPrincipal User user) {
         
         List<ChatMessageResponse> messages = chatService.getMessagesByRoom(roomId, user);
+        return ResponseEntity.ok(ApiResponse.success(messages));
+    }
+
+    /**
+     * ✅ MỚI: Load 20 tin nhắn cũ hơn (pagination)
+     */
+    @PostMapping("/rooms/{roomId}/messages/older")
+    public ResponseEntity<ApiResponse<List<ChatMessageResponse>>> getOlderMessages(
+            @PathVariable String roomId,
+            @RequestBody Map<String, Integer> request,
+            @AuthenticationPrincipal User user) {
+        
+        Integer messageId = request.get("messageId");
+        if (messageId == null) {
+            throw new AppException(ErrorCode.BAD_REQUEST, "messageId là bắt buộc");
+        }
+        
+        List<ChatMessageResponse> messages = chatService.getOlderMessages(roomId, messageId, user);
         return ResponseEntity.ok(ApiResponse.success(messages));
     }
 
