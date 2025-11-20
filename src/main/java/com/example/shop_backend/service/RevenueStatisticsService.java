@@ -16,6 +16,13 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Service xử lý thống kê doanh thu và lợi nhuận
+ * 
+ * Phân quyền:
+ * - ADMIN & OWNER: Xem doanh thu (revenue)
+ * - CHỈ OWNER: Xem lợi nhuận (profit)
+ */
 @Service
 @RequiredArgsConstructor
 public class RevenueStatisticsService {
@@ -25,36 +32,11 @@ public class RevenueStatisticsService {
     private final OrderItemRepository orderItemRepository;
 
     /**
-     * Lấy thống kê doanh thu và lợi nhuận theo khoảng thời gian
-     * Chỉ OWNER mới được gọi method này
-     */
-    @Transactional(readOnly = true)
-    public RevenueStatisticsResponse getRevenueStatistics(RevenueStatisticsRequest request) {
-        
-        LocalDateTime fromDate = request.getFromDate();
-        LocalDateTime toDate = request.getToDate();
-        
-        // Lấy tất cả payment đã thanh toán trong khoảng thời gian
-        List<Payment> payments = getFilteredPayments(fromDate, toDate);
-        
-        // Tính toán thống kê tổng quan
-        OverviewStats overview = calculateOverviewStats(payments);
-        
-        // Lấy chi tiết từng đơn hàng
-        List<OrderRevenueDetail> orderDetails = calculateOrderDetails(payments);
-        
-        // Thống kê theo khoảng thời gian
-        TimeRangeStats timeRange = calculateTimeRangeStats(payments, fromDate, toDate);
-        
-        return RevenueStatisticsResponse.builder()
-                .overview(overview)
-                .orderDetails(orderDetails)
-                .timeRange(timeRange)
-                .build();
-    }
-
-    /**
-     * Lấy payments đã thanh toán theo filter
+     * Lấy danh sách payments đã thanh toán theo khoảng thời gian
+     * 
+     * @param fromDate Ngày bắt đầu (nullable)
+     * @param toDate Ngày kết thúc (nullable)
+     * @return List payments đã PAID và được sắp xếp theo thời gian giảm dần
      */
     private List<Payment> getFilteredPayments(LocalDateTime fromDate, LocalDateTime toDate) {
         List<Payment> allPaidPayments = paymentRepository.findByStatus(PaymentStatus.PAID);
@@ -73,8 +55,186 @@ public class RevenueStatisticsService {
                 .collect(Collectors.toList());
     }
 
+    // =====================================================
+    // DOANH THU - Cho ADMIN và OWNER
+    // =====================================================
+
     /**
-     * Tính thống kê tổng quan
+     * Lấy thống kê CHỈ doanh thu (không có cost/profit)
+     * ADMIN và OWNER có thể xem
+     * 
+     * @param request RevenueStatisticsRequest chứa fromDate và toDate
+     * @return RevenueOnlyStats chỉ chứa thông tin doanh thu
+     */
+    @Transactional(readOnly = true)
+    public RevenueOnlyStats getRevenueOnly(RevenueStatisticsRequest request) {
+        LocalDateTime fromDate = request.getFromDate();
+        LocalDateTime toDate = request.getToDate();
+        
+        List<Payment> payments = getFilteredPayments(fromDate, toDate);
+        
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+        int totalProducts = 0;
+        
+        for (Payment payment : payments) {
+            totalRevenue = totalRevenue.add(payment.getAmount());
+            
+            for (OrderItem item : payment.getOrder().getItems()) {
+                totalProducts += item.getQuantity();
+            }
+        }
+        
+        return RevenueOnlyStats.builder()
+                .totalRevenue(totalRevenue.setScale(0, RoundingMode.DOWN))
+                .totalOrders(payments.size())
+                .totalProducts(totalProducts)
+                .fromDate(fromDate)
+                .toDate(toDate)
+                .build();
+    }
+
+    /**
+     * Thống kê doanh thu theo ngày
+     * Map key: yyyy-MM-dd
+     * Map value: Tổng doanh thu trong ngày đó
+     * 
+     * @param fromDate Ngày bắt đầu
+     * @param toDate Ngày kết thúc
+     * @return Map<String, BigDecimal> với key là ngày
+     */
+    @Transactional(readOnly = true)
+    public Map<String, BigDecimal> getDailyRevenue(LocalDateTime fromDate, LocalDateTime toDate) {
+        List<Payment> payments = getFilteredPayments(fromDate, toDate);
+        
+        return payments.stream()
+                .collect(Collectors.groupingBy(
+                    p -> p.getCreatedAt().toLocalDate().toString(),
+                    Collectors.reducing(
+                        BigDecimal.ZERO,
+                        Payment::getAmount,
+                        BigDecimal::add
+                    )
+                ));
+    }
+
+    /**
+     * Thống kê doanh thu theo tháng
+     * Map key: yyyy-MM (ví dụ: 2025-01)
+     * Map value: Tổng doanh thu trong tháng đó
+     * 
+     * @param fromDate Ngày bắt đầu
+     * @param toDate Ngày kết thúc
+     * @return Map<String, BigDecimal> với key là tháng
+     */
+    @Transactional(readOnly = true)
+    public Map<String, BigDecimal> getMonthlyRevenue(LocalDateTime fromDate, LocalDateTime toDate) {
+        List<Payment> payments = getFilteredPayments(fromDate, toDate);
+        
+        return payments.stream()
+                .collect(Collectors.groupingBy(
+                    p -> p.getCreatedAt().getYear() + "-" + 
+                         String.format("%02d", p.getCreatedAt().getMonthValue()),
+                    Collectors.reducing(
+                        BigDecimal.ZERO,
+                        Payment::getAmount,
+                        BigDecimal::add
+                    )
+                ));
+    }
+
+    /**
+     * Thống kê doanh thu theo quý
+     * Map key: yyyy-Qx (ví dụ: 2025-Q1, 2025-Q2)
+     * Map value: Tổng doanh thu trong quý đó
+     * 
+     * Quý được tính như sau:
+     * - Q1: tháng 1, 2, 3
+     * - Q2: tháng 4, 5, 6
+     * - Q3: tháng 7, 8, 9
+     * - Q4: tháng 10, 11, 12
+     * 
+     * @param fromDate Ngày bắt đầu
+     * @param toDate Ngày kết thúc
+     * @return Map<String, BigDecimal> với key là quý
+     */
+    @Transactional(readOnly = true)
+    public Map<String, BigDecimal> getQuarterlyRevenue(LocalDateTime fromDate, LocalDateTime toDate) {
+        List<Payment> payments = getFilteredPayments(fromDate, toDate);
+        
+        return payments.stream()
+                .collect(Collectors.groupingBy(
+                    p -> {
+                        int quarter = (p.getCreatedAt().getMonthValue() - 1) / 3 + 1;
+                        return p.getCreatedAt().getYear() + "-Q" + quarter;
+                    },
+                    Collectors.reducing(
+                        BigDecimal.ZERO,
+                        Payment::getAmount,
+                        BigDecimal::add
+                    )
+                ));
+    }
+
+    /**
+     * Thống kê doanh thu theo năm
+     * Map key: yyyy (ví dụ: 2024, 2025)
+     * Map value: Tổng doanh thu trong năm đó
+     * 
+     * @param fromDate Ngày bắt đầu
+     * @param toDate Ngày kết thúc
+     * @return Map<String, BigDecimal> với key là năm
+     */
+    @Transactional(readOnly = true)
+    public Map<String, BigDecimal> getYearlyRevenue(LocalDateTime fromDate, LocalDateTime toDate) {
+        List<Payment> payments = getFilteredPayments(fromDate, toDate);
+        
+        return payments.stream()
+                .collect(Collectors.groupingBy(
+                    p -> String.valueOf(p.getCreatedAt().getYear()),
+                    Collectors.reducing(
+                        BigDecimal.ZERO,
+                        Payment::getAmount,
+                        BigDecimal::add
+                    )
+                ));
+    }
+
+    // =====================================================
+    // LỢI NHUẬN - CHỈ CHO OWNER
+    // =====================================================
+
+    /**
+     * Lấy thống kê đầy đủ (doanh thu + lợi nhuận)
+     * CHỈ OWNER mới được gọi method này
+     * 
+     * @param request RevenueStatisticsRequest chứa fromDate và toDate
+     * @return RevenueStatisticsResponse đầy đủ thông tin
+     */
+    @Transactional(readOnly = true)
+    public RevenueStatisticsResponse getRevenueStatistics(RevenueStatisticsRequest request) {
+        LocalDateTime fromDate = request.getFromDate();
+        LocalDateTime toDate = request.getToDate();
+        
+        List<Payment> payments = getFilteredPayments(fromDate, toDate);
+        
+        // Tính toán các thống kê
+        OverviewStats overview = calculateOverviewStats(payments);
+        List<OrderRevenueDetail> orderDetails = calculateOrderDetails(payments);
+        TimeRangeStats timeRange = calculateTimeRangeStats(payments, fromDate, toDate);
+        
+        return RevenueStatisticsResponse.builder()
+                .overview(overview)
+                .orderDetails(orderDetails)
+                .timeRange(timeRange)
+                .build();
+    }
+
+    /**
+     * Tính thống kê tổng quan (overview)
+     * Bao gồm: doanh thu, chi phí, lợi nhuận, tỷ suất lợi nhuận
+     * 
+     * @param payments List payments đã thanh toán
+     * @return OverviewStats
      */
     private OverviewStats calculateOverviewStats(List<Payment> payments) {
         BigDecimal totalRevenue = BigDecimal.ZERO;
@@ -102,6 +262,7 @@ public class RevenueStatisticsService {
             }
         }
         
+        // Tính lợi nhuận
         BigDecimal totalProfit = totalRevenue.subtract(totalCost);
         
         // Tính tỷ suất lợi nhuận (%)
@@ -124,7 +285,11 @@ public class RevenueStatisticsService {
     }
 
     /**
-     * Tính chi tiết doanh thu từng đơn hàng
+     * Tính chi tiết doanh thu/lợi nhuận từng đơn hàng
+     * Bao gồm thông tin chi tiết từng sản phẩm trong đơn
+     * 
+     * @param payments List payments đã thanh toán
+     * @return List<OrderRevenueDetail>
      */
     private List<OrderRevenueDetail> calculateOrderDetails(List<Payment> payments) {
         List<OrderRevenueDetail> details = new ArrayList<>();
@@ -183,6 +348,11 @@ public class RevenueStatisticsService {
 
     /**
      * Thống kê theo khoảng thời gian
+     * 
+     * @param payments List payments đã thanh toán
+     * @param fromDate Ngày bắt đầu
+     * @param toDate Ngày kết thúc
+     * @return TimeRangeStats
      */
     private TimeRangeStats calculateTimeRangeStats(
             List<Payment> payments, 
@@ -220,39 +390,130 @@ public class RevenueStatisticsService {
     }
 
     /**
-     * Thống kê theo ngày (daily statistics)
+     * Thống kê lợi nhuận theo ngày (CHỈ OWNER)
+     * Map key: yyyy-MM-dd
+     * Map value: Tổng lợi nhuận trong ngày đó
+     * 
+     * @param fromDate Ngày bắt đầu
+     * @param toDate Ngày kết thúc
+     * @return Map<String, BigDecimal> với key là ngày
      */
     @Transactional(readOnly = true)
-    public Map<String, BigDecimal> getDailyRevenue(LocalDateTime fromDate, LocalDateTime toDate) {
+    public Map<String, BigDecimal> getDailyProfit(LocalDateTime fromDate, LocalDateTime toDate) {
         List<Payment> payments = getFilteredPayments(fromDate, toDate);
         
-        return payments.stream()
-                .collect(Collectors.groupingBy(
-                    p -> p.getCreatedAt().toLocalDate().toString(),
-                    Collectors.reducing(
-                        BigDecimal.ZERO,
-                        Payment::getAmount,
-                        BigDecimal::add
-                    )
-                ));
+        Map<String, BigDecimal> dailyProfit = new HashMap<>();
+        
+        for (Payment payment : payments) {
+            String date = payment.getCreatedAt().toLocalDate().toString();
+            BigDecimal orderProfit = calculateOrderProfit(payment.getOrder());
+            
+            dailyProfit.merge(date, orderProfit, BigDecimal::add);
+        }
+        
+        return dailyProfit;
     }
 
     /**
-     * Thống kê theo tháng (monthly statistics)
+     * Thống kê lợi nhuận theo tháng (CHỈ OWNER)
+     * Map key: yyyy-MM
+     * Map value: Tổng lợi nhuận trong tháng đó
+     * 
+     * @param fromDate Ngày bắt đầu
+     * @param toDate Ngày kết thúc
+     * @return Map<String, BigDecimal> với key là tháng
      */
     @Transactional(readOnly = true)
-    public Map<String, BigDecimal> getMonthlyRevenue(LocalDateTime fromDate, LocalDateTime toDate) {
+    public Map<String, BigDecimal> getMonthlyProfit(LocalDateTime fromDate, LocalDateTime toDate) {
         List<Payment> payments = getFilteredPayments(fromDate, toDate);
         
-        return payments.stream()
-                .collect(Collectors.groupingBy(
-                    p -> p.getCreatedAt().getYear() + "-" + 
-                         String.format("%02d", p.getCreatedAt().getMonthValue()),
-                    Collectors.reducing(
-                        BigDecimal.ZERO,
-                        Payment::getAmount,
-                        BigDecimal::add
-                    )
-                ));
+        Map<String, BigDecimal> monthlyProfit = new HashMap<>();
+        
+        for (Payment payment : payments) {
+            String month = payment.getCreatedAt().getYear() + "-" + 
+                          String.format("%02d", payment.getCreatedAt().getMonthValue());
+            BigDecimal orderProfit = calculateOrderProfit(payment.getOrder());
+            
+            monthlyProfit.merge(month, orderProfit, BigDecimal::add);
+        }
+        
+        return monthlyProfit;
+    }
+
+    /**
+     * Thống kê lợi nhuận theo quý (CHỈ OWNER)
+     * Map key: yyyy-Qx
+     * Map value: Tổng lợi nhuận trong quý đó
+     * 
+     * @param fromDate Ngày bắt đầu
+     * @param toDate Ngày kết thúc
+     * @return Map<String, BigDecimal> với key là quý
+     */
+    @Transactional(readOnly = true)
+    public Map<String, BigDecimal> getQuarterlyProfit(LocalDateTime fromDate, LocalDateTime toDate) {
+        List<Payment> payments = getFilteredPayments(fromDate, toDate);
+        
+        Map<String, BigDecimal> quarterlyProfit = new HashMap<>();
+        
+        for (Payment payment : payments) {
+            int quarter = (payment.getCreatedAt().getMonthValue() - 1) / 3 + 1;
+            String quarterKey = payment.getCreatedAt().getYear() + "-Q" + quarter;
+            BigDecimal orderProfit = calculateOrderProfit(payment.getOrder());
+            
+            quarterlyProfit.merge(quarterKey, orderProfit, BigDecimal::add);
+        }
+        
+        return quarterlyProfit;
+    }
+
+    /**
+     * Thống kê lợi nhuận theo năm (CHỈ OWNER)
+     * Map key: yyyy
+     * Map value: Tổng lợi nhuận trong năm đó
+     * 
+     * @param fromDate Ngày bắt đầu
+     * @param toDate Ngày kết thúc
+     * @return Map<String, BigDecimal> với key là năm
+     */
+    @Transactional(readOnly = true)
+    public Map<String, BigDecimal> getYearlyProfit(LocalDateTime fromDate, LocalDateTime toDate) {
+        List<Payment> payments = getFilteredPayments(fromDate, toDate);
+        
+        Map<String, BigDecimal> yearlyProfit = new HashMap<>();
+        
+        for (Payment payment : payments) {
+            String year = String.valueOf(payment.getCreatedAt().getYear());
+            BigDecimal orderProfit = calculateOrderProfit(payment.getOrder());
+            
+            yearlyProfit.merge(year, orderProfit, BigDecimal::add);
+        }
+        
+        return yearlyProfit;
+    }
+
+    /**
+     * Helper method: Tính lợi nhuận của 1 đơn hàng
+     * Lợi nhuận = Tổng tiền đơn hàng - Tổng chi phí các sản phẩm
+     * 
+     * @param order Đơn hàng cần tính
+     * @return BigDecimal lợi nhuận của đơn
+     */
+    private BigDecimal calculateOrderProfit(Order order) {
+        BigDecimal orderCost = BigDecimal.ZERO;
+        
+        for (OrderItem item : order.getItems()) {
+            Product product = item.getProductVariant().getProduct();
+            
+            // Lấy cost_price, nếu null thì dùng unit_price
+            BigDecimal costPrice = product.getCostPrice() != null 
+                ? product.getCostPrice() 
+                : item.getUnitPrice();
+            
+            orderCost = orderCost.add(
+                costPrice.multiply(new BigDecimal(item.getQuantity()))
+            );
+        }
+        
+        return order.getTotalAmount().subtract(orderCost);
     }
 }
