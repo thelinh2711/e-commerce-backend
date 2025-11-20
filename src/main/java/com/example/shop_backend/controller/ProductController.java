@@ -51,15 +51,22 @@ public class ProductController {
      * - Nếu không (PUBLIC/ADMIN): Không có costPrice
      */
     @GetMapping
-    public ResponseEntity<ProductListResponse> getAllProducts(
-            @AuthenticationPrincipal User currentUser) {
+public ResponseEntity<ProductListResponse> getAllProducts(
+        @AuthenticationPrincipal User currentUser) {
         List<ProductResponse> products = productService.getAllProducts(currentUser);
         
         ProductListResponse response = ProductListResponse.builder()
                 .success(true)
                 .data(products)
                 .build();
-        System.out.println("Current user: " + currentUser.getEmail() + ", role: " + currentUser.getRole());
+        
+        // // ✅ Check null trước khi log
+        // if (currentUser != null) {
+        //     System.out.println("Current user: " + currentUser.getEmail() + ", role: " + currentUser.getRole());
+        // } else {
+        //     System.out.println("Current user: Anonymous (no token)");
+        // }
+        
         return ResponseEntity.ok(response);
     }
 
