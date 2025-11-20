@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999, "Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
+    BAD_REQUEST(1000, "Yêu cầu không hợp lệ", HttpStatus.BAD_REQUEST),
     INVALID_KEY(1001, "Invalid message key", HttpStatus.BAD_REQUEST),
 
     // ✅ Lỗi xác thực
@@ -62,7 +63,17 @@ public enum ErrorCode {
     INSUFFICIENT_STOCK(1002, "Sản phẩm không đủ số lượng", HttpStatus.BAD_REQUEST),
     INVALID_REWARD_POINTS(1003, "Reward points không hợp lệ", HttpStatus.BAD_REQUEST),
     VOUCHER_MIN_ORDER_NOT_MET(4007, "Giá trị đơn hàng chưa đủ điều kiện voucher", HttpStatus.BAD_REQUEST),
-    VOUCHER_INVALID_COMBINATION(4009, "Voucher kết hợp không hợp lệ", HttpStatus.BAD_REQUEST);
+    VOUCHER_INVALID_COMBINATION(4009, "Voucher kết hợp không hợp lệ", HttpStatus.BAD_REQUEST),
+
+    // Lỗi đơn hàng
+    ORDER_NOT_FOUND(5001, "Đơn hàng không tồn tại", HttpStatus.NOT_FOUND),
+    INVALID_ORDER_STATUS(5002, "Trạng thái đơn hàng không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_STATUS_TRANSITION(5003, "Không thể chuyển trạng thái đơn hàng theo thứ tự này", HttpStatus.BAD_REQUEST),
+
+    PAYMENT_NOT_FOUND(5004, "Thông tin thanh toán không tồn tại", HttpStatus.NOT_FOUND),
+    PAYMENT_ALREADY_PAID(5005, "Đơn hàng đã được thanh toán", HttpStatus.BAD_REQUEST),
+
+
 
     ;
 

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL) // Chỉ include field không null
 public class ProductResponse {
     private String id;
     private String name;
@@ -39,8 +41,13 @@ public class ProductResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class PriceInfo {
         private BigDecimal price;
+        
+        // ✅ Thêm costPrice - chỉ trả về cho OWNER
+        @JsonProperty("cost_price")
+        private BigDecimal costPrice;
         
         private String currency;
         

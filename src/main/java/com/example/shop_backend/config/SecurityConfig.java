@@ -72,9 +72,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/brands/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/brands/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                        // .requestMatchers(HttpMethod.POST, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
+                        // .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
+                        // .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
 
                         // Cho phép GET product variants công khai
                         .requestMatchers("GET", "/api/product-variants/**").permitAll()
@@ -84,8 +84,19 @@ public class SecurityConfig {
                         .requestMatchers("PUT", "/api/product-variants/**").hasRole("ADMIN")
                         .requestMatchers("DELETE", "/api/product-variants/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/orders/**").hasRole("CUSTOMER")
-                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasRole("CUSTOMER")
+
+                        // CUSTOMER tạo đơn
+                        .requestMatchers(HttpMethod.POST, "/api/orders").hasRole("CUSTOMER")
+                        // CUSTOMER xem danh sách đơn của chính mình
+                        .requestMatchers(HttpMethod.GET, "/api/orders/me").hasRole("CUSTOMER")
+                        // CUSTOMER hoặc ADMIN xem chi tiết đơn theo ID
+                        .requestMatchers(HttpMethod.GET, "/api/orders/{orderId}").hasAnyRole("CUSTOMER", "ADMIN")
+                        // ADMIN tracking đơn hàng (update status)
+                        .requestMatchers(HttpMethod.PATCH, "/api/orders/*/status").hasRole("ADMIN")
+                        // ADMIN lấy danh sách đơn theo trạng thái
+                        .requestMatchers(HttpMethod.GET, "/api/orders").hasRole("ADMIN")
+
+                        .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
 
                         // ADMIN area
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

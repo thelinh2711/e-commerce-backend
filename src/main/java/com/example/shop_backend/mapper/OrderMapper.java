@@ -11,6 +11,14 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
 
+    @Named("mapFirstImage")
+    static String mapFirstImage(ProductVariant variant) {
+        if (variant.getImages() == null || variant.getImages().isEmpty()) {
+            return null;
+        }
+        return variant.getImages().get(0).getImageUrl();
+    }
+
     // ================================
     // Order -> OrderResponse
     // payment sẽ được map tự động
@@ -43,9 +51,12 @@ public interface OrderMapper {
     @Mapping(target = "color", source = "productVariant.color.name")
     @Mapping(target = "size", source = "productVariant.size.name")
     @Mapping(target = "unitPrice", source = "unitPrice")
-    @Mapping(target = "totalPrice", expression = "java(orderItem.getUnitPrice().multiply(new java.math.BigDecimal(orderItem.getQuantity())))")
+    @Mapping(target = "totalPrice",
+            expression = "java(orderItem.getUnitPrice().multiply(new java.math.BigDecimal(orderItem.getQuantity())))")
+    @Mapping(target = "imageUrl",
+            source = "productVariant",
+            qualifiedByName = "mapFirstImage")
     OrderResponse.OrderItemResponse toOrderItemResponse(OrderItem orderItem);
-
     List<OrderResponse.OrderItemResponse> toOrderItemResponses(List<OrderItem> items);
 
     // ================================
