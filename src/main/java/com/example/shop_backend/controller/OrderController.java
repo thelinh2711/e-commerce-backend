@@ -93,4 +93,15 @@ public class OrderController {
                 ApiResponse.success(orderService.getOrdersByStatus(status, page, size))
         );
     }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PageResponse<OrderResponse>> searchOrders(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(orderService.searchOrders(keyword, page, size));
+    }
+
 }

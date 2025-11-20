@@ -337,7 +337,25 @@ public class OrderService {
                 .build();
     }
 
+    public PageResponse<OrderResponse> searchOrders(String keyword, int page, int size) {
 
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Order> orderPage = orderRepository.searchOrders(keyword, pageable);
+
+        List<OrderResponse> responses = orderPage.getContent()
+                .stream()
+                .map(orderMapper::toOrderResponse)
+                .toList();
+
+        return PageResponse.<OrderResponse>builder()
+                .data(responses)
+                .page(orderPage.getNumber())
+                .size(orderPage.getSize())
+                .totalElements(orderPage.getTotalElements())
+                .totalPages(orderPage.getTotalPages())
+                .build();
+    }
 
     @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByUser(User user) {
