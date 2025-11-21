@@ -83,8 +83,8 @@ INSERT INTO labels (name, color) VALUES
 -- Mật khẩu nên được băm (hashed) ở phía ứng dụng. Ở đây dùng 'hashed_password_placeholder'
 -- Thêm: avatar, reward_points, status để khớp với model User
 INSERT INTO users (full_name, email, phone, password, avatar, reward_points, role, status) VALUES
-('Nguyễn Văn Quản Trị', 'admin@shop.com', '0900000001', '$2a$10$E.M9j8cN0.A.i.3.A.B.C.D.E.F.G.H.I.J.K.L.M', NULL, 0, 'ADMIN', 'ACTIVE'),
-('Trần Văn An', 'an.tran@gmail.com', '0912345678', '$2a$10$E.M9j8cN0.A.i.3.A.B.C.D.E.F.G.H.I.J.K.L.M', NULL, 0, 'CUSTOMER', 'ACTIVE'),
+('Chủ cửa hàng', 'owner@shop.com', '0900000001', '$2a$10$E.M9j8cN0.A.i.3.A.B.C.D.E.F.G.H.I.J.K.L.M', NULL, 0, 'OWNER', 'ACTIVE'),
+('Quản lý', 'admin@shop.com', '0912345678', '$2a$10$E.M9j8cN0.A.i.3.A.B.C.D.E.F.G.H.I.J.K.L.M', NULL, 0, 'ADMIN', 'ACTIVE'),
 ('Lê Thị Bình', 'binh.le@yahoo.com', '0987654321', '$2a$10$E.M9j8cN0.A.i.3.A.B.C.D.E.F.G.H.I.J.K.L.M', NULL, 0, 'CUSTOMER', 'ACTIVE'),
 ('Phạm Văn Cường', 'cuong.pham@outlook.com', '0911223344', '$2a$10$E.M9j8cN0.A.i.3.A.B.C.D.E.F.G.H.I.J.K.L.M', NULL, 0, 'CUSTOMER', 'ACTIVE'),
 ('Võ Thị Dung', 'dung.vo@gmail.com', '0922334455', '$2a$10$E.M9j8cN0.A.i.3.A.B.C.D.E.F.G.H.I.J.K.L.M', NULL, 0, 'CUSTOMER', 'ACTIVE'),
@@ -96,17 +96,17 @@ INSERT INTO users (full_name, email, phone, password, avatar, reward_points, rol
 
 -- Vouchers (10)
 -- Thêm: usage_count, is_active để khớp với model Voucher
-INSERT INTO vouchers (code, description, discount_type, discount_value, max_usage_count, usage_count, is_active, start_date, end_date) VALUES
-('SALE10', 'Giảm 10% tổng đơn hàng', 'PERCENTAGE', 10, 1000, 0, TRUE, '2025-10-01 00:00:00', '2025-10-31 23:59:59'),
-('FREESHIP', 'Miễn phí vận chuyển', 'FIXED_AMOUNT', 30000, 500, 0, TRUE, '2025-10-01 00:00:00', '2025-10-31 23:59:59'),
-('NEWUSER20', 'Giảm 20% cho người dùng mới', 'PERCENTAGE', 20, 200, 0, TRUE, '2025-01-01 00:00:00', '2025-12-31 23:59:59'),
-('GIAM50K', 'Giảm 50.000 VNĐ cho đơn từ 500K', 'FIXED_AMOUNT', 50000, 100, 0, TRUE, '2025-10-20 00:00:00', '2025-10-25 23:59:59'),
-('NIKEONLY', 'Giảm 15% chỉ cho sản phẩm Nike', 'PERCENTAGE', 15, 50, 0, TRUE, '2025-10-15 00:00:00', '2025-10-30 23:59:59'),
-('ADIDASFLASH', 'Giảm 100K cho sản phẩm Adidas', 'FIXED_AMOUNT', 100000, 50, 0, TRUE, '2025-10-24 00:00:00', '2025-10-24 23:59:59'),
-('SPORT123', 'Voucher ngẫu nhiên', 'PERCENTAGE', 12, 100, 0, TRUE, '2025-10-01 00:00:00', '2025-11-30 23:59:59'),
-('HAPPYWEEKEND', 'Cuối tuần vui vẻ giảm 5%', 'PERCENTAGE', 5, 100, 0, TRUE, '2025-10-25 00:00:00', '2025-10-26 23:59:59'),
-('THANKYOU', 'Tri ân khách hàng giảm 25K', 'FIXED_AMOUNT', 25000, 1000, 0, TRUE, '2025-01-01 00:00:00', '2025-12-31 23:59:59'),
-('RUNFAST', 'Giảm 10% cho giày chạy bộ', 'PERCENTAGE', 10, 50, 0, TRUE, '2025-10-01 00:00:00', '2025-10-31 23:59:59');
+INSERT INTO vouchers (code, description, discount_type, discount_value, max_discount_value, min_order_value, usage_limit, usage_count, status, start_date, end_date) VALUES
+('SALE10', 'Giảm 10% tổng đơn hàng', 'PERCENTAGE', 10, NULL, NULL, 1000, 0, 'ACTIVE', '2025-10-01 00:00:00', '2025-10-31 23:59:59'),
+('FREESHIP', 'Miễn phí vận chuyển', 'FREESHIP', 0, NULL, NULL, 500, 0, 'ACTIVE', '2025-10-01 00:00:00', '2025-10-31 23:59:59'),
+('NEWUSER20', 'Giảm 20% cho người dùng mới', 'PERCENTAGE', 20, NULL, NULL, 200, 0, 'ACTIVE', '2025-01-01 00:00:00', '2025-12-31 23:59:59'),
+('GIAM50K', 'Giảm 50.000 VNĐ cho đơn từ 500K', 'FIXED_AMOUNT', 50000, NULL, NULL, 100, 0, 'ACTIVE', '2025-10-20 00:00:00', '2025-10-25 23:59:59'),
+('NIKEONLY', 'Giảm 15% chỉ cho sản phẩm Nike', 'PERCENTAGE', 15, NULL, NULL, 50, 0, 'ACTIVE', '2025-10-15 00:00:00', '2025-10-30 23:59:59'),
+('ADIDASFLASH', 'Giảm 100K cho sản phẩm Adidas', 'FIXED_AMOUNT', 100000, NULL, NULL, 50, 0, 'ACTIVE', '2025-10-24 00:00:00', '2025-10-24 23:59:59'),
+('SPORT123', 'Voucher ngẫu nhiên', 'PERCENTAGE', 12, NULL, NULL, 100, 0, 'ACTIVE', '2025-10-01 00:00:00', '2025-11-30 23:59:59'),
+('HAPPYWEEKEND', 'Cuối tuần vui vẻ giảm 5%', 'PERCENTAGE', 5, NULL, NULL, 100, 0, 'ACTIVE', '2025-10-25 00:00:00', '2025-10-26 23:59:59'),
+('THANKYOU', 'Tri ân khách hàng giảm 25K', 'FIXED_AMOUNT', 25000, NULL, NULL, 1000, 0, 'ACTIVE', '2025-01-01 00:00:00', '2025-12-31 23:59:59'),
+('RUNFAST', 'Giảm 10% cho giày chạy bộ', 'PERCENTAGE', 10, NULL, NULL, 50, 0, 'ACTIVE', '2025-10-01 00:00:00', '2025-10-31 23:59:59');
 
 -- FlashSales (10)
 -- Thêm: is_active để khớp với model FlashSale
@@ -188,18 +188,21 @@ INSERT INTO carts (user_id) VALUES
 (1), (2), (3), (4), (5), (6), (7), (8), (9), (10);
 
 -- Orders (10)
--- Thêm: discount_amount, shipping_fee để khớp với model Order
-INSERT INTO orders (user_id, order_number, total_amount, discount_amount, shipping_fee, final_amount, status, payment_status, delivery_address) VALUES
-(2, 'DH000001', 2500000, 0, 0, 2500000, 'DELIVERED', 'PAID', '456 Đường Lê Lợi, Hàng Bạc, Hoàn Kiếm, Hà Nội'),
-(3, 'DH000002', 1200000, 30000, 0, 1170000, 'DELIVERED', 'PAID', '789 Đường Võ Văn Tần, P6, Q3, TPHCM'),
-(4, 'DH000003', 850000, 0, 0, 850000, 'SHIPPED', 'PAID', '101 Đường Nguyễn Huệ, Hải Châu 1, Hải Châu, Đà Nẵng'),
-(5, 'DH000004', 3200000, 0, 0, 3200000, 'PENDING', 'UNPAID', '202 Đường Trần Phú, Phước Ninh, Hải Châu, Đà Nẵng'),
-(2, 'DH000005', 450000, 30000, 0, 420000, 'CANCELLED', 'UNPAID', '456 Đường Lê Lợi, Hàng Bạc, Hoàn Kiếm, Hà Nội'),
-(6, 'DH000006', 1800000, 0, 0, 1800000, 'CONFIRMED', 'PAID', '303 Đường Hai Bà Trưng, Tân Định, Q1, TPHCM'),
-(7, 'DH000007', 750000, 0, 0, 750000, 'DELIVERED', 'PAID', '404 Đường Cầu Giấy, Dịch Vọng, Cầu Giấy, Hà Nội'),
-(8, 'DH000008', 2100000, 0, 0, 2100000, 'SHIPPED', 'PAID', '505 Đường Lạch Tray, Lạch Tray, Ngô Quyền, Hải Phòng'),
-(9, 'DH000009', 550000, 50000, 0, 500000, 'CONFIRMED', 'UNPAID', '606 Đường Hùng Vương, Thới Bình, Ninh Kiều, Cần Thơ'),
-(10, 'DH000010', 980000, 0, 0, 980000, 'PENDING', 'UNPAID', '707 Đường 30/4, Hưng Lợi, Ninh Kiều, Cần Thơ');
+-- Đảm bảo đúng thứ tự và trường theo model Order.java
+-- Các trường: user_id, subtotal, discount_amount, shipping_fee_original, shipping_discount, shipping_fee, total_amount, address, full_name, phone, note, payment_method, status, created_at, updated_at
+INSERT INTO orders (
+	user_id, subtotal, discount_amount, shipping_fee_original, shipping_discount, shipping_fee, total_amount, address, full_name, phone, note, payment_method, status, created_at, updated_at
+) VALUES
+(2, 3200000, 0, 0, 0, 0, 3200000, '456 Đường Lê Lợi, Hàng Bạc, Hoàn Kiếm, Hà Nội', 'Trần Văn An', '0912345678', NULL, 'BANK_TRANSFER', 'DELIVERED', '2025-10-01 10:00:00', '2025-10-01 10:00:00'),
+(3, 1586000, 30000, 0, 0, 0, 1556000, '789 Đường Võ Văn Tần, P6, Q3, TPHCM', 'Lê Thị Bình', '0987654321', NULL, 'COD', 'DELIVERED', '2025-10-05 11:00:00', '2025-10-05 11:00:00'),
+(4, 765000, 0, 0, 0, 0, 765000, '101 Đường Nguyễn Huệ, Hải Châu 1, Hải Châu, Đà Nẵng', 'Phạm Văn Cường', '0911223344', NULL, 'BANK_TRANSFER', 'SHIPPED', '2025-10-10 14:30:00', '2025-10-10 14:30:00'),
+(5, 3800000, 0, 0, 0, 0, 3800000, '202 Đường Trần Phú, Phước Ninh, Hải Châu, Đà Nẵng', 'Võ Thị Dung', '0922334455', NULL, 'BANK_TRANSFER', 'PENDING', '2025-10-15 09:00:00', '2025-10-15 09:00:00'),
+(2, 1100000, 110000, 0, 0, 0, 990000, '456 Đường Lê Lợi, Hàng Bạc, Hoàn Kiếm, Hà Nội', 'Trần Văn An', '0912345678', NULL, 'COD', 'CANCELLED', '2025-10-20 16:00:00', '2025-10-20 16:00:00'),
+(6, 4800000, 0, 0, 0, 0, 4800000, '303 Đường Hai Bà Trưng, Tân Định, Q1, TPHCM', 'Hoàng Văn Em', '0933445566', NULL, 'BANK_TRANSFER', 'CONFIRMED', '2025-10-22 10:00:00', '2025-10-22 10:00:00'),
+(7, 600000, 0, 0, 0, 0, 600000, '404 Đường Cầu Giấy, Dịch Vọng, Cầu Giấy, Hà Nội', 'Đặng Thị Giang', '0944556677', NULL, 'BANK_TRANSFER', 'DELIVERED', '2025-10-23 11:00:00', '2025-10-23 11:00:00'),
+(8, 2800000, 0, 0, 0, 0, 2800000, '505 Đường Lạch Tray, Lạch Tray, Ngô Quyền, Hải Phòng', 'Bùi Văn Hải', '0955667788', NULL, 'COD', 'SHIPPED', '2025-10-24 08:00:00', '2025-10-24 08:00:00'),
+(9, 600000, 50000, 0, 0, 0, 550000, '606 Đường Hùng Vương, Thới Bình, Ninh Kiều, Cần Thơ', 'Ngô Thị Hương', '0966778899', NULL, 'COD', 'CONFIRMED', '2025-10-25 10:00:00', '2025-10-25 10:00:00'),
+(10, 8230000, 0, 0, 0, 0, 8230000, '707 Đường 30/4, Hưng Lợi, Ninh Kiều, Cần Thơ', 'Lý Văn Kiên', '0977889900', NULL, 'BANK_TRANSFER', 'PENDING', '2025-10-25 15:00:00', '2025-10-25 15:00:00');
 
 -- Conversations (10)
 -- Thêm: priority để khớp với model Conversation
@@ -370,22 +373,22 @@ INSERT INTO wishlists (user_id, product_id) VALUES
 -- 10 danh mục (1-10) là Giày chạy, Giày đá banh, Áo thun...
 -- -> Sản phẩm 1, 11, 21, 31, 41, 51, 61, 71, 81, 91 là "Giày Chạy Bộ" (hoặc tương tự)
 -- -> Sản phẩm 2, 12, 22, 32, 42, 52, 62, 72, 82, 92 là "Giày Đá Banh" (hoặc tương tự)
-INSERT INTO product_categories (product_id, category_id) VALUES
-(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7), (8, 8), (9, 9), (10, 10),
-(11, 1), (12, 2), (13, 3), (14, 4), (15, 5), (16, 6), (17, 7), (18, 8), (19, 9), (20, 10),
-(21, 1), (22, 2), (23, 3), (24, 4), (25, 5), (26, 6), (27, 7), (28, 8), (29, 9), (30, 10),
-(31, 1), (32, 2), (33, 3), (34, 4), (35, 5), (36, 6), (37, 7), (38, 8), (39, 9), (40, 10),
-(41, 1), (42, 1), (43, 3), (44, 4), (45, 5), (46, 6), (47, 7), (48, 8), (49, 9), (50, 8),
-(51, 1), (52, 1), (53, 3), (54, 4), (55, 5), (56, 6), (57, 7), (58, 8), (59, 9), (60, 1),
-(61, 7), (62, 1), (63, 3), (64, 4), (65, 5), (66, 6), (67, 7), (68, 8), (69, 9), (70, 10),
-(71, 1), (72, 6), (73, 3), (74, 4), (75, 5), (76, 6), (77, 6), (78, 8), (79, 9), (80, 8),
-(81, 1), (82, 6), (83, 3), (84, 4), (85, 5), (86, 3), (87, 6), (88, 8), (89, 9), (90, 8),
-(91, 1), (92, 2), (93, 3), (94, 4), (95, 5), (96, 6), (97, 7), (98, 8), (99, 9), (100, 10);
+INSERT INTO product_categories (product_id, category_id, created_at) VALUES
+(1, 1, NOW()), (2, 2, NOW()), (3, 3, NOW()), (4, 4, NOW()), (5, 5, NOW()), (6, 6, NOW()), (7, 7, NOW()), (8, 8, NOW()), (9, 9, NOW()), (10, 10, NOW()),
+(11, 1, NOW()), (12, 2, NOW()), (13, 3, NOW()), (14, 4, NOW()), (15, 5, NOW()), (16, 6, NOW()), (17, 7, NOW()), (18, 8, NOW()), (19, 9, NOW()), (20, 10, NOW()),
+(21, 1, NOW()), (22, 2, NOW()), (23, 3, NOW()), (24, 4, NOW()), (25, 5, NOW()), (26, 6, NOW()), (27, 7, NOW()), (28, 8, NOW()), (29, 9, NOW()), (30, 10, NOW()),
+(31, 1, NOW()), (32, 2, NOW()), (33, 3, NOW()), (34, 4, NOW()), (35, 5, NOW()), (36, 6, NOW()), (37, 7, NOW()), (38, 8, NOW()), (39, 9, NOW()), (40, 10, NOW()),
+(41, 1, NOW()), (42, 1, NOW()), (43, 3, NOW()), (44, 4, NOW()), (45, 5, NOW()), (46, 6, NOW()), (47, 7, NOW()), (48, 8, NOW()), (49, 9, NOW()), (50, 8, NOW()),
+(51, 1, NOW()), (52, 1, NOW()), (53, 3, NOW()), (54, 4, NOW()), (55, 5, NOW()), (56, 6, NOW()), (57, 7, NOW()), (58, 8, NOW()), (59, 9, NOW()), (60, 1, NOW()),
+(61, 7, NOW()), (62, 1, NOW()), (63, 3, NOW()), (64, 4, NOW()), (65, 5, NOW()), (66, 6, NOW()), (67, 7, NOW()), (68, 8, NOW()), (69, 9, NOW()), (70, 10, NOW()),
+(71, 1, NOW()), (72, 6, NOW()), (73, 3, NOW()), (74, 4, NOW()), (75, 5, NOW()), (76, 6, NOW()), (77, 6, NOW()), (78, 8, NOW()), (79, 9, NOW()), (80, 8, NOW()),
+(81, 1, NOW()), (82, 6, NOW()), (83, 3, NOW()), (84, 4, NOW()), (85, 5, NOW()), (86, 3, NOW()), (87, 6, NOW()), (88, 8, NOW()), (89, 9, NOW()), (90, 8, NOW()),
+(91, 1, NOW()), (92, 2, NOW()), (93, 3, NOW()), (94, 4, NOW()), (95, 5, NOW()), (96, 6, NOW()), (97, 7, NOW()), (98, 8, NOW()), (99, 9, NOW()), (100, 10, NOW());
 
 -- ProductLabels (Gán nhãn cho 20 sản phẩm đầu tiên)
-INSERT INTO product_labels (product_id, label_id) VALUES
-(1, 1), (1, 2), (1, 8), (11, 1), (11, 2), (21, 1), (31, 8), (41, 2), (51, 1), (61, 2), (71, 7),
-(2, 1), (2, 3), (12, 1), (22, 1), (32, 1), (92, 3), (10, 2), (20, 2), (30, 2), (40, 2), (50, 2), (60, 2);
+INSERT INTO product_labels (product_id, label_id, created_at) VALUES
+(1, 1, NOW()), (1, 2, NOW()), (1, 8, NOW()), (11, 1, NOW()), (11, 2, NOW()), (21, 1, NOW()), (31, 8, NOW()), (41, 2, NOW()), (51, 1, NOW()), (61, 2, NOW()), (71, 7, NOW()),
+(2, 1, NOW()), (2, 3, NOW()), (12, 1, NOW()), (22, 1, NOW()), (32, 1, NOW()), (92, 3, NOW()), (10, 2, NOW()), (20, 2, NOW()), (30, 2, NOW()), (40, 2, NOW()), (50, 2, NOW()), (60, 2, NOW());
 
 -- ProductVariants (Tạo biến thể cho 10 sản phẩm đầu: 5 áo/quần, 5 giày)
 -- Áo/Quần (ID 3, 4, 5, 6, 7): Size S, M, L (ID 1, 2, 3) + Màu Đen, Trắng (ID 1, 2)
@@ -465,73 +468,108 @@ INSERT INTO user_vouchers (user_id, voucher_id) VALUES
 (2, 3), (3, 3), (4, 1), (5, 2), (6, 1), (7, 4), (8, 2), (9, 5), (10, 9), (1, 1);
 
 -- OrderItems (Chi tiết cho 10 đơn hàng)
--- Order 1 (User 2): Mua SP 1 (Giày Nike)
-INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
-(1, 1, 1, 2500000, 2500000);
--- Order 2 (User 3): Mua SP 13 (Áo Adidas), SP 14 (Quần Adidas)
-INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
-(2, 13, 1, 950000, 950000),
-(2, 14, 1, 750000, 750000);
--- Order 3 (User 4): Mua SP 3 (Áo Nike)
-INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
-(3, 3, 1, 850000, 850000);
--- Order 4 (User 5): Mua SP 31 (Giày UA)
-INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
-(4, 31, 1, 3200000, 3200000);
--- Order 5 (User 2): Mua SP 8 (Tất Nike)
-INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
-(5, 8, 1, 450000, 450000);
--- Order 6 (User 6): Mua SP 51 (Giày NB)
-INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
-(6, 51, 1, 1800000, 1800000);
--- Order 7 (User 7): Mua SP 23 (Áo Puma)
-INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
-(7, 23, 1, 750000, 750000);
--- Order 8 (User 8): Mua SP 61 (Giày Reebok)
-INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
-(8, 61, 1, 2100000, 2100000);
--- Order 9 (User 9): Mua SP 40 (Găng tay UA)
-INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
-(9, 40, 1, 550000, 550000);
--- Order 10 (User 10): Mua SP 93 (Áo Domyos), SP 95 (Quần Domyos)
-INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
-(10, 93, 2, 150000, 300000),
-(10, 95, 2, 250000, 500000),
-(10, 100, 1, 180000, 180000);
+-- Order 1 (User 2): Mua SP 1 (Giày Nike) - Variant 1 (Đen, 40)
+INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price, total_price) VALUES
+(1, 1, 1, 3200000, 3200000);
+-- Order 2 (User 3): Mua SP 13 (Áo Adidas) - Variant 31, SP 14 (Quần Adidas) - Variant 37
+INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price, total_price) VALUES
+(2, 31, 1, 836000, 836000),
+(2, 37, 1, 750000, 750000);
+-- Order 3 (User 4): Mua SP 3 (Áo Nike Miller) - Variant 13 (Đen, S)
+INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price, total_price) VALUES
+(3, 13, 1, 765000, 765000);
+-- Order 4 (User 5): Mua SP 31 (Giày UA HOVR) - Variant 46 (Xám, 40)
+INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price, total_price) VALUES
+(4, 46, 1, 3800000, 3800000);
+-- Order 5 (User 2): Mua SP 4 (Quần Nike Challenger) - Variant 19 (Đen, S)
+INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price, total_price) VALUES
+(5, 19, 1, 1100000, 1100000);
+-- Order 6 (User 6): Mua SP 11 (Giày Adidas Ultraboost) - Variant 25 (Trắng, 40)
+INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price, total_price) VALUES
+(6, 25, 1, 4800000, 4800000);
+-- Order 7 (User 7): Mua SP 23 (Áo Puma Ess) - Variant 43 (Trắng, S)
+INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price, total_price) VALUES
+(7, 43, 1, 600000, 600000);
+-- Order 8 (User 8): Mua SP 21 (Giày Puma Velocity) - Variant 40 (Đen, 40)
+INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price, total_price) VALUES
+(8, 40, 1, 2800000, 2800000);
+-- Order 9 (User 9): Mua SP 23 (Áo Puma) - Variant 44 (Trắng, M)
+INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price, total_price) VALUES
+(9, 44, 1, 600000, 600000);
+-- Order 10 (User 10): Mua SP 3 (Áo Nike), SP 4 (Quần Nike), SP 2 (Giày Nike)
+INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price, total_price) VALUES
+(10, 14, 2, 765000, 1530000),
+(10, 20, 2, 1100000, 2200000),
+(10, 7, 1, 4500000, 4500000);
 
 -- OrderVouchers (Áp dụng voucher cho một số đơn hàng)
-INSERT INTO order_vouchers (order_id, voucher_id, discount_amount) VALUES
-(2, 2, 30000), -- Order 2 dùng FREESHIP
-(5, 1, 45000), -- Order 5 dùng SALE10 (10% của 450k)
-(9, 4, 50000); -- Order 9 dùng GIAM50K
+-- Model OrderVoucher không có trường discount_amount, chỉ có order_id và voucher_id
+INSERT INTO order_vouchers (order_id, voucher_id) VALUES
+(2, 2), -- Order 2 dùng FREESHIP
+(5, 1), -- Order 5 dùng SALE10
+(9, 4); -- Order 9 dùng GIAM50K
 
 -- Payments (Thanh toán cho các đơn hàng đã 'PAID')
 INSERT INTO payments (order_id, amount, payment_method, transaction_id, status) VALUES
-(1, 2500000, 'CREDIT_CARD', 'VNPAY_001', 'SUCCESS'),
-(2, 1170000, 'COD', 'COD_002', 'SUCCESS'),
-(3, 850000, 'PAYPAL', 'PAYPAL_003', 'SUCCESS'),
-(6, 1800000, 'BANK_TRANSFER', 'BANK_004', 'SUCCESS'),
-(7, 750000, 'CREDIT_CARD', 'VNPAY_005', 'SUCCESS'),
-(8, 2100000, 'COD', 'COD_006', 'SUCCESS'),
+(1, 3200000, 'BANK_TRANSFER', 'VNPAY_001', 'PAID'),
+(2, 1556000, 'COD', 'COD_002', 'PAID'),
+(3, 765000, 'BANK_TRANSFER', 'PAYPAL_003', 'PAID'),
+(6, 4800000, 'BANK_TRANSFER', 'BANK_004', 'PAID'),
+(7, 600000, 'BANK_TRANSFER', 'VNPAY_005', 'PAID'),
+(8, 2800000, 'COD', 'COD_006', 'PAID'),
 -- Đơn hàng 4, 5, 9, 10 chưa thanh toán hoặc đã hủy
-(4, 3200000, 'CREDIT_CARD', 'VNPAY_007', 'PENDING'),
-(5, 420000, 'COD', 'COD_008', 'FAILED'),
-(9, 500000, 'COD', 'COD_009', 'PENDING'),
-(10, 980000, 'BANK_TRANSFER', 'BANK_010', 'PENDING');
+(4, 3800000, 'BANK_TRANSFER', 'VNPAY_007', 'UNPAID'),
+(5, 990000, 'COD', 'COD_008', 'UNPAID'),
+(9, 550000, 'COD', 'COD_009', 'UNPAID'),
+(10, 8230000, 'BANK_TRANSFER', 'BANK_010', 'UNPAID');
 
 -- Messages (10 tin nhắn trong cuộc hội thoại 1 và 3)
 -- Thêm: message_type, attachment_name, attachment_type, attachment_url, is_read để khớp với model Message
-INSERT INTO messages (content, sender_username, sender_role, sender_full_name, receiver_username, room_id, message_type, is_read) VALUES
-('Chào shop, đơn hàng DH000001 của tôi đã giao chưa?', 'an.tran@gmail.com', 'CLIENT', 'Trần Văn An', 'admin@shop.com', 'CONV_1', 'TEXT', FALSE),
-('Chào bạn, để mình kiểm tra nhé.', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'an.tran@gmail.com', 'CONV_1', 'TEXT', FALSE),
-('Đơn hàng DH000001 đã được giao thành công ngày hôm qua ạ.', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'an.tran@gmail.com', 'CONV_1', 'TEXT', FALSE),
-('OK, cảm ơn shop.', 'an.tran@gmail.com', 'CLIENT', 'Trần Văn An', 'admin@shop.com', 'CONV_1', 'TEXT', FALSE),
-('Shop ơi, tôi muốn tư vấn size giày Adidas.', 'binh.le@yahoo.com', 'CLIENT', 'Lê Thị Bình', 'admin@shop.com', 'CONV_2', 'TEXT', FALSE),
-('Chào bạn, bạn thường đi size bao nhiêu?', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'binh.le@yahoo.com', 'CONV_2', 'TEXT', FALSE),
-('Tôi mua sản phẩm Nike Mercurial, bị lỗi keo ở mũi giày.', 'cuong.pham@outlook.com', 'CLIENT', 'Phạm Văn Cường', 'admin@shop.com', 'CONV_3', 'TEXT', FALSE),
-('Bạn vui lòng chụp ảnh sản phẩm gửi cho shop nhé.', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'cuong.pham@outlook.com', 'CONV_3', 'TEXT', FALSE),
-('Đây nhé shop. [hình ảnh]', 'cuong.pham@outlook.com', 'CLIENT', 'Phạm Văn Cường', 'admin@shop.com', 'CONV_3', 'TEXT', FALSE),
-('Shop đã nhận được. Shop sẽ xử lý khiếu nại này ngay.', 'admin@shop.com', 'ADMIN', 'Nguyễn Văn Quản Trị', 'cuong.pham@outlook.com', 'CONV_3', 'TEXT', FALSE);
+-- Cuộc hội thoại 1: User An (id=2) chat với Admin (id=1)
+-- room_id = "2" (userId của customer)
+
+-- Tin nhắn 1: User An gửi cho Admin (2 giờ trước)
+
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(2, 1, 'Chào shop, đơn hàng DH000001 của tôi đã giao chưa?', '2', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 120 MINUTE));
+
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(1, 2, 'Chào bạn, để mình kiểm tra nhé.', '2', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 115 MINUTE));
+
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(1, 2, 'Đơn hàng DH000001 đã được giao thành công ngày hôm qua ạ.', '2', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 110 MINUTE));
+
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(2, 1, 'OK, cảm ơn shop.', '2', 'TEXT', FALSE, DATE_SUB(NOW(), INTERVAL 105 MINUTE));
+
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(3, 1, 'Shop ơi, tôi muốn tư vấn size giày Adidas.', '3', 'TEXT', FALSE, DATE_SUB(NOW(), INTERVAL 30 MINUTE));
+
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(1, 3, 'Chào bạn, bạn thường đi size bao nhiêu?', '3', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 25 MINUTE));
+
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(4, 1, 'Tôi mua sản phẩm Nike Mercurial, bị lỗi keo ở mũi giày.', '4', 'TEXT', FALSE, DATE_SUB(NOW(), INTERVAL 15 MINUTE));
+
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(1, 4, 'Bạn vui lòng chụp ảnh sản phẩm gửi cho shop nhé.', '4', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 10 MINUTE));
+
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(4, 1, 'Đây nhé shop, sản phẩm bị lỗi như thế này.', '4', 'TEXT', FALSE, DATE_SUB(NOW(), INTERVAL 5 MINUTE));
+
+INSERT INTO Messages (sender_id, receiver_id, content, room_id, message_type, is_read, created_at) 
+VALUES 
+(1, 4, 'Shop đã nhận được. Shop sẽ xử lý khiếu nại này ngay.', '4', 'TEXT', TRUE, DATE_SUB(NOW(), INTERVAL 2 MINUTE));
+
 
 
 /*

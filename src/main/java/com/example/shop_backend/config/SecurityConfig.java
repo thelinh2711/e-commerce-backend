@@ -71,9 +71,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/brands/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/brands/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                        // .requestMatchers(HttpMethod.POST, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
+                        // .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
+                        // .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
 
                         // Cho phép GET product variants công khai
                         .requestMatchers("GET", "/api/product-variants/**").permitAll()
@@ -109,6 +109,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
 
                         .requestMatchers("/api/v1/payments/**").permitAll()
+                        
+                        // WebSocket Chat
+                        .requestMatchers("/ws-chat/**").permitAll()
+                        .requestMatchers("/api/chat/**").authenticated()
 
 
                         // Tất cả còn lại yêu cầu đăng nhập
