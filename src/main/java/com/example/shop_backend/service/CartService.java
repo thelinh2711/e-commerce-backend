@@ -46,13 +46,13 @@ public class CartService {
 
         if (existingItem != null) {
             existingItem.setQuantity(existingItem.getQuantity() + request.getQuantity());
-            existingItem.setItemTotalPrice(calcItemTotal(variant, existingItem.getQuantity()));
+            // existingItem.setItemTotalPrice(calcItemTotal(variant, existingItem.getQuantity()));
         } else {
             CartItem newItem = CartItem.builder()
                     .cart(cart)
                     .productVariant(variant)
                     .quantity(request.getQuantity())
-                    .itemTotalPrice(calcItemTotal(variant, request.getQuantity()))
+                    //.itemTotalPrice(calcItemTotal(variant, request.getQuantity()))
                     .build();
             cart.getItems().add(newItem);
         }
@@ -78,7 +78,7 @@ public class CartService {
             cartItemRepository.delete(item);
         } else {
             item.setQuantity(quantity);
-            item.setItemTotalPrice(calcItemTotal(item.getProductVariant(), quantity));
+            //item.setItemTotalPrice(calcItemTotal(item.getProductVariant(), quantity));
         }
 
         cartRepository.save(cart);
@@ -158,7 +158,19 @@ public class CartService {
 
     private CartResponse buildCartResponse(Cart cart) {
         List<CartItemResponse> items = cart.getItems().stream()
-                .map(cartMapper::toCartItemResponse)
+                .map(item -> {
+                    BigDecimal price = item.getProductVariant().getProduct().getDiscountPrice() != null
+                            ? item.getProductVariant().getProduct().getDiscountPrice()
+                            : item.getProductVariant().getProduct().getPrice() != null
+                            ? item.getProductVariant().getProduct().getPrice()
+                            : BigDecimal.ZERO;
+
+                    BigDecimal total = price.multiply(BigDecimal.valueOf(item.getQuantity()));
+
+                    CartItemResponse resp = cartMapper.toCartItemResponse(item);
+                    resp.setItemTotalPrice(total);
+                    return resp;
+                })
                 .collect(Collectors.toList());
 
         BigDecimal total = items.stream()
@@ -171,6 +183,7 @@ public class CartService {
                 .totalAmount(total)
                 .build();
     }
+
 
     private BigDecimal calcItemTotal(ProductVariant variant, int quantity) {
         BigDecimal price = variant.getProduct().getDiscountPrice() != null
