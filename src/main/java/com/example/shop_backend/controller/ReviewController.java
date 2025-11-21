@@ -67,4 +67,17 @@ public class ReviewController {
     public ApiResponse<PageResponse<ReviewResponse>> getAllReviews(Pageable pageable) {
         return ApiResponse.success(reviewService.getAllReviews(pageable));
     }
+
+    // ========================
+    // ADMIN/OWNER: Lọc review theo rating (phân trang)
+    // ========================
+    @GetMapping("/admin/filter")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
+    public ApiResponse<PageResponse<ReviewResponse>> getReviewsByRating(
+            @RequestParam Integer rating,
+            Pageable pageable) {
+
+        return ApiResponse.success(reviewService.getByRating(rating, pageable));
+    }
+
 }

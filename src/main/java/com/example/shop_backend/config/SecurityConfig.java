@@ -71,17 +71,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/brands/**").hasAnyRole("ADMIN", "OWNER")
                         .requestMatchers(HttpMethod.DELETE, "/api/brands/**").hasAnyRole("ADMIN", "OWNER")
 
-                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAnyRole("ADMIN", "OWNER")
 
                         // Cho phép GET product variants công khai
                         .requestMatchers("GET", "/api/product-variants/**").permitAll()
 
                         // Tạo product variant cần ADMIN
-                        .requestMatchers("POST", "/api/product-variants/**").hasRole("ADMIN")
-                        .requestMatchers("PUT", "/api/product-variants/**").hasRole("ADMIN")
-                        .requestMatchers("DELETE", "/api/product-variants/**").hasRole("ADMIN")
+                        .requestMatchers("POST", "/api/product-variants/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers("PUT", "/api/product-variants/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers("DELETE", "/api/product-variants/**").hasAnyRole("ADMIN", "OWNER")
 
 
                         // CUSTOMER tạo đơn
@@ -92,8 +92,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/orders/{orderId}").hasAnyRole("CUSTOMER", "ADMIN", "OWNER")
                         // ADMIN tracking đơn hàng (update status)
                         .requestMatchers(HttpMethod.PATCH, "/api/orders/*/status").hasAnyRole("ADMIN", "OWNER")
-                        // ADMIN lấy danh sách đơn theo trạng thái
-                        .requestMatchers(HttpMethod.GET, "/api/orders").hasAnyRole("ADMIN", "OWNER")
+                        // ADMIN hoặc OWNER truy cập danh sách đơn hàng (bao gồm search/filter)
+                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole("ADMIN", "OWNER")
 
                         .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
 
@@ -102,7 +102,7 @@ public class SecurityConfig {
                         // CUSTOMER tạo review (theo variant)
                         .requestMatchers(HttpMethod.POST, "/api/reviews").hasRole("CUSTOMER")
                         // ADMIN hoặc OWNER xem & xóa review
-                        .requestMatchers(HttpMethod.GET, "/api/reviews/admin").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/admin/**").hasAnyRole("ADMIN", "OWNER")
                         .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasAnyRole("ADMIN", "OWNER")
                         // GET review theo productId là công khai
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
