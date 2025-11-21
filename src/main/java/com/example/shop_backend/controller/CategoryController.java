@@ -51,7 +51,7 @@ public class CategoryController {
     }
 
     @PostMapping(consumes = "multipart/form-data")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<CategoryResponse>> create(
             @Valid @ModelAttribute CategoryRequest request) {
 
@@ -67,7 +67,7 @@ public class CategoryController {
     }
 
     @PutMapping(value = "/{id}", consumes = "multipart/form-data")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<CategoryResponse>> update(
             @PathVariable Integer id,
             @Valid @ModelAttribute CategoryRequest request) {
@@ -84,7 +84,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {
         categoryService.delete(id);
 

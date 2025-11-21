@@ -58,7 +58,7 @@ public class OrderController {
      * Lấy chi tiết đơn hàng theo ID (chỉ user sở hữu đơn hàng hoặc admin)
      */
     @GetMapping("/{orderId}")
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderDetail(
             @AuthenticationPrincipal User currentUser,
             @PathVariable Integer orderId) {
@@ -71,7 +71,7 @@ public class OrderController {
      * Tracking đơn hàng (chỉ admin)
      */
     @PatchMapping("/{orderId}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(
             @PathVariable Integer orderId, @RequestBody UpdateOrderStatusRequest request
             ) {
@@ -83,7 +83,7 @@ public class OrderController {
      * lấy danh sách Order theo trạng thái (orderStatus)
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getOrdersByStatus(
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
@@ -95,7 +95,7 @@ public class OrderController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<PageResponse<OrderResponse>> searchOrders(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,

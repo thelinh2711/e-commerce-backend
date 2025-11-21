@@ -39,7 +39,7 @@ public class ReviewController {
     // Xóa review (admin)
     // ========================
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ApiResponse<Void> deleteReview(@PathVariable Integer id) {
         reviewService.delete(id);
         return ApiResponse.success("Xóa đánh giá thành công", null);

@@ -58,4 +58,15 @@ public class UserController {
         userService.updateUserInfo(user.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật thông tin thành công", null));
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<?>> getProfile(@AuthenticationPrincipal User user) {
+
+        if (user == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(userService.getProfile(user.getId())));
+    }
+
 }
