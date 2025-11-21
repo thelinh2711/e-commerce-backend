@@ -145,9 +145,8 @@ public class RevenueStatisticsService {
     }
 
 
-
     // =====================================================
-    // LỢI NHUẬN - CHỈ CHO OWNER
+    // LỢI NHUẬN - CHỈ OWNER có thể xem
     // =====================================================
 
     @Transactional(readOnly = true)
@@ -156,12 +155,10 @@ public class RevenueStatisticsService {
         
         OverviewStats overview = calculateOverviewStats(payments);
         List<OrderRevenueDetail> orderDetails = calculateOrderDetails(payments);
-        TimeRangeStats timeRange = calculateTimeRangeStats(payments, request.getFromDate(), request.getToDate());
         
         return RevenueStatisticsResponse.builder()
                 .overview(overview)
                 .orderDetails(orderDetails)
-                .timeRange(timeRange)
                 .build();
     }
 
