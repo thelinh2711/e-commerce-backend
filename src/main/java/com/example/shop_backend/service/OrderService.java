@@ -34,6 +34,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final OrderMapper orderMapper;
     private final PaymentRepository paymentRepository;
+    private final ReviewRepository reviewRepository;
 
     private static final BigDecimal DEFAULT_SHIPPING_FEE = new BigDecimal("30000");
 
@@ -376,19 +377,29 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderResponse getOrderDetail(User user, Integer orderId) {
-        // ĐỔI từ findById → findByIdWithPayment
         Order order = orderRepository.findByIdWithPayment(orderId)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
-
-        System.out.println("===== DEBUG ORDER DETAIL =====");
-        System.out.println("Order ID: " + order.getId());
-        System.out.println("Payment: " + (order.getPayment() != null ? order.getPayment().getId() : "NULL"));
 
         if (!order.getUser().getId().equals(user.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        return orderMapper.toOrderResponse(order);
+        // Lấy danh sách variantId đã review bởi user
+        List<Integer> reviewedVariantIds = reviewRepository.findReviewedVariantIdsByUserAndOrder(user.getId(), order.getId());
+
+        // Map OrderItem -> OrderItemResponse và set reviewed flag
+        List<OrderResponse.OrderItemResponse> itemResponses = order.getItems().stream()
+                .map(item -> {
+                    OrderResponse.OrderItemResponse resp = orderMapper.toOrderItemResponse(item);
+                    resp.setReviewed(reviewedVariantIds.contains(item.getProductVariant().getId()));
+                    return resp;
+                })
+                .toList();
+
+        OrderResponse response = orderMapper.toOrderResponse(order);
+        response.setItems(itemResponses);
+
+        return response;
     }
 
     private void validateTransition(OrderStatus current, OrderStatus next) {

@@ -53,6 +53,7 @@ public class OrderResponse {
         private Integer id;
 
         // Thông tin biến thể
+        private Integer productId;
         private Integer productVariantId;
         private String productSku;
         private String productName; // tên sản phẩm
@@ -62,6 +63,7 @@ public class OrderResponse {
         private BigDecimal unitPrice;   // giá bán tại thời điểm mua
         private BigDecimal totalPrice;  // unitPrice * quantity
         private String imageUrl;
+        private boolean reviewed; //check xem review chưa
     }
 
     @Getter

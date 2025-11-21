@@ -100,12 +100,21 @@ public class SecurityConfig {
 
                         // ADMIN area
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // CUSTOMER tạo review (theo variant)
+                        .requestMatchers(HttpMethod.POST, "/api/reviews").hasRole("CUSTOMER")
+
+                        // ADMIN xóa review
+                       .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasRole("ADMIN")
+
+                        // GET review theo productId là công khai
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
 
                         .requestMatchers("/api/v1/payments/**").permitAll()
                         
                         // WebSocket Chat
                         .requestMatchers("/ws-chat/**").permitAll()
                         .requestMatchers("/api/chat/**").authenticated()
+
 
                         // Tất cả còn lại yêu cầu đăng nhập
                         .anyRequest().authenticated()

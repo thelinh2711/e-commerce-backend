@@ -11,6 +11,8 @@ import com.example.shop_backend.model.enums.Role;
 import com.example.shop_backend.repository.MessageRepository;
 import com.example.shop_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,7 +77,15 @@ public class ChatService {
             System.out.println("👤 User là CUSTOMER - Lấy tin nhắn");
             
             String roomId = currentUser.getId().toString();
-            List<Message> messages = messageRepository.findByRoomIdOrderByCreatedAtAsc(roomId);
+            
+            // ✅ Lấy 40 tin nhắn mới nhất cho customer
+            Pageable pageable = PageRequest.of(0, 40);
+            List<Message> messages = messageRepository
+                    .findTopNByRoomIdOrderByCreatedAtDesc(roomId, pageable);
+            
+            // Đảo ngược để tin nhắn cũ lên trước, mới xuống dưới
+            Collections.reverse(messages);
+            
             System.out.println("💬 Tìm thấy " + messages.size() + " tin nhắn");
 
             List<ChatMessageResponse> messageResponses = messages.stream()
@@ -90,6 +100,9 @@ public class ChatService {
         return responseBuilder.build();
     }
 
+    /**
+     * ✅ SỬA: Lấy 40 tin nhắn mới nhất của room -> Cho employee xem chi tiết phòng chat
+     */
     @Transactional(readOnly = true)
     public List<ChatMessageResponse> getMessagesByRoom(String roomId, User currentUser) {
         System.out.println("📋 ChatService.getMessagesByRoom() - Room: " + roomId);
@@ -106,8 +119,60 @@ public class ChatService {
             
             System.out.println("✅ User tồn tại: " + user.getEmail());
             
-            List<Message> messages = messageRepository.findByRoomIdOrderByCreatedAtAsc(roomId);
+            // ✅ Lấy 40 tin nhắn mới nhất (DESC), sau đó đảo ngược để hiển thị đúng thứ tự
+            Pageable pageable = PageRequest.of(0, 40);
+            List<Message> messages = messageRepository
+                    .findTopNByRoomIdOrderByCreatedAtDesc(roomId, pageable);
+            
+            // Đảo ngược để tin nhắn cũ lên trước, mới xuống dưới
+            Collections.reverse(messages);
+            
             System.out.println("💬 Tìm thấy " + messages.size() + " tin nhắn");
+            
+            return messages.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+                    
+        } catch (NumberFormatException e) {
+            throw new AppException(ErrorCode.INVALID_ORDER_REQUEST, "Room ID không hợp lệ");
+        }
+    }
+
+    /**
+     * ✅ MỚI: Lấy 20 tin nhắn cũ hơn (load more)
+     */
+    @Transactional(readOnly = true)
+    public List<ChatMessageResponse> getOlderMessages(String roomId, Integer messageId, User currentUser) {
+        System.out.println("📋 ChatService.getOlderMessages() - Room: " + roomId + ", Before Message ID: " + messageId);
+        
+        if (currentUser.getRole() != Role.EMPLOYEE && !currentUser.getId().toString().equals(roomId)) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        try {
+            Integer userId = Integer.parseInt(roomId);
+            
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+            
+            // Lấy thông tin tin nhắn làm mốc
+            Message referenceMessage = messageRepository.findById(messageId)
+                    .orElseThrow(() -> new AppException(ErrorCode.BAD_REQUEST, "Message không tồn tại"));
+            
+            System.out.println("✅ Reference message time: " + referenceMessage.getCreatedAt());
+            
+            // Lấy 20 tin nhắn trước thời điểm của message reference
+            Pageable pageable = PageRequest.of(0, 20);
+            List<Message> messages = messageRepository.findByRoomIdAndCreatedAtBefore(
+                    roomId, 
+                    referenceMessage.getCreatedAt(), 
+                    pageable
+            );
+            
+            // Đảo ngược để tin nhắn cũ lên trước
+            Collections.reverse(messages);
+            
+            System.out.println("💬 Tìm thấy " + messages.size() + " tin nhắn cũ hơn");
             
             return messages.stream()
                     .map(this::convertToResponse)
@@ -127,7 +192,6 @@ public class ChatService {
         
         if (sender == null || sender.getId() == null) {
             System.out.println("❌ Sender null hoặc không có ID!");
-            // ✅ FIX: Thay UNAUTHENTICATED bằng UNAUTHORIZED hoặc USER_NOT_FOUND
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         
