@@ -11,6 +11,7 @@ public interface CartMapper {
     @Mapping(target = "productId", source = "productVariant.product.id")
     @Mapping(target = "productName", source = "productVariant.product.name")
     @Mapping(target = "productSku", source = "productVariant.product.sku")
+    @Mapping(target = "stock", source = "productVariant.stock")
     @Mapping(target = "colorName", source = "productVariant.color.name")
     @Mapping(target = "sizeName", source = "productVariant.size.name")
     @Mapping(target = "price", source = "productVariant.product.price")

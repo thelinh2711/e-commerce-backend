@@ -28,4 +28,6 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     List<Integer> findReviewedVariantIdsByUserAndOrder(@Param("userId") Integer userId,
                                                        @Param("orderId") Integer orderId);
 
+    Page<Review> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
 }

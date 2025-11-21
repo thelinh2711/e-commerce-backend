@@ -13,6 +13,7 @@ public class CartItemResponse {
     private Integer productId;
     private String productName;
     private String productSku;
+    private Integer stock;
     private String colorName;
     private String sizeName;
     private String imageUrl;
