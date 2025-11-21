@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,11 +28,22 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Query("""
     SELECT o FROM Order o
-    WHERE :keyword IS NULL 
-       OR CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%')
-       OR LOWER(o.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-       OR o.phone LIKE CONCAT('%', :keyword, '%')
+    WHERE (:keyword IS NULL 
+           OR CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%')
+           OR LOWER(o.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR o.phone LIKE CONCAT('%', :keyword, '%'))
+      AND (:status IS NULL OR o.status = :status)
+      AND (:fromDate IS NULL OR o.createdAt >= :fromDate)
+      AND (:toDate IS NULL OR o.createdAt <= :toDate)
+    ORDER BY o.createdAt DESC
 """)
-    Page<Order> searchOrders(@Param("keyword") String keyword, Pageable pageable);
+    Page<Order> searchOrdersWithFilter(
+            @Param("keyword") String keyword,
+            @Param("status") OrderStatus status,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            Pageable pageable
+    );
+
 
 }

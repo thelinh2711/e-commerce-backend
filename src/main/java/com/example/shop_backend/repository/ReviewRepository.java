@@ -30,4 +30,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
     Page<Review> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
+    Page<Review> findByRatingOrderByCreatedAtDesc(Integer rating, Pageable pageable);
+
+
 }
