@@ -2,6 +2,7 @@ package com.example.shop_backend.controller;
 
 import com.example.shop_backend.dto.request.CreateReviewRequest;
 import com.example.shop_backend.dto.response.ApiResponse;
+import com.example.shop_backend.dto.response.PageResponse;
 import com.example.shop_backend.dto.response.ReviewPageResponse;
 import com.example.shop_backend.dto.response.ReviewResponse;
 import com.example.shop_backend.model.User;
@@ -60,5 +61,10 @@ public class ReviewController {
             // Lấy tất cả review + tính trung bình
             return ApiResponse.success(reviewService.getByProductIdWithAvgRating(productId, pageable));
         }
+    }
+
+    @GetMapping("/admin")
+    public ApiResponse<PageResponse<ReviewResponse>> getAllReviews(Pageable pageable) {
+        return ApiResponse.success(reviewService.getAllReviews(pageable));
     }
 }

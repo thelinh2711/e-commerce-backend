@@ -101,10 +101,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // CUSTOMER tạo review (theo variant)
                         .requestMatchers(HttpMethod.POST, "/api/reviews").hasRole("CUSTOMER")
-
+                        // ADMIN xem tất cả review
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/admin").hasRole("ADMIN")
                         // ADMIN xóa review
                        .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasRole("ADMIN")
-
                         // GET review theo productId là công khai
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
 
