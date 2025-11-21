@@ -22,6 +22,10 @@ public class UpdateProductRequest {
     @Min(value = 0, message = "Giá sản phẩm phải >= 0")
     private BigDecimal price;
     
+    // ✅ Thêm costPrice - chỉ OWNER mới có thể cập nhật
+    @Min(value = 0, message = "Giá vốn phải >= 0")
+    private BigDecimal costPrice;
+    
     @Min(value = 0, message = "Phần trăm giảm giá phải >= 0")
     private Integer discountPercent;
 
@@ -37,14 +41,12 @@ public class UpdateProductRequest {
     
     private List<ProductVariantRequest> variants;
     
-    // Inner classes để cập nhật images và variants
-    
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ProductImageRequest {
-        private Integer id; // Nếu có ID thì update, không có thì tạo mới
+        private Integer id;
         private String imageUrl;
         private String altText;
     }
@@ -54,11 +56,11 @@ public class UpdateProductRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ProductVariantRequest {
-        private Integer id; // Nếu có ID thì update, không có thì tạo mới
+        private Integer id;
         private Integer colorId;
         private Integer sizeId;
         private Integer stock;
         private BigDecimal price;
-        private List<String> images; // URLs for variant images
+        private List<String> images;
     }
 }

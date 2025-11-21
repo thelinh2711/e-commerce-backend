@@ -27,6 +27,10 @@ public class CreateProductRequest {
     @Min(value = 0, message = "Giá sản phẩm phải lớn hơn hoặc bằng 0")
     private BigDecimal price;
     
+    // ✅ Thêm costPrice - chỉ OWNER mới set được
+    @Min(value = 0, message = "Giá vốn phải lớn hơn hoặc bằng 0")
+    private BigDecimal costPrice;
+    
     private Integer discountPercent;
     
     @NotNull(message = "Brand ID không được để trống")

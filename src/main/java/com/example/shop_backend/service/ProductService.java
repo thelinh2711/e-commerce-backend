@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.example.shop_backend.model.User;
+import com.example.shop_backend.model.enums.Role;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,8 +22,6 @@ import com.example.shop_backend.model.Product;
 import com.example.shop_backend.model.ProductCategory;
 import com.example.shop_backend.model.ProductImage;
 import com.example.shop_backend.model.ProductLabel;
-import com.example.shop_backend.model.ProductVariant;
-import com.example.shop_backend.model.ProductVariantImage;
 import com.example.shop_backend.repository.BrandRepository;
 import com.example.shop_backend.repository.CategoryRepository;
 import com.example.shop_backend.repository.LabelRepository;
@@ -50,74 +50,56 @@ public class ProductService {
     private final ProductMapper productMapper;
 
     /**
-     * Lấy danh sách tất cả sản phẩm
-     * 
-     * @return List<ProductResponse> - Danh sách sản phẩm đã được convert sang DTO
-     * 
-     * Logic:
-     * 1. Lấy tất cả products từ database
-     * 2. Convert mỗi product entity sang ProductResponse DTO bằng ProductMapper
-     * 3. Trả về danh sách đã convert
+     * Lấy danh sách sản phẩm
+     * - OWNER: Trả về có costPrice
+     * - Khác: Không có costPrice
      */
     @Transactional(readOnly = true)
-    public List<ProductResponse> getAllProducts() {
+    public List<ProductResponse> getAllProducts(User currentUser) {
         List<Product> products = productRepository.findAll();
         
+        // ✅ Nếu là OWNER → trả về đầy đủ thông tin bao gồm costPrice
+        if (currentUser != null && currentUser.getRole() == Role.OWNER) {
+            return products.stream()
+                    .map(productMapper::toProductResponseForOwner)
+                    .collect(Collectors.toList());
+        }
+        
+        // ✅ Khác → không có costPrice
         return products.stream()
                 .map(productMapper::toProductResponse)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Lấy chi tiết 1 sản phẩm theo ID
-     * 
-     * @param id - ID của sản phẩm cần lấy
-     * @return ProductResponse - Thông tin chi tiết sản phẩm
-     * @throws AppException nếu không tìm thấy sản phẩm
-     * 
-     * Logic:
-     * 1. Tìm product theo ID trong database
-     * 2. Nếu không tìm thấy -> throw exception PRODUCT_NOT_FOUND
-     * 3. Convert product entity sang ProductResponse DTO bằng ProductMapper
-     * 4. Trả về response
+     * Lấy chi tiết sản phẩm theo role
+     * - OWNER: Trả về đầy đủ bao gồm costPrice
+     * - Khác: Không có costPrice
      */
     @Transactional(readOnly = true)
-    public ProductResponse getProductById(Integer id) {
+    public ProductResponse getProductById(Integer id, User currentUser) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
         
+        // ✅ Nếu là OWNER → trả về đầy đủ thông tin
+        if (currentUser != null && currentUser.getRole() == Role.OWNER) {
+            return productMapper.toProductResponseForOwner(product);
+        }
+        
+        // ✅ Khác → không có costPrice
         return productMapper.toProductResponse(product);
     }
 
     /**
      * Tạo sản phẩm mới
-     * 
-     * @param request - Dữ liệu sản phẩm mới (CreateProductRequest)
-     * @return ProductResponse - Thông tin sản phẩm vừa tạo
-     * @throws AppException nếu brand/category/label/color/size không tồn tại
-     * 
-     * Logic:
-     * 1. Validate và lấy brand từ database
-     * 2. Tạo product entity với thông tin cơ bản:
-     *    - name, description, price: từ request
-     *    - costPrice: set NULL (không có trong request)
-     *    - discountPercent: từ request hoặc mặc định 0
-     *    - discountPrice: tính = price * (1 - discountPercent/100)
-     * 3. Lưu product vào database -> nhận ID tự động
-     * 4. Thêm categories: Duyệt categoryIds và tạo ProductCategory
-     * 5. Thêm labels: Duyệt labelIds và tạo ProductLabel
-     * 6. Thêm images: Duyệt images và tạo ProductImage
-     *    - displayOrder bắt đầu từ 1
-     *    - Ảnh đầu tiên tự động là thumbnail
-     * 7. Trả về ProductResponse của sản phẩm vừa tạo
+     * - ADMIN: Không có costPrice trong request → costPrice = null
+     * - OWNER: Có thể thêm costPrice trong request
      */
     @Transactional
-    public ProductResponse createProduct(CreateProductRequest request) {
-        // Get brand
+    public ProductResponse createProduct(CreateProductRequest request, User currentUser) {
         Brand brand = brandRepository.findById(request.getBrandId())
                 .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
 
-        // Calculate discount price
         BigDecimal discountPrice = request.getPrice();
         if (request.getDiscountPercent() != null && request.getDiscountPercent() > 0) {
             BigDecimal discountMultiplier = BigDecimal.ONE.subtract(
@@ -127,20 +109,23 @@ public class ProductService {
                 .setScale(0, java.math.RoundingMode.HALF_UP);
         }
 
-        // Create product
         Product product = Product.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .price(request.getPrice())
-                .costPrice(null) // Cost price is null if not provided
+                .costPrice(null) // ✅ Mặc định null, sẽ set bên dưới nếu là OWNER
                 .discountPercent(request.getDiscountPercent() != null ? request.getDiscountPercent() : 0)
                 .discountPrice(discountPrice)
                 .brand(brand)
                 .build();
 
+        // ✅ CHỈ OWNER mới được set costPrice khi tạo
+        if (currentUser != null && currentUser.getRole() == Role.OWNER && request.getCostPrice() != null) {
+            product.setCostPrice(request.getCostPrice());
+        }
+
         product = productRepository.save(product);
         
-        // Auto-generate SKU after product is saved (format: SP{id})
         product.setSku("SP" + product.getId());
         product = productRepository.save(product);
 
@@ -187,58 +172,52 @@ public class ProductService {
             }
         }
 
-        // Return created product
         Product savedProduct = productRepository.findById(product.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+        
+        // ✅ Trả về theo role
+        if (currentUser != null && currentUser.getRole() == Role.OWNER) {
+            return productMapper.toProductResponseForOwner(savedProduct);
+        }
         
         return productMapper.toProductResponse(savedProduct);
     }
 
     /**
-     * Cập nhật thông tin sản phẩm
-     * 
-     * @param id - ID của sản phẩm cần update
-     * @param request - Dữ liệu cập nhật (UpdateProductRequest)
-     * @return ProductResponse - Thông tin sản phẩm sau khi update
-     * @throws AppException nếu product/brand/category/label không tồn tại
-     * 
-     * Logic:
-     * 1. Tìm product hiện tại theo ID
-     * 2. Validate và lấy brand mới
-     * 3. Cập nhật thông tin cơ bản:
-     *    - name, description, price: từ request
-     *    - costPrice: set NULL
-     *    - discountPercent: từ request hoặc 0
-     *    - discountPrice: tính lại = price * (1 - discountPercent/100)
-     * 4. Cập nhật categories: Xóa cũ và thêm mới
-     * 5. Cập nhật labels: Xóa cũ và thêm mới
-     * 6. Cập nhật images: Xóa cũ và thêm mới
-     * 7. Trả về ProductResponse đã update
+     * Cập nhật sản phẩm
+     * - OWNER: Có thể cập nhật tất cả bao gồm costPrice
+     * - ADMIN: Có thể cập nhật nhưng KHÔNG được gửi costPrice trong request
      */
     @Transactional
-    public ProductResponse updateProduct(Integer id, UpdateProductRequest request) {
-        // Get existing product
+    public ProductResponse updateProduct(Integer id, UpdateProductRequest request, User currentUser) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        // Update name if provided
+        // ✅ Kiểm tra: Nếu ADMIN gửi costPrice → báo lỗi
+        if (request.getCostPrice() != null && currentUser.getRole() != Role.OWNER) {
+            throw new AppException(ErrorCode.FORBIDDEN, "Bạn không có quyền cập nhật giá vốn sản phẩm");
+        }
+
+        // Cập nhật các field nếu có trong request
         if (request.getName() != null) {
             product.setName(request.getName());
         }
 
-        // Update description if provided
         if (request.getDescription() != null) {
             product.setDescription(request.getDescription());
         }
 
-        // Update brand if provided
         if (request.getBrandId() != null) {
             Brand brand = brandRepository.findById(request.getBrandId())
                     .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_FOUND));
             product.setBrand(brand);
         }
 
-        // Update price and recalculate discount price if price or discountPercent changed
+        // ✅ CHỈ OWNER mới được cập nhật costPrice
+        if (request.getCostPrice() != null && currentUser.getRole() == Role.OWNER) {
+            product.setCostPrice(request.getCostPrice());
+        }
+
         boolean priceChanged = request.getPrice() != null;
         boolean discountPercentChanged = request.getDiscountPercent() != null;
 
@@ -250,7 +229,6 @@ public class ProductService {
             product.setDiscountPercent(request.getDiscountPercent());
         }
 
-        // Recalculate discount price if price or discount percent changed
         if (priceChanged || discountPercentChanged) {
             BigDecimal currentPrice = product.getPrice();
             Integer currentDiscountPercent = product.getDiscountPercent();
@@ -268,16 +246,14 @@ public class ProductService {
 
         product = productRepository.save(product);
 
-        // Update categories: Xóa cũ và thêm mới
+        // Update categories
         if (request.getCategoryIds() != null) {
-            // Xóa tất cả categories cũ
             List<ProductCategory> oldCategories = productCategoryRepository.findByProductId(id);
             if (!oldCategories.isEmpty()) {
                 productCategoryRepository.deleteAll(oldCategories);
-                productCategoryRepository.flush(); // Force delete trước khi insert
+                productCategoryRepository.flush();
             }
 
-            // Thêm categories mới
             for (Integer categoryId : request.getCategoryIds()) {
                 Category category = categoryRepository.findById(categoryId)
                         .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -291,16 +267,14 @@ public class ProductService {
             }
         }
 
-        // Update labels: Xóa cũ và thêm mới
+        // Update labels
         if (request.getLabelIds() != null) {
-            // Xóa tất cả labels cũ
             List<ProductLabel> oldLabels = productLabelRepository.findByProductId(id);
             if (!oldLabels.isEmpty()) {
                 productLabelRepository.deleteAll(oldLabels);
-                productLabelRepository.flush(); // Force delete trước khi insert
+                productLabelRepository.flush();
             }
 
-            // Thêm labels mới
             for (Integer labelId : request.getLabelIds()) {
                 Label label = labelRepository.findById(labelId)
                         .orElseThrow(() -> new AppException(ErrorCode.LABEL_NOT_FOUND));
@@ -314,16 +288,14 @@ public class ProductService {
             }
         }
 
-        // Update images: Xóa cũ và thêm mới
+        // Update images
         if (request.getImages() != null) {
-            // Xóa tất cả images cũ
             List<ProductImage> oldImages = productImageRepository.findByProductId(id);
             if (!oldImages.isEmpty()) {
                 productImageRepository.deleteAll(oldImages);
-                productImageRepository.flush(); // Force delete trước khi insert
+                productImageRepository.flush();
             }
 
-            // Thêm images mới
             for (UpdateProductRequest.ProductImageRequest imageReq : request.getImages()) {
                 ProductImage productImage = ProductImage.builder()
                         .product(product)
@@ -335,60 +307,33 @@ public class ProductService {
             }
         }
 
-        // Return updated product
         Product updatedProduct = productRepository.findById(product.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+        
+        // ✅ Trả về theo role
+        if (currentUser.getRole() == Role.OWNER) {
+            return productMapper.toProductResponseForOwner(updatedProduct);
+        }
         
         return productMapper.toProductResponse(updatedProduct);
     }
 
-    /**
-     * Xóa sản phẩm
-     * 
-     * @param id - ID của sản phẩm cần xóa
-     * @throws AppException nếu không tìm thấy sản phẩm
-     * 
-     * Logic:
-     * 1. Kiểm tra product có tồn tại không
-     * 2. Xóa theo thứ tự từ bảng phụ thuộc đến bảng chính:
-     *    a. Xóa variant images (của từng variant)
-     *    b. Xóa variants
-     *    c. Xóa product images
-     *    d. Xóa product labels
-     *    e. Xóa product categories
-     *    f. Xóa product
-     * 
-     * Note: Phải xóa theo thứ tự này để tránh lỗi foreign key constraint
-     */
     @Transactional
     public void deleteProduct(Integer id) {
-        // Check if product exists
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        // Xóa theo thứ tự: variant images -> variants -> images -> labels -> categories -> product
-        
-        // 1. Xóa variant images và variants
-        List<ProductVariant> variants = productVariantRepository.findByProductId(id);
-        for (ProductVariant variant : variants) {
-            List<ProductVariantImage> variantImages = productVariantImageRepository.findByProductVariantId(variant.getId());
-            productVariantImageRepository.deleteAll(variantImages);
-        }
-        productVariantRepository.deleteAll(variants);
+        productVariantRepository.findByProductId(id).forEach(variant -> {
+            productVariantImageRepository.deleteAll(
+                productVariantImageRepository.findByProductVariantId(variant.getId())
+            );
+        });
+        productVariantRepository.deleteAll(productVariantRepository.findByProductId(id));
 
-        // 2. Xóa product images
-        List<ProductImage> images = productImageRepository.findByProductId(id);
-        productImageRepository.deleteAll(images);
+        productImageRepository.deleteAll(productImageRepository.findByProductId(id));
+        productLabelRepository.deleteAll(productLabelRepository.findByProductId(id));
+        productCategoryRepository.deleteAll(productCategoryRepository.findByProductId(id));
 
-        // 3. Xóa product labels
-        List<ProductLabel> labels = productLabelRepository.findByProductId(id);
-        productLabelRepository.deleteAll(labels);
-
-        // 4. Xóa product categories
-        List<ProductCategory> categories = productCategoryRepository.findByProductId(id);
-        productCategoryRepository.deleteAll(categories);
-
-        // 5. Xóa product
         productRepository.delete(product);
     }
 }
