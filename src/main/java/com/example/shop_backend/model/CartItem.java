@@ -31,6 +31,6 @@ public class CartItem {
     private Integer quantity;
 
     // Tổng tiền = (discountPrice != null ? discountPrice : price) * quantity
-    @Column(name = "item_total_price", precision = 10, scale = 2)
-    private BigDecimal itemTotalPrice;
+//    @Column(name = "item_total_price", precision = 10, scale = 2)
+//    private BigDecimal itemTotalPrice;
 }
