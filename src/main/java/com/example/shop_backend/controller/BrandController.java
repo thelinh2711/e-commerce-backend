@@ -34,7 +34,7 @@ public class BrandController {
     }
 
     // Tạo thương hiệu (ADMIN)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     @PostMapping
     public ResponseEntity<ApiResponse<BrandResponse>> create(@Valid @RequestBody BrandRequest request) {
         BrandResponse created = brandService.createBrand(request);
@@ -42,7 +42,7 @@ public class BrandController {
     }
 
     // Cập nhật thương hiệu (ADMIN)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN' or hasRole('OWNER'))")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<BrandResponse>> update(
             @PathVariable Integer id,
@@ -52,7 +52,7 @@ public class BrandController {
     }
 
     // Xóa thương hiệu (ADMIN)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {
         brandService.deleteBrand(id);
