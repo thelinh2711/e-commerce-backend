@@ -134,12 +134,13 @@ public abstract class ProductMapper {
     @Named("mapProductImages")
     protected List<ProductResponse.ImageInfo> mapProductImages(Product product) {
         return productImageRepository.findByProductId(product.getId())
-                .stream()
-                .map(img -> ProductResponse.ImageInfo.builder()
-                        .imageUrl(img.getImageUrl())
-                        .altText(img.getAltText())
-                        .build())
-                .collect(Collectors.toList());
+            .stream()
+            .map(img -> ProductResponse.ImageInfo.builder()
+                .id(img.getId())
+                .imageUrl(img.getImageUrl())
+                .altText(img.getAltText())
+                .build())
+            .collect(Collectors.toList());
     }
 
     @Named("mapVariants")

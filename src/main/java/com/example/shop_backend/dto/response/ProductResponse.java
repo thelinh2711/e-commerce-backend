@@ -64,9 +64,9 @@ public class ProductResponse {
     @AllArgsConstructor
     @Builder
     public static class ImageInfo {
+        private Integer id;
         @JsonProperty("image_url")
         private String imageUrl;
-        
         @JsonProperty("alt_text")
         private String altText;
     }

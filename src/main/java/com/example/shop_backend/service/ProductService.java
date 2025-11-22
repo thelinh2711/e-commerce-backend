@@ -8,6 +8,7 @@ import com.example.shop_backend.model.User;
 import com.example.shop_backend.model.enums.Role;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.shop_backend.dto.request.CreateProductRequest;
 import com.example.shop_backend.dto.request.UpdateProductRequest;
@@ -15,22 +16,8 @@ import com.example.shop_backend.dto.response.ProductResponse;
 import com.example.shop_backend.exception.AppException;
 import com.example.shop_backend.exception.ErrorCode;
 import com.example.shop_backend.mapper.ProductMapper;
-import com.example.shop_backend.model.Brand;
-import com.example.shop_backend.model.Category;
-import com.example.shop_backend.model.Label;
-import com.example.shop_backend.model.Product;
-import com.example.shop_backend.model.ProductCategory;
-import com.example.shop_backend.model.ProductImage;
-import com.example.shop_backend.model.ProductLabel;
-import com.example.shop_backend.repository.BrandRepository;
-import com.example.shop_backend.repository.CategoryRepository;
-import com.example.shop_backend.repository.LabelRepository;
-import com.example.shop_backend.repository.ProductCategoryRepository;
-import com.example.shop_backend.repository.ProductImageRepository;
-import com.example.shop_backend.repository.ProductLabelRepository;
-import com.example.shop_backend.repository.ProductRepository;
-import com.example.shop_backend.repository.ProductVariantImageRepository;
-import com.example.shop_backend.repository.ProductVariantRepository;
+import com.example.shop_backend.model.*;
+import com.example.shop_backend.repository.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -48,52 +35,39 @@ public class ProductService {
     private final LabelRepository labelRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductMapper productMapper;
+    
+    // ✅ THÊM: CloudinaryService để upload ảnh
+    private final CloudinaryService cloudinaryService;
 
-    /**
-     * Lấy danh sách sản phẩm
-     * - OWNER: Trả về có costPrice
-     * - Khác: Không có costPrice
-     */
     @Transactional(readOnly = true)
     public List<ProductResponse> getAllProducts(User currentUser) {
         List<Product> products = productRepository.findAll();
         
-        // ✅ Nếu là OWNER → trả về đầy đủ thông tin bao gồm costPrice
         if (currentUser != null && currentUser.getRole() == Role.OWNER) {
             return products.stream()
                     .map(productMapper::toProductResponseForOwner)
                     .collect(Collectors.toList());
         }
         
-        // ✅ Khác → không có costPrice
         return products.stream()
                 .map(productMapper::toProductResponse)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Lấy chi tiết sản phẩm theo role
-     * - OWNER: Trả về đầy đủ bao gồm costPrice
-     * - Khác: Không có costPrice
-     */
     @Transactional(readOnly = true)
     public ProductResponse getProductById(Integer id, User currentUser) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
         
-        // ✅ Nếu là OWNER → trả về đầy đủ thông tin
         if (currentUser != null && currentUser.getRole() == Role.OWNER) {
             return productMapper.toProductResponseForOwner(product);
         }
         
-        // ✅ Khác → không có costPrice
         return productMapper.toProductResponse(product);
     }
 
     /**
-     * Tạo sản phẩm mới
-     * - ADMIN: Không có costPrice trong request → costPrice = null
-     * - OWNER: Có thể thêm costPrice trong request
+     * ✅ THAY ĐỔI: Upload file ảnh lên Cloudinary
      */
     @Transactional
     public ProductResponse createProduct(CreateProductRequest request, User currentUser) {
@@ -113,19 +87,17 @@ public class ProductService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .price(request.getPrice())
-                .costPrice(null) // ✅ Mặc định null, sẽ set bên dưới nếu là OWNER
+                .costPrice(null)
                 .discountPercent(request.getDiscountPercent() != null ? request.getDiscountPercent() : 0)
                 .discountPrice(discountPrice)
                 .brand(brand)
                 .build();
 
-        // ✅ CHỈ OWNER mới được set costPrice khi tạo
         if (currentUser != null && currentUser.getRole() == Role.OWNER && request.getCostPrice() != null) {
             product.setCostPrice(request.getCostPrice());
         }
 
         product = productRepository.save(product);
-        
         product.setSku("SP" + product.getId());
         product = productRepository.save(product);
 
@@ -159,13 +131,25 @@ public class ProductService {
             }
         }
 
-        // Add images
+        // ✅ THAY ĐỔI: Upload ảnh từ file
         if (request.getImages() != null && !request.getImages().isEmpty()) {
-            for (CreateProductRequest.ProductImageRequest imageReq : request.getImages()) {
+            List<String> altTexts = request.getImageAltTexts();
+            
+            for (int i = 0; i < request.getImages().size(); i++) {
+                MultipartFile imageFile = request.getImages().get(i);
+                
+                // Upload lên Cloudinary
+                String imageUrl = cloudinaryService.uploadImage(imageFile);
+                
+                // Lấy alt text nếu có
+                String altText = (altTexts != null && i < altTexts.size()) 
+                    ? altTexts.get(i) 
+                    : null;
+                
                 ProductImage productImage = ProductImage.builder()
                         .product(product)
-                        .imageUrl(imageReq.getImageUrl())
-                        .altText(imageReq.getAltText())
+                        .imageUrl(imageUrl)
+                        .altText(altText)
                         .build();
                 
                 productImageRepository.save(productImage);
@@ -175,7 +159,6 @@ public class ProductService {
         Product savedProduct = productRepository.findById(product.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
         
-        // ✅ Trả về theo role
         if (currentUser != null && currentUser.getRole() == Role.OWNER) {
             return productMapper.toProductResponseForOwner(savedProduct);
         }
@@ -184,21 +167,18 @@ public class ProductService {
     }
 
     /**
-     * Cập nhật sản phẩm
-     * - OWNER: Có thể cập nhật tất cả bao gồm costPrice
-     * - ADMIN: Có thể cập nhật nhưng KHÔNG được gửi costPrice trong request
+     * ✅ THAY ĐỔI: Upload file ảnh mới, giữ lại ảnh cũ nếu cần
      */
     @Transactional
     public ProductResponse updateProduct(Integer id, UpdateProductRequest request, User currentUser) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        // ✅ Kiểm tra: Nếu ADMIN gửi costPrice → báo lỗi
         if (request.getCostPrice() != null && currentUser.getRole() != Role.OWNER) {
             throw new AppException(ErrorCode.FORBIDDEN, "Bạn không có quyền cập nhật giá vốn sản phẩm");
         }
 
-        // Cập nhật các field nếu có trong request
+        // Cập nhật các field cơ bản
         if (request.getName() != null) {
             product.setName(request.getName());
         }
@@ -213,7 +193,6 @@ public class ProductService {
             product.setBrand(brand);
         }
 
-        // ✅ CHỈ OWNER mới được cập nhật costPrice
         if (request.getCostPrice() != null && currentUser.getRole() == Role.OWNER) {
             product.setCostPrice(request.getCostPrice());
         }
@@ -288,19 +267,37 @@ public class ProductService {
             }
         }
 
-        // Update images
-        if (request.getImages() != null) {
+        // ✅ THAY ĐỔI: Xử lý ảnh mới
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
             List<ProductImage> oldImages = productImageRepository.findByProductId(id);
+            List<Integer> keepIds = request.getKeepImageIds();
+            
+            // Xóa ảnh cũ (trừ những ảnh cần giữ lại)
             if (!oldImages.isEmpty()) {
-                productImageRepository.deleteAll(oldImages);
+                for (ProductImage oldImage : oldImages) {
+                    if (keepIds == null || !keepIds.contains(oldImage.getId())) {
+                        productImageRepository.delete(oldImage);
+                    }
+                }
                 productImageRepository.flush();
             }
-
-            for (UpdateProductRequest.ProductImageRequest imageReq : request.getImages()) {
+            
+            // Upload ảnh mới
+            List<String> altTexts = request.getImageAltTexts();
+            for (int i = 0; i < request.getImages().size(); i++) {
+                MultipartFile imageFile = request.getImages().get(i);
+                
+                // Upload lên Cloudinary
+                String imageUrl = cloudinaryService.uploadImage(imageFile);
+                
+                String altText = (altTexts != null && i < altTexts.size()) 
+                    ? altTexts.get(i) 
+                    : null;
+                
                 ProductImage productImage = ProductImage.builder()
                         .product(product)
-                        .imageUrl(imageReq.getImageUrl())
-                        .altText(imageReq.getAltText())
+                        .imageUrl(imageUrl)
+                        .altText(altText)
                         .build();
                 
                 productImageRepository.save(productImage);
@@ -310,7 +307,6 @@ public class ProductService {
         Product updatedProduct = productRepository.findById(product.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
         
-        // ✅ Trả về theo role
         if (currentUser.getRole() == Role.OWNER) {
             return productMapper.toProductResponseForOwner(updatedProduct);
         }
