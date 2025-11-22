@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public class ReviewResponse {
 
     private Integer id;
+    private String fullName;
     private Integer orderId;
     private Integer productId;
     private Integer productVariantId;

@@ -2,6 +2,7 @@ package com.example.shop_backend.controller;
 
 import com.example.shop_backend.dto.request.CreateReviewRequest;
 import com.example.shop_backend.dto.response.ApiResponse;
+import com.example.shop_backend.dto.response.PageResponse;
 import com.example.shop_backend.dto.response.ReviewPageResponse;
 import com.example.shop_backend.dto.response.ReviewResponse;
 import com.example.shop_backend.model.User;
@@ -38,7 +39,7 @@ public class ReviewController {
     // Xóa review (admin)
     // ========================
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ApiResponse<Void> deleteReview(@PathVariable Integer id) {
         reviewService.delete(id);
         return ApiResponse.success("Xóa đánh giá thành công", null);
@@ -61,4 +62,22 @@ public class ReviewController {
             return ApiResponse.success(reviewService.getByProductIdWithAvgRating(productId, pageable));
         }
     }
+
+    @GetMapping("/admin")
+    public ApiResponse<PageResponse<ReviewResponse>> getAllReviews(Pageable pageable) {
+        return ApiResponse.success(reviewService.getAllReviews(pageable));
+    }
+
+    // ========================
+    // ADMIN/OWNER: Lọc review theo rating (phân trang)
+    // ========================
+    @GetMapping("/admin/filter")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
+    public ApiResponse<PageResponse<ReviewResponse>> getReviewsByRating(
+            @RequestParam Integer rating,
+            Pageable pageable) {
+
+        return ApiResponse.success(reviewService.getByRating(rating, pageable));
+    }
+
 }

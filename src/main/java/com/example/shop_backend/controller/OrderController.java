@@ -10,12 +10,17 @@ import com.example.shop_backend.exception.ErrorCode;
 import com.example.shop_backend.model.User;
 import com.example.shop_backend.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -58,7 +63,7 @@ public class OrderController {
      * Lấy chi tiết đơn hàng theo ID (chỉ user sở hữu đơn hàng hoặc admin)
      */
     @GetMapping("/{orderId}")
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderDetail(
             @AuthenticationPrincipal User currentUser,
             @PathVariable Integer orderId) {
@@ -71,7 +76,7 @@ public class OrderController {
      * Tracking đơn hàng (chỉ admin)
      */
     @PatchMapping("/{orderId}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(
             @PathVariable Integer orderId, @RequestBody UpdateOrderStatusRequest request
             ) {
@@ -79,29 +84,28 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(updateOrder));
     }
 
-    /**
-     * lấy danh sách Order theo trạng thái (orderStatus)
-     */
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getOrdersByStatus(
+    @GetMapping("/search")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> searchOrders(
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(
-                ApiResponse.success(orderService.getOrdersByStatus(status, page, size))
+        Pageable pageable = PageRequest.of(page, size);
+
+        LocalDateTime fromDateTime = (fromDate != null) ? fromDate.atStartOfDay() : null;
+        LocalDateTime toDateTime = (toDate != null) ? toDate.atTime(23, 59, 59) : null;
+
+        PageResponse<OrderResponse> result = orderService.searchOrders(
+                keyword, status, fromDateTime, toDateTime, pageable
         );
+
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 
-    @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PageResponse<OrderResponse>> searchOrders(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return ResponseEntity.ok(orderService.searchOrders(keyword, page, size));
-    }
+
 
 }

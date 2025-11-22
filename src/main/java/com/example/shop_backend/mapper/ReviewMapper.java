@@ -4,25 +4,21 @@ import com.example.shop_backend.dto.response.ReviewResponse;
 import com.example.shop_backend.model.Review;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface ReviewMapper {
 
-    ReviewMapper INSTANCE = Mappers.getMapper(ReviewMapper.class);
-
-    @Mapping(target = "productId", source = "review.product.id")
-    @Mapping(target = "productVariantId", source = "review.productVariant.id")
-    @Mapping(target = "productName", source = "review.product.name")
-    @Mapping(target = "color", source = "review.productVariant.color.name")
-    @Mapping(target = "size", source = "review.productVariant.size.name")
-    @Mapping(target = "orderId", source = "review.order.id")
-    @Mapping(target = "id", source = "review.id")
-    @Mapping(target = "rating", source = "review.rating")
-    @Mapping(target = "title", source = "review.title")
-    @Mapping(target = "comment", source = "review.comment")
-    @Mapping(target = "createdAt", source = "review.createdAt")
+    @Mapping(target = "fullName", source = "user.fullName")
+    @Mapping(target = "productId", source = "product.id")
+    @Mapping(target = "productVariantId", source = "productVariant.id")
+    @Mapping(target = "productName", source = "product.name")
+    @Mapping(target = "color", source = "productVariant.color.name")
+    @Mapping(target = "size", source = "productVariant.size.name")
+    @Mapping(target = "orderId", source = "order.id")
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "rating", source = "rating")
+    @Mapping(target = "title", source = "title")
+    @Mapping(target = "comment", source = "comment")
+    @Mapping(target = "createdAt", source = "createdAt")
     ReviewResponse toReviewResponse(Review review);
 }
-

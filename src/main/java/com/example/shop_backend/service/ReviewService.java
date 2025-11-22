@@ -146,6 +146,45 @@ public class ReviewService {
                 .build();
     }
 
+    // ========================
+    // Admin: Lấy tất cả review (phân trang)
+    // ========================
+    @Transactional(readOnly = true)
+    public PageResponse<ReviewResponse> getAllReviews(Pageable pageable) {
+
+        Page<Review> page = reviewRepository.findAllByOrderByCreatedAtDesc(pageable);
+
+        List<ReviewResponse> list = page.stream()
+                .map(reviewMapper::toReviewResponse)
+                .toList();
+
+        return PageResponse.<ReviewResponse>builder()
+                .data(list)
+                .page(pageable.getPageNumber())
+                .size(pageable.getPageSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ReviewResponse> getByRating(Integer rating, Pageable pageable) {
+
+        Page<Review> page = reviewRepository.findByRatingOrderByCreatedAtDesc(rating, pageable);
+
+        List<ReviewResponse> list = page.stream()
+                .map(reviewMapper::toReviewResponse)
+                .toList();
+
+        return PageResponse.<ReviewResponse>builder()
+                .data(list)
+                .page(pageable.getPageNumber())
+                .size(pageable.getPageSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .build();
+    }
+
 
     // ========================
     // Kiểm tra sản phẩm đã review chưa

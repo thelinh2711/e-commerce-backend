@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -305,56 +306,42 @@ public class OrderService {
         return orderMapper.toOrderResponse(order);
     }
 
-    public PageResponse<OrderResponse> getOrdersByStatus(String status, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-
-        Page<Order> orderPage;
-
-        if (status == null || status.isEmpty()) {
-            orderPage = orderRepository.findAll(pageable);
-        } else {
-            OrderStatus orderStatus;
-
+    /**
+     * Search orders with optional keyword, status, fromDate, toDate
+     */
+    public PageResponse<OrderResponse> searchOrders(
+            String keyword,
+            String statusStr,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            Pageable pageable
+    ) {
+        // Convert status string to OrderStatus enum
+        OrderStatus status = null;
+        if (statusStr != null && !statusStr.isBlank()) {
             try {
-                orderStatus = OrderStatus.valueOf(status.toUpperCase());
+                status = OrderStatus.valueOf(statusStr.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw new AppException(ErrorCode.INVALID_ORDER_REQUEST);
+                throw new AppException(ErrorCode.INVALID_ORDER_STATUS, "Invalid order status: " + statusStr);
             }
-
-            orderPage = orderRepository.findByStatus(orderStatus, pageable);
         }
 
-        List<OrderResponse> data = orderPage
-                .stream()
-                .map(orderMapper::toOrderResponse)
-                .toList();
+        // Call repository method with correct enum type
+        Page<Order> page = orderRepository.searchOrdersWithFilter(
+                keyword,
+                status,
+                fromDate,
+                toDate,
+                pageable
+        );
 
+        // Map Order -> OrderResponse
         return PageResponse.<OrderResponse>builder()
-                .data(data)
-                .page(page)
-                .size(size)
-                .totalElements(orderPage.getTotalElements())
-                .totalPages(orderPage.getTotalPages())
-                .build();
-    }
-
-    public PageResponse<OrderResponse> searchOrders(String keyword, int page, int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
-
-        Page<Order> orderPage = orderRepository.searchOrders(keyword, pageable);
-
-        List<OrderResponse> responses = orderPage.getContent()
-                .stream()
-                .map(orderMapper::toOrderResponse)
-                .toList();
-
-        return PageResponse.<OrderResponse>builder()
-                .data(responses)
-                .page(orderPage.getNumber())
-                .size(orderPage.getSize())
-                .totalElements(orderPage.getTotalElements())
-                .totalPages(orderPage.getTotalPages())
+                .data(page.stream().map(orderMapper::toOrderResponse).toList())
+                .page(pageable.getPageNumber())
+                .size(pageable.getPageSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
                 .build();
     }
 

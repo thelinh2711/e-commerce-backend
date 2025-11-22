@@ -2,6 +2,7 @@ package com.example.shop_backend.service;
 
 import com.example.shop_backend.dto.request.ChangePasswordRequest;
 import com.example.shop_backend.dto.request.UpdateUserRequest;
+import com.example.shop_backend.dto.response.UserProfileResponse;
 import com.example.shop_backend.exception.AppException;
 import com.example.shop_backend.exception.ErrorCode;
 import com.example.shop_backend.model.User;
@@ -66,6 +67,18 @@ public class UserService implements UserDetailsService {
         user.setPhone(request.getPhone());
 
         userRepository.save(user);
+    }
+
+    public UserProfileResponse getProfile(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        return UserProfileResponse.builder()
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .rewardPoints(user.getRewardPoints())
+                .build();
     }
 
 }
