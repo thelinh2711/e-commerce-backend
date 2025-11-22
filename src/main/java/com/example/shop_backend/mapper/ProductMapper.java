@@ -39,6 +39,8 @@ public abstract class ProductMapper {
      * Convert Product entity sang ProductResponse DTO (cho PUBLIC/ADMIN)
      */
     @Mapping(target = "id", expression = "java(product.getId().toString())")
+    @Mapping(target = "name", source = "name")
+    @Mapping(target = "description", source = "description")
     @Mapping(target = "sku", source = "sku")
     @Mapping(target = "brand", source = "product", qualifiedByName = "mapBrand")
     @Mapping(target = "price", source = "product", qualifiedByName = "mapPriceInfo")
@@ -54,6 +56,8 @@ public abstract class ProductMapper {
      * Convert Product entity sang ProductResponse DTO (cho OWNER - bao gồm costPrice)
      */
     @Mapping(target = "id", expression = "java(product.getId().toString())")
+    @Mapping(target = "name", source = "name")
+    @Mapping(target = "description", source = "description")
     @Mapping(target = "sku", source = "sku")
     @Mapping(target = "brand", source = "product", qualifiedByName = "mapBrand")
     @Mapping(target = "price", source = "product", qualifiedByName = "mapPriceInfoForOwner")
