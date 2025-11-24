@@ -50,6 +50,7 @@ public abstract class ProductMapper {
     @Mapping(target = "labels", source = "product", qualifiedByName = "mapLabels")
     @Mapping(target = "totalCount", source = "product", qualifiedByName = "calculateTotalCount")
     @Mapping(target = "sold", source = "product", qualifiedByName = "calculateSold")
+    @org.mapstruct.Mapping(target = "active", source = "active")
     public abstract ProductResponse toProductResponse(Product product);
 
     /**
@@ -67,6 +68,7 @@ public abstract class ProductMapper {
     @Mapping(target = "labels", source = "product", qualifiedByName = "mapLabels")
     @Mapping(target = "totalCount", source = "product", qualifiedByName = "calculateTotalCount")
     @Mapping(target = "sold", source = "product", qualifiedByName = "calculateSold")
+    @org.mapstruct.Mapping(target = "active", source = "active")
     public abstract ProductResponse toProductResponseForOwner(Product product);
 
     /**
@@ -152,19 +154,20 @@ public abstract class ProductMapper {
 
         for (ProductVariant variant : variants) {
             List<ProductVariantImage> variantImages = productVariantImageRepository
-                    .findByProductVariantId(variant.getId());
+                .findByProductVariantId(variant.getId());
             String variantImageUrl = variantImages.isEmpty() 
-                ? "" 
-                : variantImages.get(0).getImageUrl();
+            ? "" 
+            : variantImages.get(0).getImageUrl();
 
             variantInfos.add(ProductResponse.VariantInfo.builder()
-                    .id(variant.getId())
-                    .size(variant.getSize() != null ? variant.getSize().getName() : "")
-                    .image(variantImageUrl)
-                    .stock(variant.getStock())
-                    .colorName(variant.getColor() != null ? variant.getColor().getName() : "")
-                    .colorHex(variant.getColor() != null ? variant.getColor().getHexCode() : "")
-                    .build());
+                .id(variant.getId())
+                .size(variant.getSize() != null ? variant.getSize().getName() : "")
+                .image(variantImageUrl)
+                .stock(variant.getStock())
+                .colorName(variant.getColor() != null ? variant.getColor().getName() : "")
+                .colorHex(variant.getColor() != null ? variant.getColor().getHexCode() : "")
+                .active(variant.getActive())
+                .build());
         }
 
         return variantInfos;

@@ -22,9 +22,17 @@ public class ProductVariantController {
     @Autowired
     private ProductVariantService productVariantService;
 
+    /**
+     * GET /api/product-variants/{id}
+     * GET /api/product-variants/{id}?active=true
+     * GET /api/product-variants/{id}?active=false
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductVariantResponse>> getVariantById(@PathVariable Integer id) {
-        ProductVariantResponse variant = productVariantService.getVariantById(id);
+    public ResponseEntity<ApiResponse<ProductVariantResponse>> getVariantById(
+            @PathVariable Integer id,
+            @RequestParam(required = false) Boolean active) {
+        
+        ProductVariantResponse variant = productVariantService.getVariantById(id, active);
         return ResponseEntity.ok(ApiResponse.<ProductVariantResponse>builder()
                 .code(1000)
                 .message("Success")
@@ -32,10 +40,17 @@ public class ProductVariantController {
                 .build());
     }
 
+    /**
+     * GET /api/product-variants/product/{productId}
+     * GET /api/product-variants/product/{productId}?active=true
+     * GET /api/product-variants/product/{productId}?active=false
+     */
     @GetMapping("/product/{productId}")
     public ResponseEntity<ApiResponse<List<ProductVariantResponse>>> getVariantsByProductId(
-            @PathVariable Integer productId) {
-        List<ProductVariantResponse> variants = productVariantService.getVariantsByProductId(productId);
+            @PathVariable Integer productId,
+            @RequestParam(required = false) Boolean active) {
+        
+        List<ProductVariantResponse> variants = productVariantService.getVariantsByProductId(productId, active);
         return ResponseEntity.ok(ApiResponse.<List<ProductVariantResponse>>builder()
                 .code(1000)
                 .message("Success")
@@ -43,9 +58,6 @@ public class ProductVariantController {
                 .build());
     }
 
-    /**
-     * ✅ THAY ĐỔI: Nhận multipart/form-data
-     */
     @PostMapping(consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<ProductVariantResponse>> createVariant(
@@ -59,9 +71,6 @@ public class ProductVariantController {
                         .build());
     }
 
-    /**
-     * ✅ THAY ĐỔI: Nhận multipart/form-data
-     */
     @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<ProductVariantResponse>> updateVariant(

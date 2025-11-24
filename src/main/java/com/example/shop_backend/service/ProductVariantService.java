@@ -41,31 +41,53 @@ public class ProductVariantService {
     @Autowired
     private ProductVariantImageRepository productVariantImageRepository;
     
-    // ✅ THÊM: CloudinaryService
     @Autowired
     private CloudinaryService cloudinaryService;
 
-    public ProductVariantResponse getVariantById(Integer id) {
+    @Autowired
+    private com.example.shop_backend.mapper.ProductVariantMapper productVariantMapper;
+
+    /**
+     * Lấy variant theo ID với filter active
+     * @param id - ID variant
+     * @param active - null: không filter, true/false: filter theo active
+     */
+    public ProductVariantResponse getVariantById(Integer id, Boolean active) {
         ProductVariant variant = productVariantRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
 
-            return productVariantMapper.toResponse(variant);
-    }
+        // Nếu có filter active và không khớp thì throw exception
+        if (active != null && !variant.getActive().equals(active)) {
+            throw new AppException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND);
+        }
 
-    public List<ProductVariantResponse> getVariantsByProductId(Integer productId) {
-        productRepository.findById(productId)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
-
-        List<ProductVariant> variants = productVariantRepository.findByProductIdWithColorAndSize(productId);
-
-        return variants.stream()
-                    .map(productVariantMapper::toResponse)
-                .collect(Collectors.toList());
+        return productVariantMapper.toResponse(variant);
     }
 
     /**
-     * ✅ THAY ĐỔI: Upload ảnh từ file
+     * Lấy tất cả variants của product với filter active
+     * @param productId - ID sản phẩm
+     * @param active - null: lấy tất cả, true: chỉ active, false: chỉ inactive
      */
+    public List<ProductVariantResponse> getVariantsByProductId(Integer productId, Boolean active) {
+        productRepository.findById(productId)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+
+        List<ProductVariant> variants;
+        
+        if (active == null) {
+            // Lấy tất cả variants
+            variants = productVariantRepository.findByProductIdWithColorAndSize(productId);
+        } else {
+            // Lọc theo active
+            variants = productVariantRepository.findByProductIdAndActive(productId, active);
+        }
+
+        return variants.stream()
+                .map(productVariantMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public ProductVariantResponse createVariant(CreateProductVariantRequest request) {
         Product product = productRepository.findById(request.getProductId())
@@ -83,7 +105,6 @@ public class ProductVariantService {
                     .orElseThrow(() -> new AppException(ErrorCode.SIZE_NOT_FOUND));
         }
 
-        // Check duplicate
         java.util.Optional<ProductVariant> existing = productVariantRepository.findDuplicate(
                 request.getProductId(),
                 color != null ? color.getId() : null,
@@ -98,14 +119,13 @@ public class ProductVariantService {
                 .color(color)
                 .size(size)
                 .stock(request.getStock() != null ? request.getStock() : 0)
+                .active(true) // Mặc định active
                 .build();
 
         ProductVariant savedVariant = productVariantRepository.save(variant);
 
-        // ✅ THAY ĐỔI: Upload ảnh từ file
         if (request.getImages() != null && !request.getImages().isEmpty()) {
             for (MultipartFile imageFile : request.getImages()) {
-                // Upload lên Cloudinary
                 String imageUrl = cloudinaryService.uploadImage(imageFile);
                 
                 ProductVariantImage variantImage = ProductVariantImage.builder()
@@ -117,18 +137,15 @@ public class ProductVariantService {
             }
         }
 
-            return productVariantMapper.toResponse(savedVariant);
+        return productVariantMapper.toResponse(savedVariant);
     }
 
-    /**
-     * ✅ THAY ĐỔI: Upload ảnh từ file
-     */
     @Transactional
     public ProductVariantResponse updateVariant(Integer id, 
             com.example.shop_backend.dto.request.UpdateProductVariantRequest request) {
         
         ProductVariant variant = productVariantRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
 
         boolean hasChanges = false;
         
@@ -146,7 +163,6 @@ public class ProductVariantService {
             hasChanges = true;
         }
         
-        // Check duplicate
         if (hasChanges) {
             java.util.Optional<ProductVariant> existing = productVariantRepository.findDuplicate(
                     variant.getProduct().getId(),
@@ -169,14 +185,10 @@ public class ProductVariantService {
         
         ProductVariant updatedVariant = productVariantRepository.save(variant);
         
-        // ✅ THAY ĐỔI: Upload ảnh mới từ file
         if (request.getImages() != null && !request.getImages().isEmpty()) {
-            // Xóa ảnh cũ
             productVariantImageRepository.deleteByProductVariantId(id);
             
-            // Upload ảnh mới
             for (MultipartFile imageFile : request.getImages()) {
-                // Upload lên Cloudinary
                 String imageUrl = cloudinaryService.uploadImage(imageFile);
                 
                 ProductVariantImage variantImage = ProductVariantImage.builder()
@@ -188,18 +200,15 @@ public class ProductVariantService {
             }
         }
 
-            return productVariantMapper.toResponse(updatedVariant);
+        return productVariantMapper.toResponse(updatedVariant);
     }
 
     @Transactional
     public void deleteVariant(Integer id) {
         ProductVariant variant = productVariantRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+            .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
         variant.setActive(false);
-        productVariantRepository.save(variant);
+        ProductVariant saved = productVariantRepository.save(variant);
+        productVariantRepository.flush();
     }
-
-    @Autowired
-    private com.example.shop_backend.mapper.ProductVariantMapper productVariantMapper;
-
 }

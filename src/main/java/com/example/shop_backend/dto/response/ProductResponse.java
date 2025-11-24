@@ -19,6 +19,7 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL) // Chỉ include field không null
 public class ProductResponse {
     private String id;
+    private Boolean active;
     private String name;
     private String description;
     private String sku;
@@ -80,7 +81,8 @@ public class ProductResponse {
         private String size;
         private String image;
         private Integer stock;
-        
+        private Boolean active;
+
         @JsonProperty("color_name")
         private String colorName;
         

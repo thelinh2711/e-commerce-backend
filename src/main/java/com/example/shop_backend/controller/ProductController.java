@@ -26,10 +26,17 @@ public class ProductController {
 
     private final ProductService productService;
 
+    /**
+     * GET /api/products
+     * GET /api/products?active=true
+     * GET /api/products?active=false
+     */
     @GetMapping
     public ResponseEntity<ProductListResponse> getAllProducts(
+            @RequestParam(required = false) Boolean active,
             @AuthenticationPrincipal User currentUser) {
-        List<ProductResponse> products = productService.getAllProducts(currentUser);
+        
+        List<ProductResponse> products = productService.getAllProducts(active, currentUser);
         
         ProductListResponse response = ProductListResponse.builder()
                 .success(true)
@@ -39,12 +46,18 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * GET /api/products/{id}
+     * GET /api/products/{id}?active=true
+     * GET /api/products/{id}?active=false
+     */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponse>> getProductById(
             @PathVariable Integer id,
+            @RequestParam(required = false) Boolean active,
             @AuthenticationPrincipal User currentUser) {
         
-        ProductResponse product = productService.getProductById(id, currentUser);
+        ProductResponse product = productService.getProductById(id, active, currentUser);
         
         ApiResponse<ProductResponse> response = ApiResponse.<ProductResponse>builder()
                 .code(1000)
@@ -55,10 +68,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * ✅ THAY ĐỔI: Nhận multipart/form-data thay vì JSON
-     * Sử dụng @ModelAttribute để bind dữ liệu từ form
-     */
     @PostMapping(consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(
@@ -76,9 +85,6 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * ✅ THAY ĐỔI: Nhận multipart/form-data
-     */
     @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(

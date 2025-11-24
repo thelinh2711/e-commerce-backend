@@ -50,13 +50,23 @@ public class ProductService {
     private final LabelRepository labelRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductMapper productMapper;
-    
-    // ✅ THÊM: CloudinaryService để upload ảnh
     private final CloudinaryService cloudinaryService;
 
+    /**
+     * Lấy tất cả sản phẩm hoặc filter theo active
+     * @param active - null: lấy tất cả, true: chỉ active, false: chỉ inactive
+     */
     @Transactional(readOnly = true)
-    public List<ProductResponse> getAllProducts(User currentUser) {
-        List<Product> products = productRepository.findAll();
+    public List<ProductResponse> getAllProducts(Boolean active, User currentUser) {
+        List<Product> products;
+        
+        if (active == null) {
+            // Lấy tất cả sản phẩm
+            products = productRepository.findAll();
+        } else {
+            // Lọc theo active
+            products = productRepository.findByActive(active);
+        }
         
         if (currentUser != null && currentUser.getRole() == Role.OWNER) {
             return products.stream()
@@ -69,10 +79,20 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Lấy sản phẩm theo ID với filter active
+     * @param id - ID sản phẩm
+     * @param active - null: không filter, true/false: filter theo active
+     */
     @Transactional(readOnly = true)
-    public ProductResponse getProductById(Integer id, User currentUser) {
+    public ProductResponse getProductById(Integer id, Boolean active, User currentUser) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+        
+        // Nếu có filter active và không khớp thì throw exception
+        if (active != null && !product.getActive().equals(active)) {
+            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
         
         if (currentUser != null && currentUser.getRole() == Role.OWNER) {
             return productMapper.toProductResponseForOwner(product);
@@ -81,9 +101,6 @@ public class ProductService {
         return productMapper.toProductResponse(product);
     }
 
-    /**
-     * ✅ THAY ĐỔI: Upload file ảnh lên Cloudinary
-     */
     @Transactional
     public ProductResponse createProduct(CreateProductRequest request, User currentUser) {
         Brand brand = brandRepository.findById(request.getBrandId())
@@ -106,6 +123,7 @@ public class ProductService {
                 .discountPercent(request.getDiscountPercent() != null ? request.getDiscountPercent() : 0)
                 .discountPrice(discountPrice)
                 .brand(brand)
+                .active(true) // Mặc định là active
                 .build();
 
         if (currentUser != null && currentUser.getRole() == Role.OWNER && request.getCostPrice() != null) {
@@ -116,7 +134,6 @@ public class ProductService {
         product.setSku("SP" + product.getId());
         product = productRepository.save(product);
 
-        // Add categories
         if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
             for (Integer categoryId : request.getCategoryIds()) {
                 Category category = categoryRepository.findById(categoryId)
@@ -131,7 +148,6 @@ public class ProductService {
             }
         }
 
-        // Add labels
         if (request.getLabelIds() != null && !request.getLabelIds().isEmpty()) {
             for (Integer labelId : request.getLabelIds()) {
                 Label label = labelRepository.findById(labelId)
@@ -146,17 +162,12 @@ public class ProductService {
             }
         }
 
-        // ✅ THAY ĐỔI: Upload ảnh từ file
         if (request.getImages() != null && !request.getImages().isEmpty()) {
             List<String> altTexts = request.getImageAltTexts();
             
             for (int i = 0; i < request.getImages().size(); i++) {
                 MultipartFile imageFile = request.getImages().get(i);
-                
-                // Upload lên Cloudinary
                 String imageUrl = cloudinaryService.uploadImage(imageFile);
-                
-                // Lấy alt text nếu có
                 String altText = (altTexts != null && i < altTexts.size()) 
                     ? altTexts.get(i) 
                     : null;
@@ -181,9 +192,6 @@ public class ProductService {
         return productMapper.toProductResponse(savedProduct);
     }
 
-    /**
-     * ✅ THAY ĐỔI: Upload file ảnh mới, giữ lại ảnh cũ nếu cần
-     */
     @Transactional
     public ProductResponse updateProduct(Integer id, UpdateProductRequest request, User currentUser) {
         Product product = productRepository.findById(id)
@@ -193,7 +201,6 @@ public class ProductService {
             throw new AppException(ErrorCode.FORBIDDEN, "Bạn không có quyền cập nhật giá vốn sản phẩm");
         }
 
-        // Cập nhật các field cơ bản
         if (request.getName() != null) {
             product.setName(request.getName());
         }
@@ -240,7 +247,6 @@ public class ProductService {
 
         product = productRepository.save(product);
 
-        // Update categories
         if (request.getCategoryIds() != null) {
             List<ProductCategory> oldCategories = productCategoryRepository.findByProductId(id);
             if (!oldCategories.isEmpty()) {
@@ -261,7 +267,6 @@ public class ProductService {
             }
         }
 
-        // Update labels
         if (request.getLabelIds() != null) {
             List<ProductLabel> oldLabels = productLabelRepository.findByProductId(id);
             if (!oldLabels.isEmpty()) {
@@ -282,12 +287,10 @@ public class ProductService {
             }
         }
 
-        // ✅ THAY ĐỔI: Xử lý ảnh mới
         if (request.getImages() != null && !request.getImages().isEmpty()) {
             List<ProductImage> oldImages = productImageRepository.findByProductId(id);
             List<Integer> keepIds = request.getKeepImageIds();
             
-            // Xóa ảnh cũ (trừ những ảnh cần giữ lại)
             if (!oldImages.isEmpty()) {
                 for (ProductImage oldImage : oldImages) {
                     if (keepIds == null || !keepIds.contains(oldImage.getId())) {
@@ -297,12 +300,9 @@ public class ProductService {
                 productImageRepository.flush();
             }
             
-            // Upload ảnh mới
             List<String> altTexts = request.getImageAltTexts();
             for (int i = 0; i < request.getImages().size(); i++) {
                 MultipartFile imageFile = request.getImages().get(i);
-                
-                // Upload lên Cloudinary
                 String imageUrl = cloudinaryService.uploadImage(imageFile);
                 
                 String altText = (altTexts != null && i < altTexts.size()) 
@@ -334,11 +334,9 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        // Chuyển product.active về false
         product.setActive(false);
         productRepository.save(product);
 
-        // Chuyển tất cả variant.active về false
         List<ProductVariant> variants = productVariantRepository.findByProductId(id);
         for (ProductVariant variant : variants) {
             variant.setActive(false);

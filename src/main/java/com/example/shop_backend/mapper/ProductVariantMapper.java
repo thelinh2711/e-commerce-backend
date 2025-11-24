@@ -15,6 +15,7 @@ import com.example.shop_backend.model.ProductVariant;
 public interface ProductVariantMapper {
     ProductVariantMapper INSTANCE = Mappers.getMapper(ProductVariantMapper.class);
 
+    @Mapping(target = "active", source = "active")
     @Mapping(target = "color", expression = "java(mapColorInfo(variant))")
     @Mapping(target = "size", expression = "java(mapSizeInfo(variant))")
     @Mapping(target = "images", expression = "java(mapImages(variant))")

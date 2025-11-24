@@ -11,5 +11,9 @@ import com.example.shop_backend.model.Product;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
     List<Product> findAll();
+    
+    // Lọc theo active
+    List<Product> findByActive(Boolean active);
+    
     boolean existsByBrand(Brand brand);
 }

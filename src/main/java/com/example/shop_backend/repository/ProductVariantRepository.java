@@ -11,11 +11,20 @@ import com.example.shop_backend.model.ProductVariant;
 
 @Repository
 public interface ProductVariantRepository extends JpaRepository<ProductVariant, Integer> {
+    
     @Query("SELECT pv FROM ProductVariant pv " +
            "LEFT JOIN FETCH pv.color " +
            "LEFT JOIN FETCH pv.size " +
            "WHERE pv.product.id = :productId")
     List<ProductVariant> findByProductIdWithColorAndSize(@Param("productId") Integer productId);
+    
+    // Lấy variants theo productId và filter active
+    @Query("SELECT pv FROM ProductVariant pv " +
+           "LEFT JOIN FETCH pv.color " +
+           "LEFT JOIN FETCH pv.size " +
+           "WHERE pv.product.id = :productId AND pv.active = :active")
+    List<ProductVariant> findByProductIdAndActive(@Param("productId") Integer productId, 
+                                                   @Param("active") Boolean active);
     
     List<ProductVariant> findByProductId(Integer productId);
 
