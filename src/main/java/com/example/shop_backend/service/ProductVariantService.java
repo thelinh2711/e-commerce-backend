@@ -50,16 +50,10 @@ public class ProductVariantService {
     /**
      * Lấy variant theo ID với filter active
      * @param id - ID variant
-     * @param active - null: không filter, true/false: filter theo active
      */
-    public ProductVariantResponse getVariantById(Integer id, Boolean active) {
+    public ProductVariantResponse getVariantById(Integer id) {
         ProductVariant variant = productVariantRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
-
-        // Nếu có filter active và không khớp thì throw exception
-        if (active != null && !variant.getActive().equals(active)) {
-            throw new AppException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND);
-        }
 
         return productVariantMapper.toResponse(variant);
     }

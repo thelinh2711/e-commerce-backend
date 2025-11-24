@@ -80,19 +80,13 @@ public class ProductService {
     }
 
     /**
-     * Lấy sản phẩm theo ID với filter active
+     * Lấy sản phẩm theo ID (không phụ thuộc vào active)
      * @param id - ID sản phẩm
-     * @param active - null: không filter, true/false: filter theo active
      */
     @Transactional(readOnly = true)
-    public ProductResponse getProductById(Integer id, Boolean active, User currentUser) {
+    public ProductResponse getProductById(Integer id, User currentUser) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
-        
-        // Nếu có filter active và không khớp thì throw exception
-        if (active != null && !product.getActive().equals(active)) {
-            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
-        }
         
         if (currentUser != null && currentUser.getRole() == Role.OWNER) {
             return productMapper.toProductResponseForOwner(product);
