@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.example.shop_backend.model.User;
-import com.example.shop_backend.model.enums.Role;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,8 +14,25 @@ import com.example.shop_backend.dto.response.ProductResponse;
 import com.example.shop_backend.exception.AppException;
 import com.example.shop_backend.exception.ErrorCode;
 import com.example.shop_backend.mapper.ProductMapper;
-import com.example.shop_backend.model.*;
-import com.example.shop_backend.repository.*;
+import com.example.shop_backend.model.Brand;
+import com.example.shop_backend.model.Category;
+import com.example.shop_backend.model.Label;
+import com.example.shop_backend.model.Product;
+import com.example.shop_backend.model.ProductCategory;
+import com.example.shop_backend.model.ProductImage;
+import com.example.shop_backend.model.ProductLabel;
+import com.example.shop_backend.model.ProductVariant;
+import com.example.shop_backend.model.User;
+import com.example.shop_backend.model.enums.Role;
+import com.example.shop_backend.repository.BrandRepository;
+import com.example.shop_backend.repository.CategoryRepository;
+import com.example.shop_backend.repository.LabelRepository;
+import com.example.shop_backend.repository.ProductCategoryRepository;
+import com.example.shop_backend.repository.ProductImageRepository;
+import com.example.shop_backend.repository.ProductLabelRepository;
+import com.example.shop_backend.repository.ProductRepository;
+import com.example.shop_backend.repository.ProductVariantImageRepository;
+import com.example.shop_backend.repository.ProductVariantRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -319,17 +334,15 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        productVariantRepository.findByProductId(id).forEach(variant -> {
-            productVariantImageRepository.deleteAll(
-                productVariantImageRepository.findByProductVariantId(variant.getId())
-            );
-        });
-        productVariantRepository.deleteAll(productVariantRepository.findByProductId(id));
+        // Chuyển product.active về false
+        product.setActive(false);
+        productRepository.save(product);
 
-        productImageRepository.deleteAll(productImageRepository.findByProductId(id));
-        productLabelRepository.deleteAll(productLabelRepository.findByProductId(id));
-        productCategoryRepository.deleteAll(productCategoryRepository.findByProductId(id));
-
-        productRepository.delete(product);
+        // Chuyển tất cả variant.active về false
+        List<ProductVariant> variants = productVariantRepository.findByProductId(id);
+        for (ProductVariant variant : variants) {
+            variant.setActive(false);
+            productVariantRepository.save(variant);
+        }
     }
 }

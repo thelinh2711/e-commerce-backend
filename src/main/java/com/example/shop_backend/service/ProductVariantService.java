@@ -12,8 +12,16 @@ import com.example.shop_backend.dto.request.CreateProductVariantRequest;
 import com.example.shop_backend.dto.response.ProductVariantResponse;
 import com.example.shop_backend.exception.AppException;
 import com.example.shop_backend.exception.ErrorCode;
-import com.example.shop_backend.model.*;
-import com.example.shop_backend.repository.*;
+import com.example.shop_backend.model.Color;
+import com.example.shop_backend.model.Product;
+import com.example.shop_backend.model.ProductVariant;
+import com.example.shop_backend.model.ProductVariantImage;
+import com.example.shop_backend.model.Size;
+import com.example.shop_backend.repository.ColorRepository;
+import com.example.shop_backend.repository.ProductRepository;
+import com.example.shop_backend.repository.ProductVariantImageRepository;
+import com.example.shop_backend.repository.ProductVariantRepository;
+import com.example.shop_backend.repository.SizeRepository;
 
 @Service
 public class ProductVariantService {
@@ -41,7 +49,7 @@ public class ProductVariantService {
         ProductVariant variant = productVariantRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
 
-        return convertToResponse(variant);
+            return productVariantMapper.toResponse(variant);
     }
 
     public List<ProductVariantResponse> getVariantsByProductId(Integer productId) {
@@ -51,7 +59,7 @@ public class ProductVariantService {
         List<ProductVariant> variants = productVariantRepository.findByProductIdWithColorAndSize(productId);
 
         return variants.stream()
-                .map(this::convertToResponse)
+                    .map(productVariantMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -109,7 +117,7 @@ public class ProductVariantService {
             }
         }
 
-        return convertToResponse(savedVariant);
+            return productVariantMapper.toResponse(savedVariant);
     }
 
     /**
@@ -180,50 +188,18 @@ public class ProductVariantService {
             }
         }
 
-        return convertToResponse(updatedVariant);
+            return productVariantMapper.toResponse(updatedVariant);
     }
 
     @Transactional
     public void deleteVariant(Integer id) {
         ProductVariant variant = productVariantRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
-
-        productVariantImageRepository.deleteByProductVariantId(id);
-        productVariantRepository.delete(variant);
+        variant.setActive(false);
+        productVariantRepository.save(variant);
     }
 
-    private ProductVariantResponse convertToResponse(ProductVariant variant) {
-        ProductVariantResponse.ColorInfo colorInfo = null;
-        if (variant.getColor() != null) {
-            colorInfo = ProductVariantResponse.ColorInfo.builder()
-                    .id(variant.getColor().getId())
-                    .name(variant.getColor().getName())
-                    .hexCode(variant.getColor().getHexCode())
-                    .build();
-        }
+    @Autowired
+    private com.example.shop_backend.mapper.ProductVariantMapper productVariantMapper;
 
-        ProductVariantResponse.SizeInfo sizeInfo = null;
-        if (variant.getSize() != null) {
-            sizeInfo = ProductVariantResponse.SizeInfo.builder()
-                    .id(variant.getSize().getId())
-                    .name(variant.getSize().getName())
-                    .build();
-        }
-
-        List<String> images = productVariantImageRepository.findByProductVariantId(variant.getId())
-                .stream()
-                .map(img -> img.getImageUrl())
-                .collect(Collectors.toList());
-
-        return ProductVariantResponse.builder()
-                .id(variant.getId())
-                .productId(variant.getProduct().getId())
-                .productName(variant.getProduct().getName())
-                .stock(variant.getStock())
-                .color(colorInfo)
-                .size(sizeInfo)
-                .images(images)
-                .createdAt(variant.getCreatedAt())
-                .build();
-    }
 }

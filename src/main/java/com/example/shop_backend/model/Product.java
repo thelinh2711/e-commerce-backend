@@ -44,6 +44,10 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Builder.Default
+    @Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private Boolean active = true;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
