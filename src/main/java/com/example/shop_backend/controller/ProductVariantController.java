@@ -24,15 +24,12 @@ public class ProductVariantController {
 
     /**
      * GET /api/product-variants/{id}
-     * GET /api/product-variants/{id}?active=true
-     * GET /api/product-variants/{id}?active=false
      */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductVariantResponse>> getVariantById(
-            @PathVariable Integer id,
-            @RequestParam(required = false) Boolean active) {
+            @PathVariable Integer id) {
         
-        ProductVariantResponse variant = productVariantService.getVariantById(id, active);
+        ProductVariantResponse variant = productVariantService.getVariantById(id);
         return ResponseEntity.ok(ApiResponse.<ProductVariantResponse>builder()
                 .code(1000)
                 .message("Success")

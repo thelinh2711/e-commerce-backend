@@ -48,16 +48,13 @@ public class ProductController {
 
     /**
      * GET /api/products/{id}
-     * GET /api/products/{id}?active=true
-     * GET /api/products/{id}?active=false
      */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponse>> getProductById(
             @PathVariable Integer id,
-            @RequestParam(required = false) Boolean active,
             @AuthenticationPrincipal User currentUser) {
         
-        ProductResponse product = productService.getProductById(id, active, currentUser);
+        ProductResponse product = productService.getProductById(id, currentUser);
         
         ApiResponse<ProductResponse> response = ApiResponse.<ProductResponse>builder()
                 .code(1000)
