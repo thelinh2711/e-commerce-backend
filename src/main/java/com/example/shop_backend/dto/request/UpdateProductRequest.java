@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @Builder
@@ -16,13 +17,11 @@ import lombok.NoArgsConstructor;
 public class UpdateProductRequest {
     
     private String name;
-    
     private String description;
 
     @Min(value = 0, message = "Giá sản phẩm phải >= 0")
     private BigDecimal price;
     
-    // ✅ Thêm costPrice - chỉ OWNER mới có thể cập nhật
     @Min(value = 0, message = "Giá vốn phải >= 0")
     private BigDecimal costPrice;
     
@@ -30,26 +29,19 @@ public class UpdateProductRequest {
     private Integer discountPercent;
 
     private Integer brandId;
-
     private Integer stock;
     
     private List<Integer> categoryIds;
-    
     private List<Integer> labelIds;
     
-    private List<ProductImageRequest> images;
+    // ✅ THAY ĐỔI: Nhận file ảnh mới
+    private List<MultipartFile> images;
+    private List<String> imageAltTexts;
+    
+    // ✅ GIỮ LẠI: Danh sách ID ảnh cũ cần giữ lại (không xóa)
+    private List<Integer> keepImageIds;
     
     private List<ProductVariantRequest> variants;
-    
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ProductImageRequest {
-        private Integer id;
-        private String imageUrl;
-        private String altText;
-    }
     
     @Data
     @Builder
@@ -61,6 +53,8 @@ public class UpdateProductRequest {
         private Integer sizeId;
         private Integer stock;
         private BigDecimal price;
-        private List<String> images;
+        
+        // ✅ THAY ĐỔI: Nhận file ảnh cho variant
+        private List<MultipartFile> images;
     }
 }

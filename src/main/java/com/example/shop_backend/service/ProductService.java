@@ -4,10 +4,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.example.shop_backend.model.User;
-import com.example.shop_backend.model.enums.Role;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.shop_backend.dto.request.CreateProductRequest;
 import com.example.shop_backend.dto.request.UpdateProductRequest;
@@ -22,6 +21,9 @@ import com.example.shop_backend.model.Product;
 import com.example.shop_backend.model.ProductCategory;
 import com.example.shop_backend.model.ProductImage;
 import com.example.shop_backend.model.ProductLabel;
+import com.example.shop_backend.model.ProductVariant;
+import com.example.shop_backend.model.User;
+import com.example.shop_backend.model.enums.Role;
 import com.example.shop_backend.repository.BrandRepository;
 import com.example.shop_backend.repository.CategoryRepository;
 import com.example.shop_backend.repository.LabelRepository;
@@ -48,53 +50,57 @@ public class ProductService {
     private final LabelRepository labelRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductMapper productMapper;
+    private final CloudinaryService cloudinaryService;
 
     /**
-     * Lấy danh sách sản phẩm
-     * - OWNER: Trả về có costPrice
-     * - Khác: Không có costPrice
+     * Lấy tất cả sản phẩm hoặc filter theo active
+     * @param active - null: lấy tất cả, true: chỉ active, false: chỉ inactive
      */
     @Transactional(readOnly = true)
-    public List<ProductResponse> getAllProducts(User currentUser) {
-        List<Product> products = productRepository.findAll();
+    public List<ProductResponse> getAllProducts(Boolean active, User currentUser) {
+        List<Product> products;
         
-        // ✅ Nếu là OWNER → trả về đầy đủ thông tin bao gồm costPrice
+        if (active == null) {
+            // Lấy tất cả sản phẩm
+            products = productRepository.findAll();
+        } else {
+            // Lọc theo active
+            products = productRepository.findByActive(active);
+        }
+        
         if (currentUser != null && currentUser.getRole() == Role.OWNER) {
             return products.stream()
                     .map(productMapper::toProductResponseForOwner)
                     .collect(Collectors.toList());
         }
         
-        // ✅ Khác → không có costPrice
         return products.stream()
                 .map(productMapper::toProductResponse)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Lấy chi tiết sản phẩm theo role
-     * - OWNER: Trả về đầy đủ bao gồm costPrice
-     * - Khác: Không có costPrice
+     * Lấy sản phẩm theo ID với filter active
+     * @param id - ID sản phẩm
+     * @param active - null: không filter, true/false: filter theo active
      */
     @Transactional(readOnly = true)
-    public ProductResponse getProductById(Integer id, User currentUser) {
+    public ProductResponse getProductById(Integer id, Boolean active, User currentUser) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
         
-        // ✅ Nếu là OWNER → trả về đầy đủ thông tin
+        // Nếu có filter active và không khớp thì throw exception
+        if (active != null && !product.getActive().equals(active)) {
+            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+        
         if (currentUser != null && currentUser.getRole() == Role.OWNER) {
             return productMapper.toProductResponseForOwner(product);
         }
         
-        // ✅ Khác → không có costPrice
         return productMapper.toProductResponse(product);
     }
 
-    /**
-     * Tạo sản phẩm mới
-     * - ADMIN: Không có costPrice trong request → costPrice = null
-     * - OWNER: Có thể thêm costPrice trong request
-     */
     @Transactional
     public ProductResponse createProduct(CreateProductRequest request, User currentUser) {
         Brand brand = brandRepository.findById(request.getBrandId())
@@ -113,23 +119,21 @@ public class ProductService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .price(request.getPrice())
-                .costPrice(null) // ✅ Mặc định null, sẽ set bên dưới nếu là OWNER
+                .costPrice(null)
                 .discountPercent(request.getDiscountPercent() != null ? request.getDiscountPercent() : 0)
                 .discountPrice(discountPrice)
                 .brand(brand)
+                .active(true) // Mặc định là active
                 .build();
 
-        // ✅ CHỈ OWNER mới được set costPrice khi tạo
         if (currentUser != null && currentUser.getRole() == Role.OWNER && request.getCostPrice() != null) {
             product.setCostPrice(request.getCostPrice());
         }
 
         product = productRepository.save(product);
-        
         product.setSku("SP" + product.getId());
         product = productRepository.save(product);
 
-        // Add categories
         if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
             for (Integer categoryId : request.getCategoryIds()) {
                 Category category = categoryRepository.findById(categoryId)
@@ -144,7 +148,6 @@ public class ProductService {
             }
         }
 
-        // Add labels
         if (request.getLabelIds() != null && !request.getLabelIds().isEmpty()) {
             for (Integer labelId : request.getLabelIds()) {
                 Label label = labelRepository.findById(labelId)
@@ -159,13 +162,20 @@ public class ProductService {
             }
         }
 
-        // Add images
         if (request.getImages() != null && !request.getImages().isEmpty()) {
-            for (CreateProductRequest.ProductImageRequest imageReq : request.getImages()) {
+            List<String> altTexts = request.getImageAltTexts();
+            
+            for (int i = 0; i < request.getImages().size(); i++) {
+                MultipartFile imageFile = request.getImages().get(i);
+                String imageUrl = cloudinaryService.uploadImage(imageFile);
+                String altText = (altTexts != null && i < altTexts.size()) 
+                    ? altTexts.get(i) 
+                    : null;
+                
                 ProductImage productImage = ProductImage.builder()
                         .product(product)
-                        .imageUrl(imageReq.getImageUrl())
-                        .altText(imageReq.getAltText())
+                        .imageUrl(imageUrl)
+                        .altText(altText)
                         .build();
                 
                 productImageRepository.save(productImage);
@@ -175,7 +185,6 @@ public class ProductService {
         Product savedProduct = productRepository.findById(product.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
         
-        // ✅ Trả về theo role
         if (currentUser != null && currentUser.getRole() == Role.OWNER) {
             return productMapper.toProductResponseForOwner(savedProduct);
         }
@@ -183,22 +192,15 @@ public class ProductService {
         return productMapper.toProductResponse(savedProduct);
     }
 
-    /**
-     * Cập nhật sản phẩm
-     * - OWNER: Có thể cập nhật tất cả bao gồm costPrice
-     * - ADMIN: Có thể cập nhật nhưng KHÔNG được gửi costPrice trong request
-     */
     @Transactional
     public ProductResponse updateProduct(Integer id, UpdateProductRequest request, User currentUser) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        // ✅ Kiểm tra: Nếu ADMIN gửi costPrice → báo lỗi
         if (request.getCostPrice() != null && currentUser.getRole() != Role.OWNER) {
             throw new AppException(ErrorCode.FORBIDDEN, "Bạn không có quyền cập nhật giá vốn sản phẩm");
         }
 
-        // Cập nhật các field nếu có trong request
         if (request.getName() != null) {
             product.setName(request.getName());
         }
@@ -213,7 +215,6 @@ public class ProductService {
             product.setBrand(brand);
         }
 
-        // ✅ CHỈ OWNER mới được cập nhật costPrice
         if (request.getCostPrice() != null && currentUser.getRole() == Role.OWNER) {
             product.setCostPrice(request.getCostPrice());
         }
@@ -246,7 +247,6 @@ public class ProductService {
 
         product = productRepository.save(product);
 
-        // Update categories
         if (request.getCategoryIds() != null) {
             List<ProductCategory> oldCategories = productCategoryRepository.findByProductId(id);
             if (!oldCategories.isEmpty()) {
@@ -267,7 +267,6 @@ public class ProductService {
             }
         }
 
-        // Update labels
         if (request.getLabelIds() != null) {
             List<ProductLabel> oldLabels = productLabelRepository.findByProductId(id);
             if (!oldLabels.isEmpty()) {
@@ -288,19 +287,32 @@ public class ProductService {
             }
         }
 
-        // Update images
-        if (request.getImages() != null) {
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
             List<ProductImage> oldImages = productImageRepository.findByProductId(id);
+            List<Integer> keepIds = request.getKeepImageIds();
+            
             if (!oldImages.isEmpty()) {
-                productImageRepository.deleteAll(oldImages);
+                for (ProductImage oldImage : oldImages) {
+                    if (keepIds == null || !keepIds.contains(oldImage.getId())) {
+                        productImageRepository.delete(oldImage);
+                    }
+                }
                 productImageRepository.flush();
             }
-
-            for (UpdateProductRequest.ProductImageRequest imageReq : request.getImages()) {
+            
+            List<String> altTexts = request.getImageAltTexts();
+            for (int i = 0; i < request.getImages().size(); i++) {
+                MultipartFile imageFile = request.getImages().get(i);
+                String imageUrl = cloudinaryService.uploadImage(imageFile);
+                
+                String altText = (altTexts != null && i < altTexts.size()) 
+                    ? altTexts.get(i) 
+                    : null;
+                
                 ProductImage productImage = ProductImage.builder()
                         .product(product)
-                        .imageUrl(imageReq.getImageUrl())
-                        .altText(imageReq.getAltText())
+                        .imageUrl(imageUrl)
+                        .altText(altText)
                         .build();
                 
                 productImageRepository.save(productImage);
@@ -310,7 +322,6 @@ public class ProductService {
         Product updatedProduct = productRepository.findById(product.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
         
-        // ✅ Trả về theo role
         if (currentUser.getRole() == Role.OWNER) {
             return productMapper.toProductResponseForOwner(updatedProduct);
         }
@@ -323,17 +334,13 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        productVariantRepository.findByProductId(id).forEach(variant -> {
-            productVariantImageRepository.deleteAll(
-                productVariantImageRepository.findByProductVariantId(variant.getId())
-            );
-        });
-        productVariantRepository.deleteAll(productVariantRepository.findByProductId(id));
+        product.setActive(false);
+        productRepository.save(product);
 
-        productImageRepository.deleteAll(productImageRepository.findByProductId(id));
-        productLabelRepository.deleteAll(productLabelRepository.findByProductId(id));
-        productCategoryRepository.deleteAll(productCategoryRepository.findByProductId(id));
-
-        productRepository.delete(product);
+        List<ProductVariant> variants = productVariantRepository.findByProductId(id);
+        for (ProductVariant variant : variants) {
+            variant.setActive(false);
+            productVariantRepository.save(variant);
+        }
     }
 }

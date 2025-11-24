@@ -7,14 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.shop_backend.dto.request.CreateProductRequest;
 import com.example.shop_backend.dto.request.UpdateProductRequest;
@@ -25,19 +18,7 @@ import com.example.shop_backend.service.ProductService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-// .\mvnw.cmd spring-boot:run
-/**
- * ProductController - REST API endpoints cho quản lý sản phẩm
- * 
- * Phân quyền:
- * - GET: PUBLIC (tất cả user đều xem được, không có costPrice)
- * - GET (OWNER): Xem đầy đủ bao gồm costPrice
- * - POST (ADMIN): Tạo sản phẩm, không có costPrice (nếu gửi costPrice sẽ bị ignore)
- * - POST (OWNER): Tạo sản phẩm, có thể thêm costPrice
- * - PUT (ADMIN): Cập nhật tất cả các trường trừ costPrice (gửi costPrice → lỗi 403)
- * - PUT (OWNER): Cập nhật bao gồm cả costPrice
- * - DELETE: ADMIN/OWNER
- */
+
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
@@ -46,34 +27,37 @@ public class ProductController {
     private final ProductService productService;
 
     /**
-     * Lấy danh sách sản phẩm
-     * - Nếu user là OWNER: Trả về có costPrice
-     * - Nếu không (PUBLIC/ADMIN): Không có costPrice
+     * GET /api/products
+     * GET /api/products?active=true
+     * GET /api/products?active=false
      */
     @GetMapping
     public ResponseEntity<ProductListResponse> getAllProducts(
+            @RequestParam(required = false) Boolean active,
             @AuthenticationPrincipal User currentUser) {
-        List<ProductResponse> products = productService.getAllProducts(currentUser);
+        
+        List<ProductResponse> products = productService.getAllProducts(active, currentUser);
         
         ProductListResponse response = ProductListResponse.builder()
                 .success(true)
                 .data(products)
                 .build();
-        // System.out.println("Current user: " + currentUser.getEmail() + ", role: " + currentUser.getRole());
+        
         return ResponseEntity.ok(response);
     }
 
     /**
-     * Lấy chi tiết sản phẩm
-     * - Nếu user là OWNER: Trả về đầy đủ bao gồm costPrice
-     * - Nếu không: Không có costPrice
+     * GET /api/products/{id}
+     * GET /api/products/{id}?active=true
+     * GET /api/products/{id}?active=false
      */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponse>> getProductById(
             @PathVariable Integer id,
+            @RequestParam(required = false) Boolean active,
             @AuthenticationPrincipal User currentUser) {
         
-        ProductResponse product = productService.getProductById(id, currentUser);
+        ProductResponse product = productService.getProductById(id, active, currentUser);
         
         ApiResponse<ProductResponse> response = ApiResponse.<ProductResponse>builder()
                 .code(1000)
@@ -84,15 +68,10 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Tạo sản phẩm mới
-     * - ADMIN: Không có costPrice trong request (bị ignore nếu có)
-     * - OWNER: Có thể thêm costPrice trong request
-     */
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(
-            @Valid @RequestBody CreateProductRequest request,
+            @Valid @ModelAttribute CreateProductRequest request,
             @AuthenticationPrincipal User currentUser) {
         
         ProductResponse product = productService.createProduct(request, currentUser);
@@ -106,17 +85,11 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Cập nhật sản phẩm
-     * - Request chứa field nào thì cập nhật field đó
-     * - ADMIN: CẤM gửi cost_price trong request (sẽ báo lỗi 403)
-     * - OWNER: Được phép cập nhật tất cả bao gồm cost_price
-     */
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
             @PathVariable Integer id,
-            @Valid @RequestBody UpdateProductRequest request,
+            @Valid @ModelAttribute UpdateProductRequest request,
             @AuthenticationPrincipal User currentUser) {
         
         ProductResponse product = productService.updateProduct(id, request, currentUser);
@@ -130,9 +103,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Xóa sản phẩm (ADMIN/OWNER)
-     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Integer id) {

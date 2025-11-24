@@ -1,7 +1,19 @@
 package com.example.shop_backend.service;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.shop_backend.dto.request.ChatMessageRequest;
-import com.example.shop_backend.dto.response.*;
+import com.example.shop_backend.dto.response.ChatMessageResponse;
+import com.example.shop_backend.dto.response.ChatRoomResponse;
+import com.example.shop_backend.dto.response.InitChatResponse;
 import com.example.shop_backend.exception.AppException;
 import com.example.shop_backend.exception.ErrorCode;
 import com.example.shop_backend.model.Message;
@@ -10,18 +22,14 @@ import com.example.shop_backend.model.enums.MessageType;
 import com.example.shop_backend.model.enums.Role;
 import com.example.shop_backend.repository.MessageRepository;
 import com.example.shop_backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class ChatService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.example.shop_backend.mapper.ChatMessageMapper chatMessageMapper;
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
@@ -88,8 +96,8 @@ public class ChatService {
             
             System.out.println("💬 Tìm thấy " + messages.size() + " tin nhắn");
 
-            List<ChatMessageResponse> messageResponses = messages.stream()
-                    .map(this::convertToResponse)
+                List<ChatMessageResponse> messageResponses = messages.stream()
+                    .map(chatMessageMapper::toResponse)
                     .collect(Collectors.toList());
 
             responseBuilder
@@ -129,8 +137,8 @@ public class ChatService {
             
             System.out.println("💬 Tìm thấy " + messages.size() + " tin nhắn");
             
-            return messages.stream()
-                    .map(this::convertToResponse)
+                return messages.stream()
+                    .map(chatMessageMapper::toResponse)
                     .collect(Collectors.toList());
                     
         } catch (NumberFormatException e) {
@@ -174,8 +182,8 @@ public class ChatService {
             
             System.out.println("💬 Tìm thấy " + messages.size() + " tin nhắn cũ hơn");
             
-            return messages.stream()
-                    .map(this::convertToResponse)
+                return messages.stream()
+                    .map(chatMessageMapper::toResponse)
                     .collect(Collectors.toList());
                     
         } catch (NumberFormatException e) {
@@ -225,7 +233,7 @@ public class ChatService {
         message = messageRepository.save(message);
         System.out.println("✅ Message saved with ID: " + message.getId());
         
-        return convertToResponse(message);
+        return chatMessageMapper.toResponse(message);
     }
 
     @Transactional
@@ -244,18 +252,5 @@ public class ChatService {
         }
         
         System.out.println("✅ Đã đánh dấu " + count + " tin nhắn là đã đọc");
-    }
-
-    private ChatMessageResponse convertToResponse(Message message) {
-        return ChatMessageResponse.builder()
-                .id(message.getId())
-                .content(message.getContent())
-                .senderEmail(message.getSender().getEmail())
-                .senderName(message.getSender().getFullName())
-                .senderRole(message.getSender().getRole().name())
-                .roomId(message.getRoomId())
-                .isRead(message.getIsRead())
-                .createdAt(message.getCreatedAt())
-                .build();
     }
 }

@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class ProductVariantResponse {
     
     private Integer id;
+    private Boolean active;
     private Integer productId;
     private String productName;
     private Integer stock;

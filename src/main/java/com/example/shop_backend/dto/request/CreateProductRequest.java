@@ -5,12 +5,12 @@ import java.util.List;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @NoArgsConstructor
@@ -27,7 +27,6 @@ public class CreateProductRequest {
     @Min(value = 0, message = "Giá sản phẩm phải lớn hơn hoặc bằng 0")
     private BigDecimal price;
     
-    // ✅ Thêm costPrice - chỉ OWNER mới set được
     @Min(value = 0, message = "Giá vốn phải lớn hơn hoặc bằng 0")
     private BigDecimal costPrice;
     
@@ -36,16 +35,17 @@ public class CreateProductRequest {
     @NotNull(message = "Brand ID không được để trống")
     private Integer brandId;
     
-    // Danh sách category IDs - bắt buộc phải có ít nhất 1 category
     @NotNull(message = "Sản phẩm phải thuộc ít nhất 1 danh mục")
     private List<Integer> categoryIds;
     
-    // Danh sách label IDs
     private List<Integer> labelIds;
     
-    // Danh sách ảnh sản phẩm (có thể null hoặc rỗng)
+    // ✅ THAY ĐỔI: Nhận danh sách file ảnh
     @NotNull(message = "Ảnh không được để trống")
-    private List<ProductImageRequest> images;
+    private List<MultipartFile> images;
+    
+    // ✅ THAY ĐỔI: Alt text cho từng ảnh (optional)
+    private List<String> imageAltTexts;
     
     // Danh sách biến thể
     private List<ProductVariantRequest> variants;
@@ -54,27 +54,15 @@ public class CreateProductRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class ProductImageRequest {
-        @NotBlank(message = "Image URL không được để trống")
-        private String imageUrl;
-        
-        private String altText;
-    }
-    
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
     public static class ProductVariantRequest {
         private Integer colorId;
-        
         private Integer sizeId;
 
         @NotNull(message = "Stock biến thể không được để trống")
         @Min(value = 0, message = "Stock biến thể phải lớn hơn hoặc bằng 0")
         private Integer stock;
         
-        // Ảnh riêng của biến thể
-        private List<String> images;
+        // ✅ THAY ĐỔI: Nhận danh sách file ảnh cho variant
+        private List<MultipartFile> images;
     }
 }
