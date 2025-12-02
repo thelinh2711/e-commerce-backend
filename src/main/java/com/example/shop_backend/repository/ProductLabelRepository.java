@@ -14,5 +14,9 @@ public interface ProductLabelRepository extends JpaRepository<ProductLabel, Inte
     @Query("SELECT pl FROM ProductLabel pl LEFT JOIN FETCH pl.label WHERE pl.product.id = :productId")
     List<ProductLabel> findByProductIdWithLabel(@Param("productId") Integer productId);
     
+    // Batch load labels cho nhiều products
+    @Query("SELECT pl FROM ProductLabel pl LEFT JOIN FETCH pl.label WHERE pl.product.id IN :productIds")
+    List<ProductLabel> findByProductIdInWithLabel(@Param("productIds") List<Integer> productIds);
+    
     List<ProductLabel> findByProductId(Integer productId);
 }

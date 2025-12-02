@@ -186,9 +186,90 @@ public abstract class ProductMapper {
         return product.getSold() != null ? product.getSold() : 0;
     }
 
+    /**
+     * Optimized method: Convert với pre-loaded data để tránh N+1 queries
+     */
+    public ProductResponse toProductResponseWithPreloadedData(
+            Product product,
+            List<com.example.shop_backend.model.ProductImage> images,
+            List<ProductVariant> variants,
+            List<com.example.shop_backend.model.ProductCategory> categories,
+            List<com.example.shop_backend.model.ProductLabel> labels,
+            java.util.Map<Integer, List<com.example.shop_backend.model.ProductVariantImage>> variantImagesMap,
+            boolean isOwner) {
+        
+        // Map images
+        List<ProductResponse.ImageInfo> imageInfos = images.stream()
+                .map(img -> ProductResponse.ImageInfo.builder()
+                        .id(img.getId())
+                        .imageUrl(img.getImageUrl())
+                        .altText(img.getAltText())
+                        .build())
+                .collect(Collectors.toList());
+        
+        // Map variants
+        List<ProductResponse.VariantInfo> variantInfos = new ArrayList<>();
+        for (ProductVariant variant : variants) {
+            List<com.example.shop_backend.model.ProductVariantImage> variantImages = 
+                    variantImagesMap.getOrDefault(variant.getId(), List.of());
+            String variantImageUrl = variantImages.isEmpty() ? "" : variantImages.get(0).getImageUrl();
+            
+            variantInfos.add(ProductResponse.VariantInfo.builder()
+                    .id(variant.getId())
+                    .size(variant.getSize() != null ? variant.getSize().getName() : "")
+                    .image(variantImageUrl)
+                    .stock(variant.getStock())
+                    .colorName(variant.getColor() != null ? variant.getColor().getName() : "")
+                    .colorHex(variant.getColor() != null ? variant.getColor().getHexCode() : "")
+                    .active(variant.getActive())
+                    .build());
+        }
+        
+        // Map categories
+        List<ProductResponse.CategoryInfo> categoryInfos = categories.stream()
+                .map(pc -> ProductResponse.CategoryInfo.builder()
+                        .id(pc.getCategory().getId())
+                        .name(pc.getCategory().getName())
+                        .build())
+                .collect(Collectors.toList());
+        
+        // Map labels
+        List<ProductResponse.LabelInfo> labelInfos = labels.stream()
+                .map(pl -> ProductResponse.LabelInfo.builder()
+                        .id(pl.getLabel().getId())
+                        .name(pl.getLabel().getName())
+                        .build())
+                .collect(Collectors.toList());
+        
+        // Calculate total count from variants
+        Integer totalCount = variants.stream()
+                .mapToInt(ProductVariant::getStock)
+                .sum();
+        
+        // Build price info
+        ProductResponse.PriceInfo priceInfo = isOwner ? 
+                mapPriceInfoForOwner(product) : mapPriceInfo(product);
+        
+        return ProductResponse.builder()
+                .id(product.getId().toString())
+                .name(product.getName())
+                .description(product.getDescription())
+                .sku(product.getSku())
+                .brand(mapBrand(product))
+                .price(priceInfo)
+                .images(imageInfos)
+                .variants(variantInfos)
+                .categories(categoryInfos)
+                .labels(labelInfos)
+                .totalCount(totalCount)
+                .sold(calculateSold(product))
+                .active(product.getActive())
+                .build();
+    }
+
     @Named("mapCategories")
     protected List<ProductResponse.CategoryInfo> mapCategories(Product product) {
-        return productCategoryRepository.findByProductId(product.getId())
+        return productCategoryRepository.findByProductIdWithCategory(product.getId())
                 .stream()
                 .map(pc -> ProductResponse.CategoryInfo.builder()
                         .id(pc.getCategory().getId())
@@ -199,7 +280,7 @@ public abstract class ProductMapper {
 
     @Named("mapLabels")
     protected List<ProductResponse.LabelInfo> mapLabels(Product product) {
-        return productLabelRepository.findByProductId(product.getId())
+        return productLabelRepository.findByProductIdWithLabel(product.getId())
                 .stream()
                 .map(pl -> ProductResponse.LabelInfo.builder()
                         .id(pl.getLabel().getId())

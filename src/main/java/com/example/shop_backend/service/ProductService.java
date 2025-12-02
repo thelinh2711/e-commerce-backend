@@ -61,21 +61,57 @@ public class ProductService {
         List<Product> products;
         
         if (active == null) {
-            // Lấy tất cả sản phẩm
-            products = productRepository.findAll();
+            // Lấy tất cả sản phẩm với brand
+            products = productRepository.findAllWithBrand();
         } else {
-            // Lọc theo active
-            products = productRepository.findByActive(active);
+            // Lọc theo active với brand
+            products = productRepository.findByActiveWithBrand(active);
         }
         
-        if (currentUser != null && currentUser.getRole() == Role.OWNER) {
-            return products.stream()
-                    .map(productMapper::toProductResponseForOwner)
-                    .collect(Collectors.toList());
+        if (products.isEmpty()) {
+            return List.of();
         }
+        
+        // Batch load tất cả data liên quan để tránh N+1 queries
+        List<Integer> productIds = products.stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
+        
+        // Pre-load tất cả images, variants, categories, labels
+        var imagesMap = productImageRepository.findByProductIdIn(productIds).stream()
+                .collect(Collectors.groupingBy(img -> img.getProduct().getId()));
+        
+        var variantsMap = productVariantRepository.findByProductIdInWithColorAndSize(productIds).stream()
+                .collect(Collectors.groupingBy(v -> v.getProduct().getId()));
+        
+        var categoriesMap = productCategoryRepository.findByProductIdInWithCategory(productIds).stream()
+                .collect(Collectors.groupingBy(pc -> pc.getProduct().getId()));
+        
+        var labelsMap = productLabelRepository.findByProductIdInWithLabel(productIds).stream()
+                .collect(Collectors.groupingBy(pl -> pl.getProduct().getId()));
+        
+        // Pre-load variant images nếu cần
+        List<Integer> variantIds = variantsMap.values().stream()
+                .flatMap(List::stream)
+                .map(ProductVariant::getId)
+                .collect(Collectors.toList());
+        
+        var variantImagesMap = variantIds.isEmpty() ? java.util.Map.<Integer, List<com.example.shop_backend.model.ProductVariantImage>>of() :
+                productVariantImageRepository.findByProductVariantIdIn(variantIds).stream()
+                .collect(Collectors.groupingBy(vi -> vi.getProductVariant().getId()));
+        
+        boolean isOwner = currentUser != null && currentUser.getRole() == Role.OWNER;
         
         return products.stream()
-                .map(productMapper::toProductResponse)
+                .map(product -> productMapper.toProductResponseWithPreloadedData(
+                        product,
+                        imagesMap.getOrDefault(product.getId(), List.of()),
+                        variantsMap.getOrDefault(product.getId(), List.of()),
+                        categoriesMap.getOrDefault(product.getId(), List.of()),
+                        labelsMap.getOrDefault(product.getId(), List.of()),
+                        variantImagesMap,
+                        isOwner
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -85,14 +121,35 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public ProductResponse getProductById(Integer id, User currentUser) {
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findByIdWithBrand(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
         
-        if (currentUser != null && currentUser.getRole() == Role.OWNER) {
-            return productMapper.toProductResponseForOwner(product);
-        }
+        // Pre-load tất cả data liên quan để tránh N+1 queries
+        var images = productImageRepository.findByProductId(id);
+        var variants = productVariantRepository.findByProductIdWithColorAndSize(id);
+        var categories = productCategoryRepository.findByProductIdWithCategory(id);
+        var labels = productLabelRepository.findByProductIdWithLabel(id);
         
-        return productMapper.toProductResponse(product);
+        // Pre-load variant images
+        List<Integer> variantIds = variants.stream()
+                .map(ProductVariant::getId)
+                .collect(Collectors.toList());
+        
+        var variantImagesMap = variantIds.isEmpty() ? java.util.Map.<Integer, List<com.example.shop_backend.model.ProductVariantImage>>of() :
+                productVariantImageRepository.findByProductVariantIdIn(variantIds).stream()
+                .collect(Collectors.groupingBy(vi -> vi.getProductVariant().getId()));
+        
+        boolean isOwner = currentUser != null && currentUser.getRole() == Role.OWNER;
+        
+        return productMapper.toProductResponseWithPreloadedData(
+                product,
+                images,
+                variants,
+                categories,
+                labels,
+                variantImagesMap,
+                isOwner
+        );
     }
 
     @Transactional
