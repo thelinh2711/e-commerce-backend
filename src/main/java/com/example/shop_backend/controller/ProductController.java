@@ -39,14 +39,16 @@ public class ProductController {
      * GET /api/products?active=true
      * GET /api/products?active=false
      * GET /api/products?id=10 (lấy 12 sản phẩm từ id=10)
+     * GET /api/products?id=10&size=20 (lấy 20 sản phẩm từ id=10)
      */
     @GetMapping
     public ResponseEntity<ProductListResponse> getAllProducts(
             @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) Integer id,
+            @RequestParam(required = false, defaultValue = "12") Integer size,
             @AuthenticationPrincipal User currentUser) {
         
-        List<ProductResponse> products = productService.getAllProducts(active, id, currentUser);
+        List<ProductResponse> products = productService.getAllProducts(active, id, size, currentUser);
         
         ProductListResponse response = ProductListResponse.builder()
                 .success(true)
