@@ -18,6 +18,13 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
            "WHERE pv.product.id = :productId")
     List<ProductVariant> findByProductIdWithColorAndSize(@Param("productId") Integer productId);
     
+    // Batch load variants cho nhiều products
+    @Query("SELECT pv FROM ProductVariant pv " +
+           "LEFT JOIN FETCH pv.color " +
+           "LEFT JOIN FETCH pv.size " +
+           "WHERE pv.product.id IN :productIds")
+    List<ProductVariant> findByProductIdInWithColorAndSize(@Param("productIds") List<Integer> productIds);
+    
     // Lấy variants theo productId và filter active
     @Query("SELECT pv FROM ProductVariant pv " +
            "LEFT JOIN FETCH pv.color " +
