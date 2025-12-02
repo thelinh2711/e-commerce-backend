@@ -109,6 +109,9 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/v1/payments/**").permitAll()
 
+                        // WebSocket Chat
+                        .requestMatchers("/ws-chat/**").permitAll()
+                        .requestMatchers("/api/chat/**").authenticated()
 
                         // Tất cả còn lại yêu cầu đăng nhập
                         .anyRequest().authenticated()
