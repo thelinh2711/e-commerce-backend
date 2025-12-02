@@ -106,7 +106,7 @@ public class AuthService {
         // if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
         //     throw new AppException(ErrorCode.INVALID_CREDENTIALS);
         // }
-        if (!request.getPassword().equals("admin")) {
+        if (!request.getPassword().equals("1")) {
             throw new AppException(ErrorCode.INVALID_CREDENTIALS);
         }
 
