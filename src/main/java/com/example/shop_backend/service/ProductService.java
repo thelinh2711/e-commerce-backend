@@ -55,17 +55,28 @@ public class ProductService {
     /**
      * Lấy tất cả sản phẩm hoặc filter theo active
      * @param active - null: lấy tất cả, true: chỉ active, false: chỉ inactive
+     * @param startId - null: lấy tất cả, có giá trị: lấy 12 sản phẩm từ id này
      */
     @Transactional(readOnly = true)
-    public List<ProductResponse> getAllProducts(Boolean active, User currentUser) {
+    public List<ProductResponse> getAllProducts(Boolean active, Integer startId, User currentUser) {
         List<Product> products;
         
-        if (active == null) {
-            // Lấy tất cả sản phẩm với brand
-            products = productRepository.findAllWithBrand();
+        if (startId != null) {
+            // Lấy 12 sản phẩm từ startId
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 12);
+            
+            if (active == null) {
+                products = productRepository.findTop12ByIdGreaterThanEqualWithBrand(startId, pageable);
+            } else {
+                products = productRepository.findTop12ByIdGreaterThanEqualAndActiveWithBrand(startId, active, pageable);
+            }
         } else {
-            // Lọc theo active với brand
-            products = productRepository.findByActiveWithBrand(active);
+            // Lấy tất cả sản phẩm
+            if (active == null) {
+                products = productRepository.findAllWithBrand();
+            } else {
+                products = productRepository.findByActiveWithBrand(active);
+            }
         }
         
         if (products.isEmpty()) {

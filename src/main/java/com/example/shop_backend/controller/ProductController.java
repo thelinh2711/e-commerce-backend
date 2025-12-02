@@ -2,18 +2,26 @@ package com.example.shop_backend.controller;
 
 import java.util.List;
 
-import com.example.shop_backend.model.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.shop_backend.dto.request.CreateProductRequest;
 import com.example.shop_backend.dto.request.UpdateProductRequest;
 import com.example.shop_backend.dto.response.ApiResponse;
 import com.example.shop_backend.dto.response.ProductListResponse;
 import com.example.shop_backend.dto.response.ProductResponse;
+import com.example.shop_backend.model.User;
 import com.example.shop_backend.service.ProductService;
 
 import jakarta.validation.Valid;
@@ -30,13 +38,15 @@ public class ProductController {
      * GET /api/products
      * GET /api/products?active=true
      * GET /api/products?active=false
+     * GET /api/products?id=10 (lấy 12 sản phẩm từ id=10)
      */
     @GetMapping
     public ResponseEntity<ProductListResponse> getAllProducts(
             @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) Integer id,
             @AuthenticationPrincipal User currentUser) {
         
-        List<ProductResponse> products = productService.getAllProducts(active, currentUser);
+        List<ProductResponse> products = productService.getAllProducts(active, id, currentUser);
         
         ProductListResponse response = ProductListResponse.builder()
                 .success(true)

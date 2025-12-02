@@ -30,5 +30,15 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("SELECT p FROM Product p WHERE p.id = :id")
     Optional<Product> findByIdWithBrand(@Param("id") Integer id);
     
+    // Lấy 12 products bắt đầu từ id
+    @EntityGraph(attributePaths = {"brand"})
+    @Query("SELECT p FROM Product p WHERE p.id >= :startId ORDER BY p.id ASC")
+    List<Product> findTop12ByIdGreaterThanEqualWithBrand(@Param("startId") Integer startId, org.springframework.data.domain.Pageable pageable);
+    
+    // Lấy 12 products bắt đầu từ id và filter active
+    @EntityGraph(attributePaths = {"brand"})
+    @Query("SELECT p FROM Product p WHERE p.id >= :startId AND p.active = :active ORDER BY p.id ASC")
+    List<Product> findTop12ByIdGreaterThanEqualAndActiveWithBrand(@Param("startId") Integer startId, @Param("active") Boolean active, org.springframework.data.domain.Pageable pageable);
+    
     boolean existsByBrand(Brand brand);
 }
