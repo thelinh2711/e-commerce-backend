@@ -1,5 +1,6 @@
 package com.example.shop_backend.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import com.example.shop_backend.dto.request.UpdateProductRequest;
 import com.example.shop_backend.dto.response.ApiResponse;
 import com.example.shop_backend.dto.response.ProductListResponse;
 import com.example.shop_backend.dto.response.ProductResponse;
+import com.example.shop_backend.dto.response.ProductSearchResponse;
 import com.example.shop_backend.model.User;
 import com.example.shop_backend.service.ProductService;
 
@@ -54,6 +56,46 @@ public class ProductController {
                 .success(true)
                 .data(products)
                 .build();
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * GET /api/products/search
+     * Tìm kiếm và lọc sản phẩm với phân trang
+     * 
+     * Logic lọc:
+     * - Cùng trường (category, sex, brand): dùng OR
+     * - Khác trường: dùng AND
+     * 
+     * Ví dụ: category=áo-thun&category=áo-polo&sex=male&brand=Nike
+     * => (category = áo-thun OR áo-polo) AND sex = male AND brand = Nike
+     * 
+     * @param search - từ khóa tìm kiếm (tên sản phẩm)
+     * @param category - danh sách category (truyền nhiều lần, ví dụ: category=áo-thun&category=áo-polo)
+     * @param sex - danh sách giới tính (male, female, unisex)
+     * @param brand - danh sách thương hiệu (truyền nhiều lần)
+     * @param priceMin - giá tối thiểu (VND)
+     * @param priceMax - giá tối đa (VND)
+     * @param sort - kiểu sắp xếp (default: A→Z, name-desc: Z→A, price-asc: thấp→cao, price-desc: cao→thấp)
+     * @param page - trang hiện tại (1-based, mặc định 1)
+     * @param size - số item mỗi trang (mặc định 12)
+     */
+    @GetMapping("/search")
+    public ResponseEntity<ProductSearchResponse> searchProducts(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) List<String> category,
+            @RequestParam(required = false) List<String> sex,
+            @RequestParam(required = false) List<String> brand,
+            @RequestParam(required = false) BigDecimal priceMin,
+            @RequestParam(required = false) BigDecimal priceMax,
+            @RequestParam(required = false, defaultValue = "default") String sort,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "12") Integer size,
+            @AuthenticationPrincipal User currentUser) {
+        
+        ProductSearchResponse response = productService.searchProducts(
+                search, category, sex, brand, priceMin, priceMax, sort, page, size, currentUser);
         
         return ResponseEntity.ok(response);
     }
