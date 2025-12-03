@@ -180,6 +180,7 @@ public class ProductService {
 
         Product product = Product.builder()
                 .name(request.getName())
+                .sex(request.getSex())
                 .description(request.getDescription())
                 .price(request.getPrice())
                 .costPrice(null)
@@ -270,6 +271,10 @@ public class ProductService {
 
         if (request.getDescription() != null) {
             product.setDescription(request.getDescription());
+        }
+
+        if (request.getSex() != null) {
+            product.setSex(request.getSex());
         }
 
         if (request.getBrandId() != null) {

@@ -12,6 +12,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.shop_backend.model.Product;
+import com.example.shop_backend.model.enums.ProductSex;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,6 +34,8 @@ public class CreateProductRequest {
     private BigDecimal costPrice;
     
     private Integer discountPercent;
+
+    private ProductSex sex;
     
     @NotNull(message = "Brand ID không được để trống")
     private Integer brandId;
