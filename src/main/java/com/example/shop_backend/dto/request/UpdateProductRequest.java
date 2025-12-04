@@ -3,12 +3,15 @@ package com.example.shop_backend.dto.request;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import com.example.shop_backend.model.enums.ProductSex;
+
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @Builder
@@ -18,6 +21,7 @@ public class UpdateProductRequest {
     
     private String name;
     private String description;
+    private ProductSex sex;
 
     @Min(value = 0, message = "Giá sản phẩm phải >= 0")
     private BigDecimal price;
@@ -53,6 +57,7 @@ public class UpdateProductRequest {
         private Integer sizeId;
         private Integer stock;
         private BigDecimal price;
+        private ProductSex sex;
         
         // ✅ THAY ĐỔI: Nhận file ảnh cho variant
         private List<MultipartFile> images;

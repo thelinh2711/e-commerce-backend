@@ -40,6 +40,7 @@ public abstract class ProductMapper {
      */
     @Mapping(target = "id", expression = "java(product.getId().toString())")
     @Mapping(target = "name", source = "name")
+    @Mapping(target = "sex", source = "sex")
     @Mapping(target = "description", source = "description")
     @Mapping(target = "sku", source = "sku")
     @Mapping(target = "brand", source = "product", qualifiedByName = "mapBrand")
@@ -58,6 +59,7 @@ public abstract class ProductMapper {
      */
     @Mapping(target = "id", expression = "java(product.getId().toString())")
     @Mapping(target = "name", source = "name")
+    @Mapping(target = "sex", source = "sex")
     @Mapping(target = "description", source = "description")
     @Mapping(target = "sku", source = "sku")
     @Mapping(target = "brand", source = "product", qualifiedByName = "mapBrand")
@@ -253,6 +255,7 @@ public abstract class ProductMapper {
         return ProductResponse.builder()
                 .id(product.getId().toString())
                 .name(product.getName())
+                .sex(product.getSex())
                 .description(product.getDescription())
                 .sku(product.getSku())
                 .brand(mapBrand(product))

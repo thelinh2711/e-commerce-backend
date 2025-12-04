@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -13,7 +14,7 @@ import com.example.shop_backend.model.Brand;
 import com.example.shop_backend.model.Product;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Integer> {
+public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     
     // Tối ưu: Fetch brand cùng lúc với product để tránh N+1 query
     @EntityGraph(attributePaths = {"brand"})
@@ -39,6 +40,13 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @EntityGraph(attributePaths = {"brand"})
     @Query("SELECT p FROM Product p WHERE p.id >= :startId AND p.active = :active ORDER BY p.id ASC")
     List<Product> findByIdGreaterThanEqualAndActiveWithBrand(@Param("startId") Integer startId, @Param("active") Boolean active, org.springframework.data.domain.Pageable pageable);
+    
+    // Override findAll với Specification để fetch brand luôn (tối ưu search API)
+    @EntityGraph(attributePaths = {"brand"})
+    org.springframework.data.domain.Page<Product> findAll(
+        org.springframework.data.jpa.domain.Specification<Product> spec, 
+        org.springframework.data.domain.Pageable pageable
+    );
     
     boolean existsByBrand(Brand brand);
 }

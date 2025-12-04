@@ -1,9 +1,16 @@
 package com.example.shop_backend.service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.shop_backend.dto.request.CreateProductRequest;
 import com.example.shop_backend.dto.request.UpdateProductRequest;
 import com.example.shop_backend.dto.response.ProductResponse;
+import com.example.shop_backend.dto.response.ProductSearchResponse;
 import com.example.shop_backend.exception.AppException;
 import com.example.shop_backend.exception.ErrorCode;
 import com.example.shop_backend.mapper.ProductMapper;
@@ -23,6 +31,7 @@ import com.example.shop_backend.model.ProductImage;
 import com.example.shop_backend.model.ProductLabel;
 import com.example.shop_backend.model.ProductVariant;
 import com.example.shop_backend.model.User;
+import com.example.shop_backend.model.enums.ProductSex;
 import com.example.shop_backend.model.enums.Role;
 import com.example.shop_backend.repository.BrandRepository;
 import com.example.shop_backend.repository.CategoryRepository;
@@ -33,6 +42,7 @@ import com.example.shop_backend.repository.ProductLabelRepository;
 import com.example.shop_backend.repository.ProductRepository;
 import com.example.shop_backend.repository.ProductVariantImageRepository;
 import com.example.shop_backend.repository.ProductVariantRepository;
+import com.example.shop_backend.specification.ProductSpecification;
 
 import lombok.RequiredArgsConstructor;
 
@@ -180,6 +190,7 @@ public class ProductService {
 
         Product product = Product.builder()
                 .name(request.getName())
+                .sex(request.getSex())
                 .description(request.getDescription())
                 .price(request.getPrice())
                 .costPrice(null)
@@ -270,6 +281,10 @@ public class ProductService {
 
         if (request.getDescription() != null) {
             product.setDescription(request.getDescription());
+        }
+
+        if (request.getSex() != null) {
+            product.setSex(request.getSex());
         }
 
         if (request.getBrandId() != null) {
@@ -390,6 +405,160 @@ public class ProductService {
         }
         
         return productMapper.toProductResponse(updatedProduct);
+    }
+
+    /**
+     * Search và filter products với phân trang
+     * @param search - từ khóa tìm kiếm (tên sản phẩm)
+     * @param categories - danh sách category (OR)
+     * @param sexList - danh sách giới tính (OR)
+     * @param brands - danh sách brand (OR)
+     * @param priceMin - giá tối thiểu
+     * @param priceMax - giá tối đa
+     * @param sort - kiểu sắp xếp (default, name-desc, price-asc, price-desc)
+     * @param page - trang hiện tại (1-based)
+     * @param size - số item mỗi trang
+     * @param currentUser - user hiện tại
+     * @return ProductSearchResponse với data, totalPages, totalElements
+     */
+    @Transactional(readOnly = true)
+    public ProductSearchResponse searchProducts(
+            String search,
+            List<String> categories,
+            List<String> sexList,
+            List<String> brands,
+            BigDecimal priceMin,
+            BigDecimal priceMax,
+            String sort,
+            Integer page,
+            Integer size,
+            User currentUser) {
+        
+        // Convert sex strings to ProductSex enum
+        List<ProductSex> productSexList = null;
+        if (sexList != null && !sexList.isEmpty()) {
+            productSexList = new ArrayList<>();
+            for (String sex : sexList) {
+                try {
+                    productSexList.add(ProductSex.valueOf(sex.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    // Bỏ qua giá trị không hợp lệ
+                }
+            }
+        }
+        
+        // Xác định sort order
+        Sort sortOrder;
+        if (sort != null) {
+            switch (sort.toLowerCase()) {
+                case "name-desc":
+                    sortOrder = Sort.by(Sort.Direction.DESC, "name");
+                    break;
+                case "price-asc":
+                    sortOrder = Sort.by(Sort.Direction.ASC, "discountPrice");
+                    break;
+                case "price-desc":
+                    sortOrder = Sort.by(Sort.Direction.DESC, "discountPrice");
+                    break;
+                default: // "default" hoặc không truyền
+                    sortOrder = Sort.by(Sort.Direction.ASC, "name");
+                    break;
+            }
+        } else {
+            sortOrder = Sort.by(Sort.Direction.ASC, "name");
+        }
+        
+        // Tạo Pageable (Spring Data JPA dùng 0-based, nhưng FE truyền 1-based)
+        int pageIndex = (page != null && page > 0) ? page - 1 : 0;
+        int pageSize = (size != null && size > 0) ? size : 12;
+        Pageable pageable = PageRequest.of(pageIndex, pageSize, sortOrder);
+        
+        // Tạo Specification với tất cả filters
+        Specification<Product> spec = ProductSpecification.filterProducts(
+            search,
+            categories,
+            productSexList,
+            brands,
+            priceMin,
+            priceMax,
+            true // chỉ lấy sản phẩm active
+        );
+        
+        // Query database với Specification và Pageable
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+        List<Product> products = productPage.getContent();
+        
+        // Nếu không có sản phẩm, trả về empty
+        if (products.isEmpty()) {
+            return ProductSearchResponse.builder()
+                    .success(true)
+                    .data(List.of())
+                    .totalPages(0)
+                    .totalElements(0L)
+                    .currentPage(page != null ? page : 1)
+                    .pageSize(pageSize)
+                    .build();
+        }
+        
+        // Batch load tất cả related data
+        List<Integer> productIds = products.stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
+        
+        // Load images
+        List<ProductImage> allImages = productImageRepository.findByProductIdIn(productIds);
+        Map<Integer, List<ProductImage>> imagesMap = allImages.stream()
+                .collect(Collectors.groupingBy(img -> img.getProduct().getId()));
+        
+        // Load variants
+        List<ProductVariant> allVariants = productVariantRepository.findByProductIdInWithColorAndSize(productIds);
+        Map<Integer, List<ProductVariant>> variantsMap = allVariants.stream()
+                .collect(Collectors.groupingBy(v -> v.getProduct().getId()));
+        
+        // Load categories
+        List<ProductCategory> allCategories = productCategoryRepository.findByProductIdInWithCategory(productIds);
+        Map<Integer, List<ProductCategory>> categoriesMap = allCategories.stream()
+                .collect(Collectors.groupingBy(pc -> pc.getProduct().getId()));
+        
+        // Load labels
+        List<ProductLabel> allLabels = productLabelRepository.findByProductIdInWithLabel(productIds);
+        Map<Integer, List<ProductLabel>> labelsMap = allLabels.stream()
+                .collect(Collectors.groupingBy(pl -> pl.getProduct().getId()));
+        
+        // Load variant images
+        List<Integer> variantIds = allVariants.stream()
+                .map(ProductVariant::getId)
+                .collect(Collectors.toList());
+        
+        List<com.example.shop_backend.model.ProductVariantImage> allVariantImages = 
+                variantIds.isEmpty() ? List.of() : productVariantImageRepository.findByProductVariantIdIn(variantIds);
+        
+        Map<Integer, List<com.example.shop_backend.model.ProductVariantImage>> variantImagesMap = 
+                allVariantImages.stream()
+                        .collect(Collectors.groupingBy(vi -> vi.getProductVariant().getId()));
+        
+        // Convert to ProductResponse
+        boolean isOwner = currentUser != null && currentUser.getRole() == Role.OWNER;
+        List<ProductResponse> productResponses = products.stream()
+                .map(product -> productMapper.toProductResponseWithPreloadedData(
+                        product,
+                        imagesMap.getOrDefault(product.getId(), List.of()),
+                        variantsMap.getOrDefault(product.getId(), List.of()),
+                        categoriesMap.getOrDefault(product.getId(), List.of()),
+                        labelsMap.getOrDefault(product.getId(), List.of()),
+                        variantImagesMap,
+                        isOwner
+                ))
+                .collect(Collectors.toList());
+        
+        return ProductSearchResponse.builder()
+                .success(true)
+                .data(productResponses)
+                .totalPages(productPage.getTotalPages())
+                .totalElements(productPage.getTotalElements())
+                .currentPage(page != null ? page : 1)
+                .pageSize(pageSize)
+                .build();
     }
 
     @Transactional

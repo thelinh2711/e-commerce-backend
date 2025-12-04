@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.example.shop_backend.model.enums.ProductSex;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -21,6 +22,7 @@ public class ProductResponse {
     private String id;
     private Boolean active;
     private String name;
+    private ProductSex sex;
     private String description;
     private String sku;
     private BrandInfo brand;
