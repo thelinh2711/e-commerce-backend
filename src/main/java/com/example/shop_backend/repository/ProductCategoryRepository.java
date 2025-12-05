@@ -25,4 +25,7 @@ public interface ProductCategoryRepository extends JpaRepository<ProductCategory
     boolean existsByCategory_Id(Integer categoryId);
 
     void deleteByCategory_Id(Integer categoryId);
+
+    @Query("SELECT COUNT(pc) FROM ProductCategory pc WHERE pc.category.id = :categoryId")
+    Long countByCategoryId(@Param("categoryId") Integer categoryId);
 }

@@ -30,7 +30,12 @@ public class CategoryService {
     public List<CategoryResponse> getAll() {
         return categoryRepository.findAll()
                 .stream()
-                .map(categoryMapper::toResponse)
+                .map(category -> {
+                    CategoryResponse response = categoryMapper.toResponse(category);
+                    Long count = productCategoryRepository.countByCategoryId(category.getId());
+                    response.setProductCount(count);
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -38,7 +43,11 @@ public class CategoryService {
     public CategoryResponse getById(Integer id) {
         var category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
-        return categoryMapper.toResponse(category);
+
+        CategoryResponse response = categoryMapper.toResponse(category);
+        response.setProductCount(productCategoryRepository.countByCategoryId(id));
+
+        return response;
     }
 
     @Transactional

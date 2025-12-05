@@ -10,4 +10,6 @@ public class CategoryResponse {
     private String description;
     private String image;
     private LocalDateTime createdAt;
+
+    private Long productCount;
 }
