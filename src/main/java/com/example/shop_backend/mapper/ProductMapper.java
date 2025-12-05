@@ -51,6 +51,7 @@ public abstract class ProductMapper {
     @Mapping(target = "labels", source = "product", qualifiedByName = "mapLabels")
     @Mapping(target = "totalCount", source = "product", qualifiedByName = "calculateTotalCount")
     @Mapping(target = "sold", source = "product", qualifiedByName = "calculateSold")
+    @Mapping(target = "createdAt", source = "createdAt")
     @org.mapstruct.Mapping(target = "active", source = "active")
     public abstract ProductResponse toProductResponse(Product product);
 
@@ -70,6 +71,7 @@ public abstract class ProductMapper {
     @Mapping(target = "labels", source = "product", qualifiedByName = "mapLabels")
     @Mapping(target = "totalCount", source = "product", qualifiedByName = "calculateTotalCount")
     @Mapping(target = "sold", source = "product", qualifiedByName = "calculateSold")
+    @Mapping(target = "createdAt", source = "createdAt")
     @org.mapstruct.Mapping(target = "active", source = "active")
     public abstract ProductResponse toProductResponseForOwner(Product product);
 
@@ -267,6 +269,7 @@ public abstract class ProductMapper {
                 .totalCount(totalCount)
                 .sold(calculateSold(product))
                 .active(product.getActive())
+                .createdAt(product.getCreatedAt())
                 .build();
     }
 
