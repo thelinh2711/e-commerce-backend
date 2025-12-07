@@ -27,6 +27,7 @@ public enum ErrorCode {
     // Bổ sung cho phân quyền
     UNAUTHORIZED(1011, "Bạn chưa đăng nhập hoặc token không hợp lệ", HttpStatus.UNAUTHORIZED),
     FORBIDDEN(1012, "Bạn không có quyền truy cập chức năng này", HttpStatus.FORBIDDEN),
+    ROLE_NOT_ALLOWED(1006, "Không được phép thực hiện thao tác với vai trò này", HttpStatus.FORBIDDEN),
 
     // ✅ Lỗi sản phẩm
     PRODUCT_NOT_FOUND(2001, "Sản phẩm không tồn tại", HttpStatus.NOT_FOUND),

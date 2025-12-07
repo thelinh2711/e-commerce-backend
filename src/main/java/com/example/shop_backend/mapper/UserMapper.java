@@ -1,5 +1,8 @@
 package com.example.shop_backend.mapper;
 
+import com.example.shop_backend.dto.request.CreateUserRequest;
+import com.example.shop_backend.dto.request.UpdateStaffRequest;
+import com.example.shop_backend.dto.response.StaffResponse;
 import org.mapstruct.*;
 import com.example.shop_backend.dto.request.RegisterRequest;
 import com.example.shop_backend.dto.response.LoginResponse;
@@ -36,4 +39,19 @@ public interface UserMapper {
     @Mapping(target = "rewardPoints", source = "rewardPoints")
     @Mapping(target = "created_at", source = "createdAt")
     RegisterResponse.UserInfo toRegisterUserInfo(User user);
+
+    // ===== CREATE =====
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "rewardPoints", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    User toEntity(CreateUserRequest request);
+
+    // Dùng chung response
+    StaffResponse toResponse(User user);
+
+    // ===== UPDATE =====
+    @Mapping(target = "role", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    void updateStaff(@MappingTarget User user, UpdateStaffRequest request);
+
 }

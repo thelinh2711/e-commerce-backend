@@ -104,6 +104,8 @@ public class SecurityConfig {
                         // ADMIN hoặc OWNER xem & xóa review
                         .requestMatchers(HttpMethod.GET, "/api/reviews/admin/**").hasAnyRole("ADMIN", "OWNER")
                         .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasAnyRole("ADMIN", "OWNER")
+
+                        .requestMatchers("/api/owner/**").hasAnyRole("OWNER", "ADMIN")
                         // GET review theo productId là công khai
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
 
