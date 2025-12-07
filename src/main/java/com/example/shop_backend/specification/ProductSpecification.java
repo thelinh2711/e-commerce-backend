@@ -1,6 +1,9 @@
 package com.example.shop_backend.specification;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.jpa.domain.Specification;
@@ -8,6 +11,7 @@ import org.springframework.data.jpa.domain.Specification;
 import com.example.shop_backend.model.Product;
 import com.example.shop_backend.model.ProductCategory;
 import com.example.shop_backend.model.enums.ProductSex;
+import jakarta.persistence.criteria.Predicate;
 
 public class ProductSpecification {
 
@@ -29,6 +33,7 @@ public class ProductSpecification {
     /**
      * Lọc theo danh mục (OR - sản phẩm thuộc 1 trong các category)
      * Tối ưu: Dùng subquery thay vì JOIN để tránh duplicate rows
+     * Hỗ trợ cả categoryId (số) và categoryName (chữ)
      */
     public static Specification<Product> hasCategories(List<String> categories) {
         return (root, query, criteriaBuilder) -> {
@@ -36,11 +41,38 @@ public class ProductSpecification {
                 return criteriaBuilder.conjunction();
             }
             
-            // Subquery: SELECT product_id FROM product_categories WHERE category_name IN (...)
+            // Tách categoryIds và categoryNames
+            List<Integer> categoryIds = new ArrayList<>();
+            List<String> categoryNames = new ArrayList<>();
+            
+            for (String category : categories) {
+                try {
+                    categoryIds.add(Integer.parseInt(category));
+                } catch (NumberFormatException e) {
+                    categoryNames.add(category);
+                }
+            }
+            
+            // Subquery: SELECT product_id FROM product_categories 
+            // WHERE category_id IN (...) OR category_name IN (...)
             var subquery = query.subquery(Integer.class);
             var productCategoryRoot = subquery.from(ProductCategory.class);
-            subquery.select(productCategoryRoot.get("product").get("id"))
-                    .where(productCategoryRoot.get("category").get("name").in(categories));
+            subquery.select(productCategoryRoot.get("product").get("id"));
+            
+            // Build WHERE clause
+            var predicates = new ArrayList<Predicate>();
+            
+            if (!categoryIds.isEmpty()) {
+                predicates.add(productCategoryRoot.get("category").get("id").in(categoryIds));
+            }
+            
+            if (!categoryNames.isEmpty()) {
+                predicates.add(productCategoryRoot.get("category").get("name").in(categoryNames));
+            }
+            
+            if (!predicates.isEmpty()) {
+                subquery.where(criteriaBuilder.or(predicates.toArray(new Predicate[0])));
+            }
             
             return root.get("id").in(subquery);
         };
@@ -103,6 +135,32 @@ public class ProductSpecification {
     }
 
     /**
+     * Lọc theo khoảng thời gian tạo sản phẩm (createdAt >= startDate)
+     */
+    public static Specification<Product> createdAfterOrEqual(LocalDate startDate) {
+        return (root, query, criteriaBuilder) -> {
+            if (startDate == null) {
+                return criteriaBuilder.conjunction();
+            }
+            LocalDateTime startDateTime = startDate.atStartOfDay();
+            return criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), startDateTime);
+        };
+    }
+
+    /**
+     * Lọc theo khoảng thời gian tạo sản phẩm (createdAt <= endDate)
+     */
+    public static Specification<Product> createdBeforeOrEqual(LocalDate endDate) {
+        return (root, query, criteriaBuilder) -> {
+            if (endDate == null) {
+                return criteriaBuilder.conjunction();
+            }
+            LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
+            return criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), endDateTime);
+        };
+    }
+
+    /**
      * Combine tất cả filters với AND, nhưng trong mỗi filter dùng OR
      */
     public static Specification<Product> filterProducts(
@@ -149,6 +207,38 @@ public class ProductSpecification {
         // AND: active
         if (activeOnly != null && activeOnly) {
             spec = spec.and(isActive());
+        }
+        
+        return spec;
+    }
+
+    /**
+     * Combine tất cả filters với AND + thêm date range filter
+     */
+    public static Specification<Product> filterProductsWithDateRange(
+            String search,
+            List<String> categories,
+            List<ProductSex> sexList,
+            List<String> brands,
+            BigDecimal priceMin,
+            BigDecimal priceMax,
+            LocalDate startDate,
+            LocalDate endDate,
+            Boolean activeOnly) {
+        
+        // Gọi filterProducts base
+        Specification<Product> spec = filterProducts(
+            search, categories, sexList, brands, priceMin, priceMax, activeOnly
+        );
+        
+        // AND: startDate
+        if (startDate != null) {
+            spec = spec.and(createdAfterOrEqual(startDate));
+        }
+        
+        // AND: endDate
+        if (endDate != null) {
+            spec = spec.and(createdBeforeOrEqual(endDate));
         }
         
         return spec;

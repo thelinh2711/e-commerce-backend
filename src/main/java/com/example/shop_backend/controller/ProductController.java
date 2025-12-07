@@ -1,8 +1,10 @@
 package com.example.shop_backend.controller;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -96,6 +98,42 @@ public class ProductController {
         
         ProductSearchResponse response = productService.searchProducts(
                 search, category, sex, brand, priceMin, priceMax, sort, page, size, currentUser);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * GET /api/products/bestseller
+     * Lấy sản phẩm bán chạy với tất cả filter giống search + sort theo sold
+     * @param search - từ khóa tìm kiếm
+     * @param category - danh sách category (OR)
+     * @param sex - danh sách giới tính (OR)
+     * @param brand - danh sách brand (OR)
+     * @param priceMin - giá tối thiểu
+     * @param priceMax - giá tối đa
+     * @param startDate - ngày bắt đầu (yyyy-MM-dd, optional)
+     * @param endDate - ngày kết thúc (yyyy-MM-dd, optional)
+     * @param sort - kiểu sắp xếp sold (sold-asc: ít→nhiều, sold-desc: nhiều→ít, default: sold-desc)
+     * @param page - trang hiện tại (1-based, mặc định 1)
+     * @param size - số item mỗi trang (mặc định 12)
+     */
+    @GetMapping("/bestseller")
+    public ResponseEntity<ProductSearchResponse> getBestseller(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) List<String> category,
+            @RequestParam(required = false) List<String> sex,
+            @RequestParam(required = false) List<String> brand,
+            @RequestParam(required = false) BigDecimal priceMin,
+            @RequestParam(required = false) BigDecimal priceMax,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "sold-desc") String sort,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "12") Integer size,
+            @AuthenticationPrincipal User currentUser) {
+        
+        ProductSearchResponse response = productService.getBestseller(
+                search, category, sex, brand, priceMin, priceMax, startDate, endDate, sort, page, size, currentUser);
         
         return ResponseEntity.ok(response);
     }
