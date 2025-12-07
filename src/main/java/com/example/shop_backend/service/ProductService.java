@@ -61,6 +61,7 @@ public class ProductService {
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductMapper productMapper;
     private final CloudinaryService cloudinaryService;
+    private final com.example.shop_backend.repository.OrderItemRepository orderItemRepository;
 
     /**
      * Lấy tất cả sản phẩm hoặc filter theo active
@@ -556,6 +557,207 @@ public class ProductService {
                 .data(productResponses)
                 .totalPages(productPage.getTotalPages())
                 .totalElements(productPage.getTotalElements())
+                .currentPage(page != null ? page : 1)
+                .pageSize(pageSize)
+                .build();
+    }
+
+    /**
+     * Lấy sản phẩm bán chạy (bestseller) với filter và sort theo sold
+     * @param search - từ khóa tìm kiếm
+     * @param categories - danh sách category
+     * @param sexList - danh sách giới tính
+     * @param brands - danh sách brand
+     * @param priceMin - giá tối thiểu
+     * @param priceMax - giá tối đa
+     * @param startDate - ngày bắt đầu filter theo createdAt
+     * @param endDate - ngày kết thúc filter theo createdAt
+     * @param sort - kiểu sắp xếp (sold-asc, sold-desc)
+     * @param page - trang hiện tại
+     * @param size - số item mỗi trang
+     * @param currentUser - user hiện tại
+     * @return ProductSearchResponse
+     */
+    @Transactional(readOnly = true)
+    public ProductSearchResponse getBestseller(
+            String search,
+            List<String> categories,
+            List<String> sexList,
+            List<String> brands,
+            BigDecimal priceMin,
+            BigDecimal priceMax,
+            java.time.LocalDate startDate,
+            java.time.LocalDate endDate,
+            String sort,
+            Integer page,
+            Integer size,
+            User currentUser) {
+        
+        // Convert sex strings to ProductSex enum
+        List<ProductSex> productSexList = null;
+        if (sexList != null && !sexList.isEmpty()) {
+            productSexList = new ArrayList<>();
+            for (String sex : sexList) {
+                try {
+                    productSexList.add(ProductSex.valueOf(sex.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    // Bỏ qua giá trị không hợp lệ
+                }
+            }
+        }
+        
+        // Bước 1: Lấy tất cả products match filter (chưa sort, chưa phân trang)
+        Specification<Product> spec = ProductSpecification.filterProductsWithDateRange(
+            search,
+            categories,
+            productSexList,
+            brands,
+            priceMin,
+            priceMax,
+            startDate,
+            endDate,
+            true // chỉ lấy sản phẩm active
+        );
+        
+        // Lấy tất cả products (không phân trang)
+        List<Product> allProducts = productRepository.findAll(spec);
+        
+        if (allProducts.isEmpty()) {
+            return ProductSearchResponse.builder()
+                    .success(true)
+                    .data(List.of())
+                    .totalPages(0)
+                    .totalElements(0L)
+                    .currentPage(page != null ? page : 1)
+                    .pageSize(size != null && size > 0 ? size : 12)
+                    .build();
+        }
+        
+        // Bước 2: Tính số lượng bán thực tế từ OrderItem
+        List<Integer> productIds = allProducts.stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
+        
+        Map<Integer, Long> soldCountMap = new java.util.HashMap<>();
+        
+        if (startDate != null || endDate != null) {
+            // Có date range: tính sold trong khoảng thời gian
+            java.time.LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : java.time.LocalDateTime.of(1970, 1, 1, 0, 0);
+            java.time.LocalDateTime endDateTime = endDate != null ? endDate.atTime(23, 59, 59) : java.time.LocalDateTime.now();
+            
+            List<Map<String, Object>> soldData = orderItemRepository.calculateTotalSoldByProductIdsAndDateRange(
+                productIds, startDateTime, endDateTime
+            );
+            
+            for (Map<String, Object> data : soldData) {
+                Integer productId = (Integer) data.get("productId");
+                Long totalSold = ((Number) data.get("totalSold")).longValue();
+                soldCountMap.put(productId, totalSold);
+            }
+        } else {
+            // Không có date range: tính sold tất cả thời gian
+            List<Map<String, Object>> soldData = orderItemRepository.calculateTotalSoldByProductIds(productIds);
+            
+            for (Map<String, Object> data : soldData) {
+                Integer productId = (Integer) data.get("productId");
+                Long totalSold = ((Number) data.get("totalSold")).longValue();
+                soldCountMap.put(productId, totalSold);
+            }
+        }
+        
+        // Bước 3: Lọc chỉ giữ sản phẩm có ít nhất 1 lượt bán
+        List<Product> productsWithSales = allProducts.stream()
+                .filter(product -> soldCountMap.getOrDefault(product.getId(), 0L) >= 1)
+                .collect(Collectors.toList());
+        
+        // Bước 4: Sort products theo số lượng bán
+        boolean isAscending = sort != null && sort.equalsIgnoreCase("sold-asc");
+        productsWithSales.sort((p1, p2) -> {
+            Long sold1 = soldCountMap.getOrDefault(p1.getId(), 0L);
+            Long sold2 = soldCountMap.getOrDefault(p2.getId(), 0L);
+            return isAscending ? sold1.compareTo(sold2) : sold2.compareTo(sold1);
+        });
+        
+        // Bước 5: Phân trang thủ công
+        int pageIndex = (page != null && page > 0) ? page - 1 : 0;
+        int pageSize = (size != null && size > 0) ? size : 12;
+        int totalElements = productsWithSales.size();
+        int totalPages = (int) Math.ceil((double) totalElements / pageSize);
+        
+        int fromIndex = pageIndex * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalElements);
+        
+        List<Product> products = productsWithSales.subList(fromIndex, toIndex);
+        
+        // Nếu không có sản phẩm, trả về empty
+        if (products.isEmpty()) {
+            return ProductSearchResponse.builder()
+                    .success(true)
+                    .data(List.of())
+                    .totalPages(0)
+                    .totalElements(0L)
+                    .currentPage(page != null ? page : 1)
+                    .pageSize(pageSize)
+                    .build();
+        }
+        
+        // Batch load tất cả related data (giống searchProducts)
+        List<Integer> currentPageProductIds = products.stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
+        
+        List<ProductImage> allImages = productImageRepository.findByProductIdIn(currentPageProductIds);
+        Map<Integer, List<ProductImage>> imagesMap = allImages.stream()
+                .collect(Collectors.groupingBy(img -> img.getProduct().getId()));
+        
+        List<ProductVariant> allVariants = productVariantRepository.findByProductIdInWithColorAndSize(currentPageProductIds);
+        Map<Integer, List<ProductVariant>> variantsMap = allVariants.stream()
+                .collect(Collectors.groupingBy(v -> v.getProduct().getId()));
+        
+        List<ProductCategory> allCategories = productCategoryRepository.findByProductIdInWithCategory(currentPageProductIds);
+        Map<Integer, List<ProductCategory>> categoriesMap = allCategories.stream()
+                .collect(Collectors.groupingBy(pc -> pc.getProduct().getId()));
+        
+        List<ProductLabel> allLabels = productLabelRepository.findByProductIdInWithLabel(currentPageProductIds);
+        Map<Integer, List<ProductLabel>> labelsMap = allLabels.stream()
+                .collect(Collectors.groupingBy(pl -> pl.getProduct().getId()));
+        
+        List<Integer> variantIds = allVariants.stream()
+                .map(ProductVariant::getId)
+                .collect(Collectors.toList());
+        
+        List<com.example.shop_backend.model.ProductVariantImage> allVariantImages = 
+                variantIds.isEmpty() ? List.of() : productVariantImageRepository.findByProductVariantIdIn(variantIds);
+        
+        Map<Integer, List<com.example.shop_backend.model.ProductVariantImage>> variantImagesMap = 
+                allVariantImages.stream()
+                        .collect(Collectors.groupingBy(vi -> vi.getProductVariant().getId()));
+        
+        // Convert to ProductResponse với sold thực tế
+        boolean isOwner = currentUser != null && currentUser.getRole() == Role.OWNER;
+        List<ProductResponse> productResponses = products.stream()
+                .map(product -> {
+                    ProductResponse response = productMapper.toProductResponseWithPreloadedData(
+                            product,
+                            imagesMap.getOrDefault(product.getId(), List.of()),
+                            variantsMap.getOrDefault(product.getId(), List.of()),
+                            categoriesMap.getOrDefault(product.getId(), List.of()),
+                            labelsMap.getOrDefault(product.getId(), List.of()),
+                            variantImagesMap,
+                            isOwner
+                    );
+                    // Override sold bằng số lượng bán thực tế từ OrderItem
+                    Long actualSold = soldCountMap.getOrDefault(product.getId(), 0L);
+                    response.setSold(actualSold.intValue());
+                    return response;
+                })
+                .collect(Collectors.toList());
+        
+        return ProductSearchResponse.builder()
+                .success(true)
+                .data(productResponses)
+                .totalPages(totalPages)
+                .totalElements((long) totalElements)
                 .currentPage(page != null ? page : 1)
                 .pageSize(pageSize)
                 .build();
