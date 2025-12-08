@@ -19,6 +19,8 @@ public enum ErrorCode {
     // ✅ Lỗi đăng nhập
     USER_NOT_FOUND(1006, "Tài khoản không tồn tại", HttpStatus.NOT_FOUND),
     INVALID_CREDENTIALS(1007, "Email hoặc mật khẩu không đúng", HttpStatus.UNAUTHORIZED),
+    ACCOUNT_BLOCKED(1012, "Tài khoản đã bị khóa", HttpStatus.FORBIDDEN),
+
 
     INVALID_OTP(1008, "OTP không hợp lệ hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
     INVALID_RESET_TOKEN(1009, "Reset token không hợp lệ hoặc đã hết hạn", HttpStatus.BAD_REQUEST),

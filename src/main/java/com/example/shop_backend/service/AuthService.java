@@ -103,6 +103,10 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        if (user.getStatus() == UserStatus.BLOCKED) {
+            throw new AppException(ErrorCode.ACCOUNT_BLOCKED);
+        }
+
         // if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
         //     throw new AppException(ErrorCode.INVALID_CREDENTIALS);
         // }
@@ -166,6 +170,10 @@ public class AuthService {
 
                 return newUser;
             });
+
+            if (user.getStatus() == UserStatus.BLOCKED) {
+                throw new AppException(ErrorCode.ACCOUNT_BLOCKED);
+            }
 
             // Sinh token JWT với role
             String accessToken = jwtUtils.generateAccessToken(email, user.getRole());

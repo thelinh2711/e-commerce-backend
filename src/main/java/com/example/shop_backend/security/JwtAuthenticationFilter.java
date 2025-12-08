@@ -40,8 +40,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // ✅ Lấy user từ DB
                 User user = userRepository.findByEmail(email)
                         .orElse(null);
-                if (user == null) {
-                    filterChain.doFilter(request, response);
+//                if (user == null) {
+//                    filterChain.doFilter(request, response);
+//                    return;
+//                }
+
+                if (user == null || user.getStatus() == com.example.shop_backend.model.enums.UserStatus.BLOCKED) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("""
+                    {
+                        "code": 2012,
+                        "message": "Tài khoản đã bị khóa"
+                    }
+                    """);
                     return;
                 }
 
