@@ -15,13 +15,13 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     /**
      * Đếm số lượng variants bán được của từng product
      * Ví dụ: 10 variants khác nhau của product A → sold = 10
-     * Chỉ tính order đã DELIVERED hoặc COMPLETED
+     * Chỉ tính order đã DELIVERED
      */
     @Query("SELECT pv.product.id as productId, COUNT(DISTINCT pv.id) as totalSold " +
            "FROM OrderItem oi " +
            "JOIN oi.productVariant pv " +
            "JOIN oi.order o " +
-           "WHERE o.status IN ('DELIVERED', 'COMPLETED') " +
+           "WHERE o.status IN ('DELIVERED') " +
            "AND oi.productVariant.product.id IN :productIds " +
            "GROUP BY pv.product.id")
     List<Map<String, Object>> calculateTotalSoldByProductIds(@Param("productIds") List<Integer> productIds);
@@ -33,7 +33,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
            "FROM OrderItem oi " +
            "JOIN oi.productVariant pv " +
            "JOIN oi.order o " +
-           "WHERE o.status IN ('DELIVERED', 'COMPLETED') " +
+           "WHERE o.status IN ('DELIVERED') " +
            "AND oi.productVariant.product.id IN :productIds " +
            "AND o.createdAt >= :startDate " +
            "AND o.createdAt <= :endDate " +
