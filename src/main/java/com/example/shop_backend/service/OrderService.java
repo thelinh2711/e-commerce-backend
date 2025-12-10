@@ -36,6 +36,7 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final PaymentRepository paymentRepository;
     private final ReviewRepository reviewRepository;
+    private final ProductRepository productRepository;
 
     private static final BigDecimal DEFAULT_SHIPPING_FEE = new BigDecimal("30000");
 
@@ -257,7 +258,7 @@ public class OrderService {
 
             ProductVariant variant = item.getProductVariant();
             variant.setStock(variant.getStock() - item.getQuantity());
-            variant.getProduct().setSold(variant.getProduct().getSold() + item.getQuantity());
+            // variant.getProduct().setSold(variant.getProduct().getSold() + item.getQuantity());
         }
 
         // UPDATE REWARD POINTS
@@ -281,30 +282,82 @@ public class OrderService {
         return response;
     }
 
+//    @Transactional
+//    public OrderResponse updateOrderStatus(Integer orderId, OrderStatus newStatus){
+//        Order order = orderRepository.findById(orderId)
+//                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+//
+//        // check flow
+//        validateTransition(order.getStatus(), newStatus);
+//
+//        // cập nhật trạng thái đơn
+//        order.setStatus(newStatus);
+//        order.setUpdatedAt(LocalDateTime.now());
+//        orderRepository.save(order);
+//
+//        // Nếu đơn giao thành công → cập nhật payment
+//        if(newStatus == OrderStatus.DELIVERED){
+//            Payment payment = order.getPayment();
+//            if (payment!=null && payment.getPaymentMethod() == PaymentMethod.COD && payment.getStatus()== PaymentStatus.UNPAID){
+//                payment.setStatus(PaymentStatus.PAID);
+//                paymentRepository.save(payment);
+//            }
+//        }
+//
+//        return orderMapper.toOrderResponse(order);
+//    }
+
     @Transactional
-    public OrderResponse updateOrderStatus(Integer orderId, OrderStatus newStatus){
+    public OrderResponse updateOrderStatus(Integer orderId, OrderStatus newStatus) {
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-        // check flow
+        // Kiểm tra flow chuyển trạng thái
         validateTransition(order.getStatus(), newStatus);
 
-        // cập nhật trạng thái đơn
+        OrderStatus oldStatus = order.getStatus();
+
+        // Cập nhật trạng thái đơn
         order.setStatus(newStatus);
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
 
-        // Nếu đơn giao thành công → cập nhật payment
-        if(newStatus == OrderStatus.DELIVERED){
+        // === Nếu giao thành công ===
+        if (newStatus == OrderStatus.DELIVERED) {
+
+            // 1. Cập nhật payment cho COD
             Payment payment = order.getPayment();
-            if (payment!=null && payment.getPaymentMethod() == PaymentMethod.COD && payment.getStatus()== PaymentStatus.UNPAID){
+            if (payment != null
+                    && payment.getPaymentMethod() == PaymentMethod.COD
+                    && payment.getStatus() == PaymentStatus.UNPAID) {
+
                 payment.setStatus(PaymentStatus.PAID);
                 paymentRepository.save(payment);
+            }
+
+            // 2. Tăng số lượng đã bán (sold)
+            for (OrderItem item : order.getItems()) {
+                Product product = item.getProductVariant().getProduct();
+                product.setSold(product.getSold() + item.getQuantity());
+                productRepository.save(product);
+            }
+        }
+
+        // === Nếu đơn bị hủy ===
+        if (newStatus == OrderStatus.CANCELLED) {
+
+            // Hoàn lại stock cho variant
+            for (OrderItem item : order.getItems()) {
+                ProductVariant variant = item.getProductVariant();
+                variant.setStock(variant.getStock() + item.getQuantity());
+                variantRepository.save(variant);
             }
         }
 
         return orderMapper.toOrderResponse(order);
     }
+
 
     /**
      * Search orders with optional keyword, status, fromDate, toDate
