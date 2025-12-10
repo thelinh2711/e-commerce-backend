@@ -13,11 +13,11 @@ import com.example.shop_backend.model.OrderItem;
 public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     
     /**
-     * Đếm số lượng variants bán được của từng product
-     * Ví dụ: 10 variants khác nhau của product A → sold = 10
+     * Tính tổng số lượng bán (SUM quantity) của từng product
+     * Ví dụ: Bán 5 áo size M + 3 áo size L của product A → sold = 8
      * Chỉ tính order đã DELIVERED
      */
-    @Query("SELECT pv.product.id as productId, COUNT(DISTINCT pv.id) as totalSold " +
+    @Query("SELECT pv.product.id as productId, SUM(oi.quantity) as totalSold " +
            "FROM OrderItem oi " +
            "JOIN oi.productVariant pv " +
            "JOIN oi.order o " +
@@ -27,9 +27,9 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     List<Map<String, Object>> calculateTotalSoldByProductIds(@Param("productIds") List<Integer> productIds);
     
     /**
-     * Đếm số lượng variants bán được theo product trong khoảng thời gian
+     * Tính tổng số lượng bán theo product trong khoảng thời gian
      */
-    @Query("SELECT pv.product.id as productId, COUNT(DISTINCT pv.id) as totalSold " +
+    @Query("SELECT pv.product.id as productId, SUM(oi.quantity) as totalSold " +
            "FROM OrderItem oi " +
            "JOIN oi.productVariant pv " +
            "JOIN oi.order o " +
