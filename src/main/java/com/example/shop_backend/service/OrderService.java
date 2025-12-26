@@ -282,31 +282,6 @@ public class OrderService {
         return response;
     }
 
-//    @Transactional
-//    public OrderResponse updateOrderStatus(Integer orderId, OrderStatus newStatus){
-//        Order order = orderRepository.findById(orderId)
-//                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-//
-//        // check flow
-//        validateTransition(order.getStatus(), newStatus);
-//
-//        // cập nhật trạng thái đơn
-//        order.setStatus(newStatus);
-//        order.setUpdatedAt(LocalDateTime.now());
-//        orderRepository.save(order);
-//
-//        // Nếu đơn giao thành công → cập nhật payment
-//        if(newStatus == OrderStatus.DELIVERED){
-//            Payment payment = order.getPayment();
-//            if (payment!=null && payment.getPaymentMethod() == PaymentMethod.COD && payment.getStatus()== PaymentStatus.UNPAID){
-//                payment.setStatus(PaymentStatus.PAID);
-//                paymentRepository.save(payment);
-//            }
-//        }
-//
-//        return orderMapper.toOrderResponse(order);
-//    }
-
     @Transactional
     public OrderResponse updateOrderStatus(Integer orderId, OrderStatus newStatus) {
 
@@ -418,9 +393,12 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderResponse getOrderDetail(User user, Integer orderId) {
         Order order = orderRepository.findByIdWithPayment(orderId)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-        if (!order.getUser().getId().equals(user.getId())) {
+        boolean isOwnerOrAdmin =
+                user.getRole() == Role.ADMIN || user.getRole() == Role.OWNER;
+
+        if (!isOwnerOrAdmin && !order.getUser().getId().equals(user.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
