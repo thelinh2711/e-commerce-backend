@@ -18,13 +18,11 @@ public interface OrderMapper {
         }
         return variant.getImages().get(0).getImageUrl();
     }
-
     // ================================
     // Order -> OrderResponse
     // payment sẽ được map tự động
     // rewardPoints phải set thủ công trong service
     // ================================
-    @Mapping(target = "items", source = "items")
     @Mapping(target = "payment", source = "payment")
     OrderResponse toOrderResponse(Order order);
 

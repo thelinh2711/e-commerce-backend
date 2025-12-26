@@ -1,6 +1,7 @@
 package com.example.shop_backend.service;
 
 import com.example.shop_backend.dto.request.CreateOrderRequest;
+import com.example.shop_backend.dto.response.OrderListResponse;
 import com.example.shop_backend.dto.response.OrderResponse;
 import com.example.shop_backend.dto.response.PageResponse;
 import com.example.shop_backend.exception.AppException;
@@ -337,41 +338,45 @@ public class OrderService {
     /**
      * Search orders with optional keyword, status, fromDate, toDate
      */
-    public PageResponse<OrderResponse> searchOrders(
+    public PageResponse<OrderListResponse> searchOrders(
             String keyword,
             String statusStr,
             LocalDateTime fromDate,
             LocalDateTime toDate,
             Pageable pageable
     ) {
-        // Convert status string to OrderStatus enum
+        // Parse status string -> enum
         OrderStatus status = null;
         if (statusStr != null && !statusStr.isBlank()) {
             try {
                 status = OrderStatus.valueOf(statusStr.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw new AppException(ErrorCode.INVALID_ORDER_STATUS, "Invalid order status: " + statusStr);
+                throw new AppException(
+                        ErrorCode.INVALID_ORDER_STATUS,
+                        "Invalid order status: " + statusStr
+                );
             }
         }
 
-        // Call repository method with correct enum type
-        Page<Order> page = orderRepository.searchOrdersWithFilter(
-                keyword,
-                status,
-                fromDate,
-                toDate,
-                pageable
-        );
+        Page<OrderListResponse> page =
+                orderRepository.searchOrderList(
+                        keyword,
+                        status,
+                        fromDate,
+                        toDate,
+                        pageable
+                );
 
-        // Map Order -> OrderResponse
-        return PageResponse.<OrderResponse>builder()
-                .data(page.stream().map(orderMapper::toOrderResponse).toList())
-                .page(pageable.getPageNumber())
-                .size(pageable.getPageSize())
+        return PageResponse.<OrderListResponse>builder()
+                .data(page.getContent())
+                .page(page.getNumber())
+                .size(page.getSize())
                 .totalElements(page.getTotalElements())
                 .totalPages(page.getTotalPages())
                 .build();
     }
+
+
 
     @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByUser(User user) {

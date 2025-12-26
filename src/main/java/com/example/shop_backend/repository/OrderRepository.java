@@ -1,5 +1,6 @@
 package com.example.shop_backend.repository;
 
+import com.example.shop_backend.dto.response.OrderListResponse;
 import com.example.shop_backend.model.Order;
 import com.example.shop_backend.model.User;
 import com.example.shop_backend.model.enums.OrderStatus;
@@ -15,7 +16,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Integer> {
-
     Page<Order> findByStatus(OrderStatus status, Pageable pageable);
     List<Order> findByUser(User user);
     List<Order> findByStatus(OrderStatus status);
@@ -27,23 +27,33 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     Optional<Order> findByIdWithPayment(@Param("id") Integer id);
 
     @Query("""
-    SELECT o FROM Order o
-    WHERE (:keyword IS NULL 
-           OR CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%')
-           OR LOWER(o.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-           OR o.phone LIKE CONCAT('%', :keyword, '%'))
-      AND (:status IS NULL OR o.status = :status)
-      AND (:fromDate IS NULL OR o.createdAt >= :fromDate)
-      AND (:toDate IS NULL OR o.createdAt <= :toDate)
-    ORDER BY o.createdAt DESC
-""")
-    Page<Order> searchOrdersWithFilter(
-            @Param("keyword") String keyword,
-            @Param("status") OrderStatus status,
-            @Param("fromDate") LocalDateTime fromDate,
-            @Param("toDate") LocalDateTime toDate,
+        SELECT new com.example.shop_backend.dto.response.OrderListResponse(
+            o.id,
+            o.fullName,
+            o.phone,
+            o.status,
+            o.totalAmount,
+            p.paymentMethod,
+            p.status,
+            o.createdAt
+        )
+        FROM Order o
+        LEFT JOIN o.payment p
+        WHERE (:keyword IS NULL 
+               OR CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%')
+               OR LOWER(o.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR o.phone LIKE CONCAT('%', :keyword, '%'))
+          AND (:status IS NULL OR o.status = :status)
+          AND (:fromDate IS NULL OR o.createdAt >= :fromDate)
+          AND (:toDate IS NULL OR o.createdAt <= :toDate)
+        ORDER BY o.createdAt DESC
+        """)
+    Page<OrderListResponse> searchOrderList(
+            String keyword,
+            OrderStatus status,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
             Pageable pageable
     );
-
 
 }
