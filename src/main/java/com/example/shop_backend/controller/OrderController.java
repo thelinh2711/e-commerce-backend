@@ -3,6 +3,7 @@ package com.example.shop_backend.controller;
 import com.example.shop_backend.dto.request.CreateOrderRequest;
 import com.example.shop_backend.dto.request.UpdateOrderStatusRequest;
 import com.example.shop_backend.dto.response.ApiResponse;
+import com.example.shop_backend.dto.response.OrderListResponse;
 import com.example.shop_backend.dto.response.OrderResponse;
 import com.example.shop_backend.dto.response.PageResponse;
 import com.example.shop_backend.exception.AppException;
@@ -86,26 +87,31 @@ public class OrderController {
 
     @GetMapping("/search")
     @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> searchOrders(
+    public ResponseEntity<ApiResponse<PageResponse<OrderListResponse>>> searchOrders(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
 
-        LocalDateTime fromDateTime = (fromDate != null) ? fromDate.atStartOfDay() : null;
-        LocalDateTime toDateTime = (toDate != null) ? toDate.atTime(23, 59, 59) : null;
+        LocalDateTime fromDateTime = fromDate != null ? fromDate.atStartOfDay() : null;
+        LocalDateTime toDateTime = toDate != null ? toDate.atTime(23, 59, 59) : null;
 
-        PageResponse<OrderResponse> result = orderService.searchOrders(
-                keyword, status, fromDateTime, toDateTime, pageable
-        );
+        PageResponse<OrderListResponse> result =
+                orderService.searchOrders(
+                        keyword,
+                        status,
+                        fromDateTime,
+                        toDateTime,
+                        pageable
+                );
 
         return ResponseEntity.ok(ApiResponse.success(result));
     }
-
-
 
 }
