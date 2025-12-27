@@ -15,7 +15,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Payments")
+@Table(name = "Payments", indexes = {
+        @Index(name = "idx_payments_order_id", columnList = "order_id"),
+        @Index(name = "idx_payments_status", columnList = "status"),
+        @Index(name = "idx_payments_transaction_id", columnList = "transactionId")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

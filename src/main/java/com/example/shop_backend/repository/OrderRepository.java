@@ -2,6 +2,7 @@ package com.example.shop_backend.repository;
 
 import com.example.shop_backend.dto.response.OrderListResponse;
 import com.example.shop_backend.model.Order;
+import com.example.shop_backend.model.ProductVariant;
 import com.example.shop_backend.model.User;
 import com.example.shop_backend.model.enums.OrderStatus;
 import org.springframework.data.domain.Page;
@@ -23,8 +24,24 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.payment WHERE o.user = :user ORDER BY o.createdAt DESC")
     List<Order> findByUserWithPayment(@Param("user") User user);
 
-    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.payment WHERE o.id = :id")
+    @Query("""
+    SELECT DISTINCT o FROM Order o
+    LEFT JOIN FETCH o.payment
+    LEFT JOIN FETCH o.items oi
+    LEFT JOIN FETCH oi.productVariant pv
+    LEFT JOIN FETCH pv.product
+    LEFT JOIN FETCH pv.color
+    LEFT JOIN FETCH pv.size
+    WHERE o.id = :id
+    """)
     Optional<Order> findByIdWithPayment(@Param("id") Integer id);
+
+    @Query("""
+    SELECT DISTINCT pv FROM ProductVariant pv
+    LEFT JOIN FETCH pv.images
+    WHERE pv.id IN :variantIds
+    """)
+    List<ProductVariant> findVariantsWithImages(@Param("variantIds") List<Integer> variantIds);
 
     @Query("""
         SELECT new com.example.shop_backend.dto.response.OrderListResponse(

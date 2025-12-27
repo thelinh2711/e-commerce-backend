@@ -397,20 +397,29 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderResponse getOrderDetail(User user, Integer orderId) {
+        // Query 1: Lấy Order + items + variant (không có images)
         Order order = orderRepository.findByIdWithPayment(orderId)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-        boolean isOwnerOrAdmin =
-                user.getRole() == Role.ADMIN || user.getRole() == Role.OWNER;
-
+        boolean isOwnerOrAdmin = user.getRole() == Role.ADMIN || user.getRole() == Role.OWNER;
         if (!isOwnerOrAdmin && !order.getUser().getId().equals(user.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        // Lấy danh sách variantId đã review bởi user
-        List<Integer> reviewedVariantIds = reviewRepository.findReviewedVariantIdsByUserAndOrder(user.getId(), order.getId());
+        // Query 2: Lấy images cho các variants (nếu cần)
+        List<Integer> variantIds = order.getItems().stream()
+                .map(item -> item.getProductVariant().getId())
+                .toList();
 
-        // Map OrderItem -> OrderItemResponse và set reviewed flag
+        if (!variantIds.isEmpty()) {
+            orderRepository.findVariantsWithImages(variantIds); // Load images vào cache
+        }
+
+        // Query 3: Lấy reviewed variants
+        List<Integer> reviewedVariantIds =
+                reviewRepository.findReviewedVariantIdsByUserAndOrder(user.getId(), order.getId());
+
+        // Map response
         List<OrderResponse.OrderItemResponse> itemResponses = order.getItems().stream()
                 .map(item -> {
                     OrderResponse.OrderItemResponse resp = orderMapper.toOrderItemResponse(item);
