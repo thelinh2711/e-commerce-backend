@@ -42,7 +42,7 @@ public class BrandController {
     }
 
     // Cập nhật thương hiệu (ADMIN)
-    @PreAuthorize("hasRole('ADMIN' or hasRole('OWNER'))")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<BrandResponse>> update(
             @PathVariable Integer id,
