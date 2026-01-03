@@ -73,4 +73,20 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             Pageable pageable
     );
 
+    @Query("""
+    SELECT 
+        COUNT(o),
+        SUM(CASE WHEN o.status = 'PENDING' THEN 1 ELSE 0 END),
+        SUM(CASE WHEN o.status = 'CONFIRMED' THEN 1 ELSE 0 END),
+        SUM(CASE WHEN o.status = 'SHIPPED' THEN 1 ELSE 0 END),
+        SUM(CASE WHEN o.status = 'DELIVERED' THEN 1 ELSE 0 END)
+    FROM Order o
+    WHERE (:from IS NULL OR o.createdAt >= :from)
+      AND (:to IS NULL OR o.createdAt <= :to)
+""")
+    Object countOrderDashboardStats(
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
+
 }

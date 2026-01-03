@@ -1,6 +1,7 @@
 package com.example.shop_backend.service;
 
 import com.example.shop_backend.dto.request.CreateOrderRequest;
+import com.example.shop_backend.dto.response.OrderDashboardStatsResponse;
 import com.example.shop_backend.dto.response.OrderListResponse;
 import com.example.shop_backend.dto.response.OrderResponse;
 import com.example.shop_backend.dto.response.PageResponse;
@@ -456,4 +457,22 @@ public class OrderService {
                 throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
         }
     }
+
+    public OrderDashboardStatsResponse getStats(
+            LocalDateTime from,
+            LocalDateTime to
+    ) {
+        Object result = orderRepository.countOrderDashboardStats(from, to);
+
+        Object[] row = (Object[]) result;
+
+        return OrderDashboardStatsResponse.builder()
+                .total(((Number) row[0]).longValue())
+                .pending(row[1] == null ? 0 : ((Number) row[1]).longValue())
+                .confirmed(row[2] == null ? 0 : ((Number) row[2]).longValue())
+                .shipped(row[3] == null ? 0 : ((Number) row[3]).longValue())
+                .delivered(row[4] == null ? 0 : ((Number) row[4]).longValue())
+                .build();
+    }
+
 }
