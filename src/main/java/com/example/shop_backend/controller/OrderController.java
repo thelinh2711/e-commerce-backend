@@ -2,10 +2,7 @@ package com.example.shop_backend.controller;
 
 import com.example.shop_backend.dto.request.CreateOrderRequest;
 import com.example.shop_backend.dto.request.UpdateOrderStatusRequest;
-import com.example.shop_backend.dto.response.ApiResponse;
-import com.example.shop_backend.dto.response.OrderListResponse;
-import com.example.shop_backend.dto.response.OrderResponse;
-import com.example.shop_backend.dto.response.PageResponse;
+import com.example.shop_backend.dto.response.*;
 import com.example.shop_backend.exception.AppException;
 import com.example.shop_backend.exception.ErrorCode;
 import com.example.shop_backend.model.User;
@@ -114,4 +111,22 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    @GetMapping("/dashboard-stats")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<OrderDashboardStatsResponse>> getDashboardStats(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime from,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime to
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Thống kê đơn hàng",
+                        orderService.getStats(from, to)
+                )
+        );
+    }
 }
