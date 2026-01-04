@@ -1,6 +1,8 @@
 package com.example.shop_backend.service;
 
 import com.example.shop_backend.dto.request.CreateOrderRequest;
+import com.example.shop_backend.dto.response.OrderDashboardStatsResponse;
+import com.example.shop_backend.dto.response.OrderListResponse;
 import com.example.shop_backend.dto.response.OrderResponse;
 import com.example.shop_backend.dto.response.PageResponse;
 import com.example.shop_backend.exception.AppException;
@@ -36,6 +38,7 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final PaymentRepository paymentRepository;
     private final ReviewRepository reviewRepository;
+    private final ProductRepository productRepository;
 
     private static final BigDecimal DEFAULT_SHIPPING_FEE = new BigDecimal("30000");
 
@@ -257,7 +260,7 @@ public class OrderService {
 
             ProductVariant variant = item.getProductVariant();
             variant.setStock(variant.getStock() - item.getQuantity());
-            variant.getProduct().setSold(variant.getProduct().getSold() + item.getQuantity());
+            // variant.getProduct().setSold(variant.getProduct().getSold() + item.getQuantity());
         }
 
         // UPDATE REWARD POINTS
@@ -282,68 +285,99 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse updateOrderStatus(Integer orderId, OrderStatus newStatus){
+    public OrderResponse updateOrderStatus(Integer orderId, OrderStatus newStatus) {
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-        // check flow
+        // Kiểm tra flow chuyển trạng thái
         validateTransition(order.getStatus(), newStatus);
 
-        // cập nhật trạng thái đơn
+        OrderStatus oldStatus = order.getStatus();
+
+        // Cập nhật trạng thái đơn
         order.setStatus(newStatus);
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
 
-        // Nếu đơn giao thành công → cập nhật payment
-        if(newStatus == OrderStatus.DELIVERED){
+        // === Nếu giao thành công ===
+        if (newStatus == OrderStatus.DELIVERED) {
+
+            // 1. Cập nhật payment cho COD
             Payment payment = order.getPayment();
-            if (payment!=null && payment.getPaymentMethod() == PaymentMethod.COD && payment.getStatus()== PaymentStatus.UNPAID){
+            if (payment != null
+                    && payment.getPaymentMethod() == PaymentMethod.COD
+                    && payment.getStatus() == PaymentStatus.UNPAID) {
+
                 payment.setStatus(PaymentStatus.PAID);
                 paymentRepository.save(payment);
+            }
+
+            // 2. Tăng số lượng đã bán (sold)
+            for (OrderItem item : order.getItems()) {
+                Product product = item.getProductVariant().getProduct();
+                product.setSold(product.getSold() + item.getQuantity());
+                productRepository.save(product);
+            }
+        }
+
+        // === Nếu đơn bị hủy ===
+        if (newStatus == OrderStatus.CANCELLED) {
+
+            // Hoàn lại stock cho variant
+            for (OrderItem item : order.getItems()) {
+                ProductVariant variant = item.getProductVariant();
+                variant.setStock(variant.getStock() + item.getQuantity());
+                variantRepository.save(variant);
             }
         }
 
         return orderMapper.toOrderResponse(order);
     }
 
+
     /**
      * Search orders with optional keyword, status, fromDate, toDate
      */
-    public PageResponse<OrderResponse> searchOrders(
+    public PageResponse<OrderListResponse> searchOrders(
             String keyword,
             String statusStr,
             LocalDateTime fromDate,
             LocalDateTime toDate,
             Pageable pageable
     ) {
-        // Convert status string to OrderStatus enum
+        // Parse status string -> enum
         OrderStatus status = null;
         if (statusStr != null && !statusStr.isBlank()) {
             try {
                 status = OrderStatus.valueOf(statusStr.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw new AppException(ErrorCode.INVALID_ORDER_STATUS, "Invalid order status: " + statusStr);
+                throw new AppException(
+                        ErrorCode.INVALID_ORDER_STATUS,
+                        "Invalid order status: " + statusStr
+                );
             }
         }
 
-        // Call repository method with correct enum type
-        Page<Order> page = orderRepository.searchOrdersWithFilter(
-                keyword,
-                status,
-                fromDate,
-                toDate,
-                pageable
-        );
+        Page<OrderListResponse> page =
+                orderRepository.searchOrderList(
+                        keyword,
+                        status,
+                        fromDate,
+                        toDate,
+                        pageable
+                );
 
-        // Map Order -> OrderResponse
-        return PageResponse.<OrderResponse>builder()
-                .data(page.stream().map(orderMapper::toOrderResponse).toList())
-                .page(pageable.getPageNumber())
-                .size(pageable.getPageSize())
+        return PageResponse.<OrderListResponse>builder()
+                .data(page.getContent())
+                .page(page.getNumber())
+                .size(page.getSize())
                 .totalElements(page.getTotalElements())
                 .totalPages(page.getTotalPages())
                 .build();
     }
+
+
 
     @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByUser(User user) {
@@ -364,17 +398,29 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderResponse getOrderDetail(User user, Integer orderId) {
+        // Query 1: Lấy Order + items + variant (không có images)
         Order order = orderRepository.findByIdWithPayment(orderId)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-        if (!order.getUser().getId().equals(user.getId())) {
+        boolean isOwnerOrAdmin = user.getRole() == Role.ADMIN || user.getRole() == Role.OWNER;
+        if (!isOwnerOrAdmin && !order.getUser().getId().equals(user.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        // Lấy danh sách variantId đã review bởi user
-        List<Integer> reviewedVariantIds = reviewRepository.findReviewedVariantIdsByUserAndOrder(user.getId(), order.getId());
+        // Query 2: Lấy images cho các variants (nếu cần)
+        List<Integer> variantIds = order.getItems().stream()
+                .map(item -> item.getProductVariant().getId())
+                .toList();
 
-        // Map OrderItem -> OrderItemResponse và set reviewed flag
+        if (!variantIds.isEmpty()) {
+            orderRepository.findVariantsWithImages(variantIds); // Load images vào cache
+        }
+
+        // Query 3: Lấy reviewed variants
+        List<Integer> reviewedVariantIds =
+                reviewRepository.findReviewedVariantIdsByUserAndOrder(user.getId(), order.getId());
+
+        // Map response
         List<OrderResponse.OrderItemResponse> itemResponses = order.getItems().stream()
                 .map(item -> {
                     OrderResponse.OrderItemResponse resp = orderMapper.toOrderItemResponse(item);
@@ -411,4 +457,22 @@ public class OrderService {
                 throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
         }
     }
+
+    public OrderDashboardStatsResponse getStats(
+            LocalDateTime from,
+            LocalDateTime to
+    ) {
+        Object result = orderRepository.countOrderDashboardStats(from, to);
+
+        Object[] row = (Object[]) result;
+
+        return OrderDashboardStatsResponse.builder()
+                .total(((Number) row[0]).longValue())
+                .pending(row[1] == null ? 0 : ((Number) row[1]).longValue())
+                .confirmed(row[2] == null ? 0 : ((Number) row[2]).longValue())
+                .shipped(row[3] == null ? 0 : ((Number) row[3]).longValue())
+                .delivered(row[4] == null ? 0 : ((Number) row[4]).longValue())
+                .build();
+    }
+
 }

@@ -606,16 +606,15 @@ public class ProductService {
             }
         }
         
-        // Bước 1: Lấy tất cả products match filter (chưa sort, chưa phân trang)
-        Specification<Product> spec = ProductSpecification.filterProductsWithDateRange(
+        // Bước 1: Lấy tất cả products match filter (KHÔNG filter theo createdAt của Product)
+        // startDate/endDate chỉ dùng để filter Order.createdAt ở bước tính sold
+        Specification<Product> spec = ProductSpecification.filterProducts(
             search,
             categories,
             productSexList,
             brands,
             priceMin,
             priceMax,
-            startDate,
-            endDate,
             true // chỉ lấy sản phẩm active
         );
         
