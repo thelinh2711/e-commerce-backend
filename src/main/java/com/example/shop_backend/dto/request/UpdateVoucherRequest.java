@@ -2,7 +2,6 @@ package com.example.shop_backend.dto.request;
 
 import java.math.BigDecimal;
 
-import com.example.shop_backend.model.enums.StatusVoucher;
 import com.example.shop_backend.model.enums.VoucherDiscountType;
 
 import jakarta.validation.constraints.Min;
@@ -34,8 +33,6 @@ public class UpdateVoucherRequest {
     private String startDate; // Format: dd/MM/yyyy
     
     private String endDate; // Format: dd/MM/yyyy
-    
-    private StatusVoucher status;
     
     private String description;
 }

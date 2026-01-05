@@ -26,26 +26,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class VoucherService {
     
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     
     private final VoucherRepository voucherRepository;
     private final VoucherMapper voucherMapper;
 
     /**
      * Tạo voucher mới
-     * 
-     * @param request - Dữ liệu tạo voucher
-     * @return VoucherResponse
-     * @throws AppException nếu mã voucher đã tồn tại hoặc ngày không hợp lệ
      */
     @Transactional
     public VoucherResponse createVoucher(CreateVoucherRequest request) {
-        // Kiểm tra mã voucher đã tồn tại
+
         if (voucherRepository.existsByCode(request.getCode())) {
             throw new AppException(ErrorCode.VOUCHER_CODE_EXISTED);
         }
 
-        // Parse và set giờ cho startDate và endDate
         try {
             LocalDate startLocalDate = LocalDate.parse(request.getStartDate(), DATE_FORMATTER);
             LocalDate endLocalDate = LocalDate.parse(request.getEndDate(), DATE_FORMATTER);
@@ -53,12 +48,10 @@ public class VoucherService {
             LocalDateTime startDate = startLocalDate.atStartOfDay(); // 00:00:00
             LocalDateTime endDate = endLocalDate.atTime(23, 59, 59); // 23:59:59
 
-            // Validate ngày
             if (endDate.isBefore(startDate)) {
                 throw new AppException(ErrorCode.VOUCHER_INVALID_DATE);
             }
 
-            // Tạo voucher
             Voucher voucher = voucherMapper.toVoucher(request);
             voucher.setStartDate(startDate);
             voucher.setEndDate(endDate);
@@ -72,26 +65,18 @@ public class VoucherService {
 
     /**
      * Cập nhật voucher
-     * 
-     * @param id - ID voucher cần update
-     * @param request - Dữ liệu cập nhật
-     * @return VoucherResponse
-     * @throws AppException nếu voucher không tồn tại, mã đã tồn tại hoặc ngày không hợp lệ
      */
     @Transactional
     public VoucherResponse updateVoucher(Integer id, UpdateVoucherRequest request) {
-        // Tìm voucher
         Voucher voucher = voucherRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
 
-        // Kiểm tra mã voucher nếu có thay đổi
         if (request.getCode() != null && !request.getCode().equals(voucher.getCode())) {
             if (voucherRepository.existsByCode(request.getCode())) {
                 throw new AppException(ErrorCode.VOUCHER_CODE_EXISTED);
             }
         }
 
-        // Parse và set giờ cho startDate và endDate nếu có
         LocalDateTime startDate = voucher.getStartDate();
         LocalDateTime endDate = voucher.getEndDate();
         
@@ -109,43 +94,40 @@ public class VoucherService {
             throw new AppException(ErrorCode.VOUCHER_INVALID_DATE);
         }
         
-        // Validate ngày
         if (endDate.isBefore(startDate)) {
             throw new AppException(ErrorCode.VOUCHER_INVALID_DATE);
         }
 
-        // Update voucher
         voucherMapper.updateVoucherFromRequest(request, voucher);
         voucher.setStartDate(startDate);
         voucher.setEndDate(endDate);
         voucher = voucherRepository.save(voucher);
+        updateStatusVoucher();
 
-        return voucherMapper.toVoucherResponse(voucher);
+        Voucher voucher_new = voucherRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
+        return voucherMapper.toVoucherResponse(voucher_new);
     }
 
     /**
      * Xóa voucher
-     * 
-     * @param id - ID voucher cần xóa
-     * @throws AppException nếu voucher không tồn tại
      */
     @Transactional
     public void deleteVoucher(Integer id) {
         Voucher voucher = voucherRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
 
-        voucherRepository.delete(voucher);
+        voucher.setStatus(StatusVoucher.INACTIVE);
+        voucherRepository.save(voucher);
+        updateStatusVoucher();
     }
 
     /**
      * Lấy thông tin voucher theo ID
-     * 
-     * @param id - ID voucher
-     * @return VoucherResponse
-     * @throws AppException nếu voucher không tồn tại
      */
     @Transactional(readOnly = true)
     public VoucherResponse getVoucherById(Integer id) {
+        updateStatusVoucher();
         Voucher voucher = voucherRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
 
@@ -154,13 +136,10 @@ public class VoucherService {
 
     /**
      * Lấy voucher theo mã code
-     * 
-     * @param code - Mã voucher
-     * @return VoucherResponse
-     * @throws AppException nếu voucher không tồn tại
      */
     @Transactional(readOnly = true)
     public VoucherResponse getVoucherByCode(String code) {
+        updateStatusVoucher();
         Voucher voucher = voucherRepository.findByCode(code)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
 
@@ -169,11 +148,10 @@ public class VoucherService {
 
     /**
      * Lấy tất cả vouchers
-     * 
-     * @return List<VoucherResponse>
      */
     @Transactional(readOnly = true)
     public List<VoucherResponse> getAllVouchers() {
+        updateStatusVoucher();
         return voucherRepository.findAll().stream()
                 .map(voucherMapper::toVoucherResponse)
                 .collect(Collectors.toList());
@@ -181,74 +159,37 @@ public class VoucherService {
 
     /**
      * Lấy vouchers theo status
-     * 
-     * @param status - Trạng thái voucher
-     * @return List<VoucherResponse>
      */
     @Transactional(readOnly = true)
     public List<VoucherResponse> getVouchersByStatus(StatusVoucher status) {
+        updateStatusVoucher();
         return voucherRepository.findByStatus(status).stream()
                 .map(voucherMapper::toVoucherResponse)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Lấy vouchers đang active (trong thời gian hiệu lực)
-     * 
-     * @return List<VoucherResponse>
-     */
-    @Transactional(readOnly = true)
-    public List<VoucherResponse> getActiveVouchers() {
-        LocalDateTime now = LocalDateTime.now();
-        return voucherRepository.findActiveVouchers(StatusVoucher.ACTIVE, now).stream()
-                .map(voucherMapper::toVoucherResponse)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Cập nhật status các voucher đã hết hạn
-     * Method này có thể được gọi định kỳ bằng scheduler
+     * Cập nhật status các voucher
      */
     @Transactional
-    public void updateExpiredVouchers() {
+    public void updateStatusVoucher() {
         LocalDateTime now = LocalDateTime.now();
         List<Voucher> expiredVouchers = voucherRepository.findExpiredVouchers(now);
-        
         for (Voucher voucher : expiredVouchers) {
             voucher.setStatus(StatusVoucher.EXPIRED);
             voucherRepository.save(voucher);
         }
-    }
 
-    /**
-     * Validate voucher có thể sử dụng không
-     * 
-     * @param code - Mã voucher
-     * @return VoucherResponse nếu valid
-     * @throws AppException nếu voucher không hợp lệ
-     */
-    @Transactional(readOnly = true)
-    public VoucherResponse validateVoucher(String code) {
-        Voucher voucher = voucherRepository.findByCode(code)
-                .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
-
-        LocalDateTime now = LocalDateTime.now();
-
-        // Kiểm tra trạng thái
-        if (voucher.getStatus() != StatusVoucher.ACTIVE) {
-            throw new AppException(ErrorCode.VOUCHER_NOT_ACTIVE);
+        List<Voucher> outOfStockVouchers = voucherRepository.findOutOfStockVouchers();
+        for (Voucher voucher : outOfStockVouchers) {
+            voucher.setStatus(StatusVoucher.OUT_OF_STOCK);
+            voucherRepository.save(voucher);
         }
 
-        // Kiểm tra thời gian
-        if (now.isBefore(voucher.getStartDate()) || now.isAfter(voucher.getEndDate())) {
-            throw new AppException(ErrorCode.VOUCHER_EXPIRED);
+        List<Voucher> activeVouchers = voucherRepository.findActiveVouchersUpdate(LocalDateTime.now());
+        for (Voucher voucher : activeVouchers) {
+            voucher.setStatus(StatusVoucher.ACTIVE);
+            voucherRepository.save(voucher);
         }
-
-        // Kiểm tra lượt sử dụng
-        if (voucher.getUsageCount() >= voucher.getUsageLimit()) {
-            throw new AppException(ErrorCode.VOUCHER_OUT_OF_USES);
-        }
-
-        return voucherMapper.toVoucherResponse(voucher);
     }
 }

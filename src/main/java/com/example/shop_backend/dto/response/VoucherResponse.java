@@ -42,11 +42,4 @@ public class VoucherResponse {
     private String description;
     
     private LocalDateTime createdAt;
-    
-    // Calculated fields
-    private Boolean isActive;
-    
-    private Boolean isExpired;
-    
-    private Integer remainingUses;
 }

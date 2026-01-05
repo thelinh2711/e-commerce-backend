@@ -21,9 +21,12 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
     
     List<Voucher> findByStatus(StatusVoucher status);
     
-    @Query("SELECT v FROM Voucher v WHERE v.status = :status AND v.startDate <= :now AND v.endDate >= :now")
-    List<Voucher> findActiveVouchers(@Param("status") StatusVoucher status, @Param("now") LocalDateTime now);
-    
-    @Query("SELECT v FROM Voucher v WHERE v.endDate < :now AND v.status != com.example.shop_backend.model.enums.StatusVoucher.EXPIRED")
+    @Query("SELECT v FROM Voucher v WHERE v.endDate < :now AND v.status != com.example.shop_backend.model.enums.StatusVoucher.EXPIRED AND v.status != com.example.shop_backend.model.enums.StatusVoucher.INACTIVE")
     List<Voucher> findExpiredVouchers(@Param("now") LocalDateTime now);
+
+    @Query("SELECT v FROM Voucher v WHERE v.usageCount >= v.usageLimit AND v.status != com.example.shop_backend.model.enums.StatusVoucher.OUT_OF_STOCK AND v.status != com.example.shop_backend.model.enums.StatusVoucher.INACTIVE")
+    List<Voucher> findOutOfStockVouchers();
+
+    @Query("SELECT v FROM Voucher v WHERE v.startDate <= :now AND v.endDate >= :now AND v.usageCount < v.usageLimit AND v.status != com.example.shop_backend.model.enums.StatusVoucher.ACTIVE AND v.status != com.example.shop_backend.model.enums.StatusVoucher.INACTIVE")
+    List<Voucher> findActiveVouchersUpdate(@Param("now") LocalDateTime now);
 }

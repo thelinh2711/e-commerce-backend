@@ -32,7 +32,6 @@ public class VoucherController {
 
     /**
      * Tạo voucher mới
-     * POST /api/vouchers
      */
     @PostMapping
     public ResponseEntity<ApiResponse<VoucherResponse>> createVoucher(
@@ -45,7 +44,6 @@ public class VoucherController {
 
     /**
      * Cập nhật voucher
-     * PUT /api/vouchers/{id}
      */
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<VoucherResponse>> updateVoucher(
@@ -113,40 +111,4 @@ public class VoucherController {
                 .build());
     }
 
-    /**
-     * Lấy vouchers đang active
-     * GET /api/vouchers/active
-     */
-    @GetMapping("/active")
-    public ResponseEntity<ApiResponse<List<VoucherResponse>>> getActiveVouchers() {
-        List<VoucherResponse> responses = voucherService.getActiveVouchers();
-        return ResponseEntity.ok(ApiResponse.<List<VoucherResponse>>builder()
-                .result(responses)
-                .build());
-    }
-
-    /**
-     * Validate voucher
-     * GET /api/vouchers/validate/{code}
-     */
-    @GetMapping("/validate/{code}")
-    public ResponseEntity<ApiResponse<VoucherResponse>> validateVoucher(@PathVariable String code) {
-        VoucherResponse response = voucherService.validateVoucher(code);
-        return ResponseEntity.ok(ApiResponse.<VoucherResponse>builder()
-                .result(response)
-                .message("Voucher hợp lệ")
-                .build());
-    }
-
-    /**
-     * Cập nhật trạng thái vouchers đã hết hạn
-     * PUT /api/vouchers/update-expired
-     */
-    @PutMapping("/update-expired")
-    public ResponseEntity<ApiResponse<Void>> updateExpiredVouchers() {
-        voucherService.updateExpiredVouchers();
-        return ResponseEntity.ok(ApiResponse.<Void>builder()
-                .message("Cập nhật vouchers hết hạn thành công")
-                .build());
-    }
 }

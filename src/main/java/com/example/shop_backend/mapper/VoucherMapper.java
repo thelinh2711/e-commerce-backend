@@ -1,7 +1,5 @@
 package com.example.shop_backend.mapper;
 
-import java.time.LocalDateTime;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -25,30 +23,11 @@ public interface VoucherMapper {
     
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "usageCount", ignore = true)
+    @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "startDate", ignore = true)
     @Mapping(target = "endDate", ignore = true)
     void updateVoucherFromRequest(UpdateVoucherRequest request, @MappingTarget Voucher voucher);
     
-    @Mapping(target = "isActive", expression = "java(calculateIsActive(voucher))")
-    @Mapping(target = "isExpired", expression = "java(calculateIsExpired(voucher))")
-    @Mapping(target = "remainingUses", expression = "java(calculateRemainingUses(voucher))")
     VoucherResponse toVoucherResponse(Voucher voucher);
-    
-    default Boolean calculateIsActive(Voucher voucher) {
-        LocalDateTime now = LocalDateTime.now();
-        return voucher.getStatus() == com.example.shop_backend.model.enums.StatusVoucher.ACTIVE
-                && voucher.getStartDate().isBefore(now)
-                && voucher.getEndDate().isAfter(now)
-                && voucher.getUsageCount() < voucher.getUsageLimit();
-    }
-    
-    default Boolean calculateIsExpired(Voucher voucher) {
-        return voucher.getEndDate().isBefore(LocalDateTime.now())
-                || voucher.getStatus() == com.example.shop_backend.model.enums.StatusVoucher.EXPIRED;
-    }
-    
-    default Integer calculateRemainingUses(Voucher voucher) {
-        return Math.max(0, voucher.getUsageLimit() - voucher.getUsageCount());
-    }
 }
