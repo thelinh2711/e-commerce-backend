@@ -117,8 +117,7 @@ public class VoucherService {
         Voucher voucher = voucherRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
 
-        voucher.setStatus(StatusVoucher.INACTIVE);
-        voucherRepository.save(voucher);
+        voucherRepository.delete(voucher);
         updateStatusVoucher();
     }
 
@@ -173,8 +172,12 @@ public class VoucherService {
      */
     @Transactional
     public void updateStatusVoucher() {
-        LocalDateTime now = LocalDateTime.now();
-        List<Voucher> expiredVouchers = voucherRepository.findExpiredVouchers(now);
+        List<Voucher> deleteVouchers = voucherRepository.findByStatus(StatusVoucher.INACTIVE);
+        for (Voucher voucher : deleteVouchers) {
+            voucherRepository.delete(voucher);
+        }
+
+        List<Voucher> expiredVouchers = voucherRepository.findExpiredVouchers(LocalDateTime.now());
         for (Voucher voucher : expiredVouchers) {
             voucher.setStatus(StatusVoucher.EXPIRED);
             voucherRepository.save(voucher);
