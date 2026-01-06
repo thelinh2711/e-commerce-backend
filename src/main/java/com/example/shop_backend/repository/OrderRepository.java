@@ -21,8 +21,16 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<Order> findByUser(User user);
     List<Order> findByStatus(OrderStatus status);
 
-    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.payment WHERE o.user = :user ORDER BY o.createdAt DESC")
+    @Query("""
+    SELECT o
+    FROM Order o
+    LEFT JOIN FETCH o.payment
+    WHERE o.user = :user
+      AND o.status <> com.example.shop_backend.model.enums.OrderStatus.CANCELLED
+    ORDER BY o.createdAt DESC
+""")
     List<Order> findByUserWithPayment(@Param("user") User user);
+
 
     @Query("""
     SELECT DISTINCT o FROM Order o
@@ -44,27 +52,28 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<ProductVariant> findVariantsWithImages(@Param("variantIds") List<Integer> variantIds);
 
     @Query("""
-        SELECT new com.example.shop_backend.dto.response.OrderListResponse(
-            o.id,
-            o.fullName,
-            o.phone,
-            o.status,
-            o.totalAmount,
-            p.paymentMethod,
-            p.status,
-            o.createdAt
-        )
-        FROM Order o
-        LEFT JOIN o.payment p
-        WHERE (:keyword IS NULL 
-               OR CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%')
-               OR LOWER(o.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-               OR o.phone LIKE CONCAT('%', :keyword, '%'))
-          AND (:status IS NULL OR o.status = :status)
-          AND (:fromDate IS NULL OR o.createdAt >= :fromDate)
-          AND (:toDate IS NULL OR o.createdAt <= :toDate)
-        ORDER BY o.createdAt DESC
-        """)
+    SELECT new com.example.shop_backend.dto.response.OrderListResponse(
+        o.id,
+        o.fullName,
+        o.phone,
+        o.status,
+        o.totalAmount,
+        p.paymentMethod,
+        p.status,
+        o.createdAt
+    )
+    FROM Order o
+    LEFT JOIN o.payment p
+    WHERE o.status <> com.example.shop_backend.model.enums.OrderStatus.CANCELLED
+      AND (:keyword IS NULL 
+           OR CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%')
+           OR LOWER(o.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR o.phone LIKE CONCAT('%', :keyword, '%'))
+      AND (:status IS NULL OR o.status = :status)
+      AND (:fromDate IS NULL OR o.createdAt >= :fromDate)
+      AND (:toDate IS NULL OR o.createdAt <= :toDate)
+    ORDER BY o.createdAt DESC
+""")
     Page<OrderListResponse> searchOrderList(
             String keyword,
             OrderStatus status,

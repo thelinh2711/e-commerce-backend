@@ -8,6 +8,7 @@ import com.example.shop_backend.model.enums.OrderStatus;
 import com.example.shop_backend.model.enums.PaymentStatus;
 import com.example.shop_backend.repository.OrderRepository;
 import com.example.shop_backend.repository.PaymentRepository;
+import com.example.shop_backend.service.OrderService;
 import com.example.shop_backend.service.VnPayService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +23,16 @@ public class VnPayController {
     private final VnPayService vnPayService;
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final OrderService orderService;
 
     public VnPayController(VnPayService vnPayService,
                            PaymentRepository paymentRepository,
-                           OrderRepository orderRepository) {
+                           OrderRepository orderRepository,
+                           OrderService orderService) {
         this.vnPayService = vnPayService;
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
+        this.orderService = orderService;
     }
 
     @PostMapping("/create")
@@ -106,13 +110,12 @@ public class VnPayController {
                     "message", "Payment not found"
             ));
         }
-
+        Order order = payment.getOrder();
         if ("00".equals(responseCode)) {
             System.out.println("✅ PAYMENT SUCCESS");
             payment.setStatus(PaymentStatus.PAID);
             paymentRepository.save(payment);
 
-            Order order = payment.getOrder();
             //order.setStatus(OrderStatus.CONFIRMED);
             //orderRepository.save(order);
 
@@ -127,13 +130,35 @@ public class VnPayController {
             ));
         }
 
-        System.out.println("❌ PAYMENT FAILED - Code: " + responseCode);
-        return ResponseEntity.ok(Map.of(
-                "success", false,
-                "message", "Payment failed",
-                "responseCode", responseCode,
-                "transactionId", txnRef
-        ));
+        // THANH TOÁN THẤT BẠI/HỦY
+        System.out.println("PAYMENT FAILED/CANCELLED - Code: " + responseCode);
+
+        // Cập nhật payment status
+        payment.setStatus(PaymentStatus.FAILED);
+        paymentRepository.save(payment);
+
+        // Hủy order và hoàn lại (stock, voucher, reward points)
+        try {
+            orderService.cancelOrderAndRefund(order.getId());
+
+            return ResponseEntity.ok(Map.of(
+                    "success", false,
+                    "message", "Payment failed or cancelled. Order has been cancelled and refunded.",
+                    "responseCode", responseCode,
+                    "transactionId", txnRef,
+                    "orderId", order.getId()
+            ));
+        } catch (Exception e) {
+            System.err.println("ERROR during refund: " + e.getMessage());
+            e.printStackTrace();
+
+            return ResponseEntity.ok(Map.of(
+                    "success", false,
+                    "message", "Payment failed: " + e.getMessage(),
+                    "responseCode", responseCode,
+                    "transactionId", txnRef
+            ));
+        }
     }
 
     /**

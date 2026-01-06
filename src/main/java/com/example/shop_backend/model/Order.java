@@ -94,4 +94,8 @@ public class Order {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer rewardPointsUsed = 0;
 }
