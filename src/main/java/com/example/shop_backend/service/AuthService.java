@@ -40,6 +40,9 @@ public class AuthService {
     @Autowired
     private final UserProviderRepository userProviderRepository;
 
+    @Autowired
+    private final RecaptchaService recaptchaService;
+
     @Value("${GOOGLE_CLIENT_ID}")
     private String googleClientId;
 
@@ -54,6 +57,7 @@ public class AuthService {
 
     public RegisterResponse register(RegisterRequest request) {
 
+        recaptchaService.verifyCaptcha(request.getCaptcha_token());
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
@@ -63,9 +67,9 @@ public class AuthService {
         if (userRepository.existsByPhone(request.getPhone())) {
             throw new AppException(ErrorCode.PHONE_ALREADY_EXISTS);
         }
-        if (request.getCaptcha_token() == null || request.getCaptcha_token().isEmpty()) {
-            throw new AppException(ErrorCode.CAPTCHA_REQUIRED);
-        }
+//         if (request.getCaptcha_token() == null || request.getCaptcha_token().isEmpty()) {
+//           throw new AppException(ErrorCode.CAPTCHA_REQUIRED);
+//        }
 
         // MapStruct -> Entity
         User user = userMapper.toEntity(request);
@@ -96,10 +100,10 @@ public class AuthService {
 
     public ApiResponse<LoginResponse.LoginData> login(LoginRequest request) {
 
-        if (request.getCaptcha_response() == null || request.getCaptcha_response().isEmpty()) {
-            throw new AppException(ErrorCode.CAPTCHA_REQUIRED);
-        }
-
+//        if (request.getCaptcha_response() == null || request.getCaptcha_response().isEmpty()) {
+//            throw new AppException(ErrorCode.CAPTCHA_REQUIRED);
+//        }
+        recaptchaService.verifyCaptcha(request.getCaptcha_response());
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -107,12 +111,12 @@ public class AuthService {
             throw new AppException(ErrorCode.ACCOUNT_BLOCKED);
         }
 
-        // if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-        //     throw new AppException(ErrorCode.INVALID_CREDENTIALS);
-        // }
-        if (!request.getPassword().equals("1")) {
-            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
-        }
+         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+             throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+         }
+//        if (!request.getPassword().equals("1")) {
+//            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+//        }
 
         String accessToken = jwtUtils.generateAccessToken(user.getEmail(), user.getRole(), request.isRemember_me());
         String refreshToken = jwtUtils.generateRefreshToken(user.getEmail(), user.getRole());
