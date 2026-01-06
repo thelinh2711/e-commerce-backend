@@ -39,6 +39,7 @@ public class OrderService {
     private final PaymentRepository paymentRepository;
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
+    private final OrderVoucherRepository orderVoucherRepository;
 
     private static final BigDecimal DEFAULT_SHIPPING_FEE = new BigDecimal("30000");
 
@@ -105,9 +106,6 @@ public class OrderService {
                         : DEFAULT_SHIPPING_FEE;
                 break;
         }
-
-        voucher.setUsageCount(voucher.getUsageCount() + 1);
-        voucherRepository.save(voucher);
 
         return result;
     }
@@ -235,9 +233,29 @@ public class OrderService {
                 .shippingFeeOriginal(money(shippingFeeOriginal))
                 .shippingDiscount(money(shippingDiscount))
                 .totalAmount(money(totalAmount))
+                .rewardPointsUsed(rewardUsed)
                 .build();
 
         orderRepository.save(order);
+
+        if (request.getVoucherCodes() != null && !request.getVoucherCodes().isEmpty()) {
+            for (String code : request.getVoucherCodes()) {
+                Voucher voucher = voucherRepository.findByCode(code)
+                        .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
+
+                // 1. Tăng usage count (CHỈ 1 LẦN)
+                voucher.setUsageCount(voucher.getUsageCount() + 1);
+                voucherRepository.save(voucher);
+
+                // 2. Lưu OrderVoucher
+                OrderVoucher orderVoucher = OrderVoucher.builder()
+                        .order(order)   // ✅ order đã tồn tại
+                        .voucher(voucher)
+                        .build();
+
+                orderVoucherRepository.save(orderVoucher);
+            }
+        }
 
         // SAVE PAYMENT
         // CHỈ TẠO PAYMENT CHO COD
@@ -475,4 +493,113 @@ public class OrderService {
                 .build();
     }
 
+    /**
+     * Hủy order và hoàn lại: stock, voucher usage count, reward points
+     * Dùng khi thanh toán thất bại/hủy
+     */
+    @Transactional
+    public void cancelOrderAndRefund(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+        // Chỉ hủy nếu order đang ở trạng thái PENDING
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new AppException(
+                    ErrorCode.INVALID_STATUS_TRANSITION,
+                    "Cannot cancel order with status: " + order.getStatus()
+            );
+        }
+
+        System.out.println("===== CANCELLING ORDER AND REFUNDING =====");
+        System.out.println("Order ID: " + order.getId());
+
+        // 1. Hoàn lại stock cho các sản phẩm
+        for (OrderItem item : order.getItems()) {
+            ProductVariant variant = item.getProductVariant();
+            variant.setStock(variant.getStock() + item.getQuantity());
+            variantRepository.save(variant);
+            System.out.println("Restored stock: " + item.getQuantity() + " for variant ID: " + variant.getId());
+        }
+
+        // 2. Hoàn lại reward points cho user (CHÍNH XÁC)
+        User user = order.getUser();
+
+        // Lấy reward points đã sử dụng khi tạo order
+        int rewardUsed = order.getRewardPointsUsed() != null ? order.getRewardPointsUsed() : 0;
+
+        // Tính reward points đã cộng khi tạo order
+        int rewardEarned = calculateRewardPoints(order.getTotalAmount());
+
+        // Hoàn lại chính xác:
+        // - Cộng lại reward đã dùng: +rewardUsed
+        // - Trừ đi reward đã cộng: -rewardEarned
+        int finalRewardPoints = user.getRewardPoints() + rewardUsed - rewardEarned;
+
+        // Đảm bảo không âm
+        if (finalRewardPoints < 0) {
+            finalRewardPoints = 0;
+        }
+
+        user.setRewardPoints(finalRewardPoints);
+        userRepository.save(user);
+
+        System.out.println("Reward points refund:");
+        System.out.println("   - Restored used points: +" + rewardUsed);
+        System.out.println("   - Deducted earned points: -" + rewardEarned);
+        System.out.println("   - User final points: " + finalRewardPoints);
+
+        // 3. Hoàn lại voucher usage count
+        List<OrderVoucher> appliedVouchers = order.getAppliedVouchers();
+        System.out.println("Found " + appliedVouchers.size() + " vouchers to restore");
+
+        for (OrderVoucher orderVoucher : appliedVouchers) {
+            try {
+                // Lấy voucher ID từ OrderVoucher
+                Voucher voucherRef = orderVoucher.getVoucher();
+                if (voucherRef == null) {
+                    System.out.println("Voucher reference is null, skip restore");
+                    continue;
+                }
+
+                Integer voucherId = voucherRef.getId();
+                if (voucherId == null) {
+                    System.out.println(" Voucher ID is null, skip restore");
+                    continue;
+                }
+
+                // Kiểm tra voucher có tồn tại trong DB không
+                Optional<Voucher> voucherOpt = voucherRepository.findById(voucherId);
+
+                if (!voucherOpt.isPresent()) {
+                    System.out.println("Voucher ID " + voucherId + " not found in database, skip restore");
+                    continue;
+                }
+
+                // Lấy voucher từ DB
+                Voucher voucher = voucherOpt.get();
+
+                // Hoàn lại usage count
+                int oldUsageCount = voucher.getUsageCount();
+                int newUsageCount = oldUsageCount - 1;
+                if (newUsageCount < 0) {
+                    newUsageCount = 0;
+                }
+                voucher.setUsageCount(newUsageCount);
+                voucherRepository.save(voucher);
+
+                System.out.println("✅ Restored voucher: " + voucher.getCode() +
+                        " | UsageCount: " + oldUsageCount + " → " + newUsageCount +
+                        " | Status: " + voucher.getStatus());
+            } catch (Exception e) {
+                System.err.println("⚠️ Error restoring voucher: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        // 4. Cập nhật order status thành CANCELLED
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+
+        System.out.println("Order cancelled and refunded successfully");
+    }
 }
