@@ -104,10 +104,10 @@ public class AuthService {
 
     public ApiResponse<LoginResponse.LoginData> login(LoginRequest request) {
 
-//        if (request.getCaptcha_response() == null || request.getCaptcha_response().isEmpty()) {
-//            throw new AppException(ErrorCode.CAPTCHA_REQUIRED);
-//        }
-        recaptchaService.verifyCaptcha(request.getCaptcha_response());
+        if (request.getCaptcha_response() == null || request.getCaptcha_response().isEmpty()) {
+            throw new AppException(ErrorCode.CAPTCHA_REQUIRED);
+        }
+        //recaptchaService.verifyCaptcha(request.getCaptcha_response());
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
