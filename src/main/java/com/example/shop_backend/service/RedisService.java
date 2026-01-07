@@ -12,6 +12,22 @@ public class RedisService {
 
     private final StringRedisTemplate redisTemplate;
 
+    public void saveRefreshToken(String email, String refreshToken, long seconds) {
+        redisTemplate.opsForValue().set("refresh_token:" + email, refreshToken, seconds, TimeUnit.SECONDS);
+    }
+
+    public String getRefreshToken(String email) {
+        return redisTemplate.opsForValue().get("refresh_token:" + email);
+    }
+
+    public void deleteRefreshToken(String email) {
+        redisTemplate.delete("refresh_token:" + email);
+    }
+
+    public void deleteAllRefreshTokens(String email) {
+        redisTemplate.delete("refresh_token:" + email);
+    }
+
     // Lưu OTP
     public void saveOtp(String email, String otp, long minutes) {
         redisTemplate.opsForValue().set("otp:" + email, otp, minutes, TimeUnit.MINUTES);

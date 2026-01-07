@@ -43,6 +43,9 @@ public class AuthService {
     @Autowired
     private final RecaptchaService recaptchaService;
 
+    @Autowired
+    private final RedisService redisService;
+
     @Value("${GOOGLE_CLIENT_ID}")
     private String googleClientId;
 
@@ -83,6 +86,7 @@ public class AuthService {
 
         String accessToken = jwtUtils.generateAccessToken(user.getEmail(), user.getRole());
         String refreshToken = jwtUtils.generateRefreshToken(user.getEmail(), user.getRole());
+        redisService.saveRefreshToken(user.getEmail(), refreshToken, 604800); // 7 ngày
 
         return RegisterResponse.builder()
                 .success(true)
@@ -121,6 +125,8 @@ public class AuthService {
         String accessToken = jwtUtils.generateAccessToken(user.getEmail(), user.getRole(), request.isRemember_me());
         String refreshToken = jwtUtils.generateRefreshToken(user.getEmail(), user.getRole());
 
+        redisService.saveRefreshToken(user.getEmail(), refreshToken, 604800); // 7 ngày
+
         LoginResponse.LoginData data = LoginResponse.LoginData.builder()
                 .user(userMapper.toLoginUserInfo(user))
                 .tokens(LoginResponse.TokenInfo.builder()
@@ -133,7 +139,7 @@ public class AuthService {
         return new ApiResponse<>(1000, "Đăng nhập thành công", data);
     }
 
-    // ✅ Đăng nhập bằng Google
+    // Đăng nhập bằng Google
     public LoginResponse loginWithGoogle(String idTokenString) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
@@ -183,6 +189,7 @@ public class AuthService {
             String accessToken = jwtUtils.generateAccessToken(email, user.getRole());
             String refreshToken = jwtUtils.generateRefreshToken(email, user.getRole());
 
+            redisService.saveRefreshToken(email, refreshToken, 604800); // 7 ngày
             return LoginResponse.builder()
                     .success(true)
                     .message("Đăng nhập Google thành công")
@@ -209,5 +216,52 @@ public class AuthService {
         } catch (Exception e) {
             throw new RuntimeException("Đăng nhập Google thất bại: " + e.getMessage(), e);
         }
+    }
+
+    public ApiResponse<LoginResponse.TokenInfo> refreshToken(String refreshToken) {
+        // Validate refresh token
+        if (!jwtUtils.validateToken(refreshToken)) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        // Lấy email từ token
+        String email = jwtUtils.getEmailFromToken(refreshToken);
+
+        // Kiểm tra refresh token trong Redis
+        String storedToken = redisService.getRefreshToken(email);
+        if (storedToken == null || !storedToken.equals(refreshToken)) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        // Lấy user từ DB
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Kiểm tra trạng thái user
+        if (user.getStatus() == UserStatus.BLOCKED) {
+            throw new AppException(ErrorCode.ACCOUNT_BLOCKED);
+        }
+
+        // Tạo access token mới
+        String newAccessToken = jwtUtils.generateAccessToken(user.getEmail(), user.getRole());
+
+        // Tùy chọn: Có thể tạo refresh token mới (rotation)
+        String newRefreshToken = jwtUtils.generateRefreshToken(user.getEmail(), user.getRole());
+        redisService.saveRefreshToken(user.getEmail(), newRefreshToken, 604800);
+
+        LoginResponse.TokenInfo tokenInfo = LoginResponse.TokenInfo.builder()
+                .access_token(newAccessToken)
+                .refresh_token(newRefreshToken)
+                .expires_in(3600)
+                .build();
+
+        return new ApiResponse<>(1000, "Làm mới token thành công", tokenInfo);
+    }
+
+    // Thêm method logout
+    public ApiResponse<Void> logout(String email) {
+        // Xóa refresh token khỏi Redis
+        redisService.deleteRefreshToken(email);
+        return new ApiResponse<>(1000, "Đăng xuất thành công", null);
     }
 }

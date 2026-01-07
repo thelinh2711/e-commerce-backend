@@ -2,14 +2,17 @@ package com.example.shop_backend.controller;
 
 import com.example.shop_backend.dto.request.GoogleLoginRequest;
 import com.example.shop_backend.dto.request.LoginRequest;
+import com.example.shop_backend.dto.request.RefreshTokenRequest;
 import com.example.shop_backend.dto.request.RegisterRequest;
 import com.example.shop_backend.dto.response.ApiResponse;
 import com.example.shop_backend.dto.response.LoginResponse;
 import com.example.shop_backend.dto.response.RegisterResponse;
+import com.example.shop_backend.model.User;
 import com.example.shop_backend.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,6 +46,19 @@ public class AuthController {
     @PostMapping("/login/google")
     public ResponseEntity<LoginResponse> loginWithGoogle(@RequestBody GoogleLoginRequest request) {
         LoginResponse response = authService.loginWithGoogle(request.getIdToken());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<LoginResponse.TokenInfo>> refreshToken(
+            @RequestBody RefreshTokenRequest request) {
+        ApiResponse<LoginResponse.TokenInfo> response = authService.refreshToken(request.getRefreshToken());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal User user) {
+        ApiResponse<Void> response = authService.logout(user.getEmail());
         return ResponseEntity.ok(response);
     }
 }
