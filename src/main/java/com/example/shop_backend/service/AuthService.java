@@ -60,7 +60,7 @@ public class AuthService {
 
     public RegisterResponse register(RegisterRequest request) {
 
-        recaptchaService.verifyCaptcha(request.getCaptcha_token());
+        //recaptchaService.verifyCaptcha(request.getCaptcha_token());
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
@@ -70,9 +70,9 @@ public class AuthService {
         if (userRepository.existsByPhone(request.getPhone())) {
             throw new AppException(ErrorCode.PHONE_ALREADY_EXISTS);
         }
-//         if (request.getCaptcha_token() == null || request.getCaptcha_token().isEmpty()) {
-//           throw new AppException(ErrorCode.CAPTCHA_REQUIRED);
-//        }
+         if (request.getCaptcha_token() == null || request.getCaptcha_token().isEmpty()) {
+           throw new AppException(ErrorCode.CAPTCHA_REQUIRED);
+        }
 
         // MapStruct -> Entity
         User user = userMapper.toEntity(request);
@@ -104,10 +104,10 @@ public class AuthService {
 
     public ApiResponse<LoginResponse.LoginData> login(LoginRequest request) {
 
-        if (request.getCaptcha_response() == null || request.getCaptcha_response().isEmpty()) {
-            throw new AppException(ErrorCode.CAPTCHA_REQUIRED);
-        }
-        //recaptchaService.verifyCaptcha(request.getCaptcha_response());
+        // if (request.getCaptcha_response() == null || request.getCaptcha_response().isEmpty()) {
+        //     throw new AppException(ErrorCode.CAPTCHA_REQUIRED);
+        // }
+        recaptchaService.verifyCaptcha(request.getCaptcha_response());
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
